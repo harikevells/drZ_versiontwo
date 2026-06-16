@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "780313726048",
+    "project_id": "victor-9a767",
+    "storage_bucket": "victor-9a767.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:780313726048:android:c4b8e00d39111d1e6ac705",
+        "android_client_info": {
+          "package_name": "com.android.application"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAoBZ9TOeYr6Gkyx1nXYTPnHhJplWjXaEw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:780313726048:android:4c25d5c6cbb4b32f6ac705",
+        "android_client_info": {
+          "package_name": "com.drzapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAoBZ9TOeYr6Gkyx1nXYTPnHhJplWjXaEw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
