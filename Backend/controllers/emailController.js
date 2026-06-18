@@ -87,4 +87,25 @@ const sendBookingEmail = async (req, res) => {
     }
 };
 
-module.exports = { sendBookingEmail };
+const getBookedTimings = async (req, res) => {
+    try {
+        const { doctor_name, appointment_date } = req.query;
+        if (!appointment_date) {
+            return res.status(400).json({ message: "Date is required" });
+        }
+        
+        const filter = { appointment_date };
+        if (doctor_name) {
+            filter.doctor_name = doctor_name;
+        }
+        
+        const appointments = await Appointment.find(filter);
+        // Return array of objects { doctor_name, booked_timings: [] } or just the raw appointments
+        res.status(200).json(appointments);
+    } catch (error) {
+        console.error("Error fetching booked timings:", error);
+        res.status(500).json({ message: "Internal server error" });
+    }
+};
+
+module.exports = { sendBookingEmail, getBookedTimings };

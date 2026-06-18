@@ -25,6 +25,12 @@ async function generate() {
       // For now we'll just save the same image since the padding handles the circular masks of the launcher
       await resized.write(`android/app/src/main/res/mipmap-${density}/ic_launcher_round.png`);
       
+      // Also write to v26 adaptive icon folders as ic_foreground.png
+      const v26Dir = `android/app/src/main/res/mipmap-${density}-v26`;
+      if (fs.existsSync(v26Dir)) {
+          await resized.write(`${v26Dir}/ic_foreground.png`);
+      }
+      
       console.log(`Generated ${density}`);
     }
     console.log('All icons generated successfully!');

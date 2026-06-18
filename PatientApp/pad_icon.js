@@ -7,9 +7,9 @@ async function padIcon() {
     const h = image.bitmap.height;
     
     // Add more padding so the logo fits inside the "safe zone" of Android's adaptive icon masks and appears smaller
-    const size = Math.floor(Math.max(w, h) * 2.2);
+    const size = Math.floor(Math.max(w, h) * 2.8);
     
-    const squared = new Jimp({ width: size, height: size, color: 0xffffffff }); // white background
+    const squared = new Jimp({ width: size, height: size, color: 0x00000000 }); // transparent background
     
     // center the image
     const x = Math.floor((size - w) / 2);

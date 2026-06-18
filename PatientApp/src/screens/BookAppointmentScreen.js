@@ -65,35 +65,78 @@ const BookAppointmentScreen = ({ navigation }) => {
   const [availableTimings, setAvailableTimings] = useState([]);
   const [allDoctors, setAllDoctors] = useState([]);
   const [doctorList, setDoctorList] = useState([]);
+  const [availableDoctorsForDate, setAvailableDoctorsForDate] = useState([]);
+  const [dateSchedules, setDateSchedules] = useState([]);
+  const [bookedByDoctor, setBookedByDoctor] = useState({});
+
+  const formatDate = (rawDate) => { const d = new Date(rawDate); return `${d.getDate()}/${d.getMonth() + 1}/${d.getFullYear()}`; };
 
   useEffect(() => {
-    if (selectedDoctor && date) {
-      fetchAvailableTimings(selectedDoctor._id, date);
+    fetchSchedulesForDate(date);
+  }, [date, allDoctors]);
+
+  useEffect(() => {
+    if (selectedDoctor) {
+      const schedule = dateSchedules.find(s => s.doctorId === selectedDoctor._id || s.doctorId === selectedDoctor.id);
+      if (schedule && schedule.time) {
+        setAvailableTimings(schedule.time);
+      } else {
+        setAvailableTimings([]);
+      }
     } else {
       setAvailableTimings([]);
     }
     setSelectedTimes([]);
-  }, [selectedDoctor, date]);
+  }, [selectedDoctor, dateSchedules]);
 
-  const fetchAvailableTimings = async (docId, selectedDate) => {
+  const fetchSchedulesForDate = async (selectedDate) => {
+    if (!allDoctors || allDoctors.length === 0) return;
     try {
       const d = new Date(selectedDate);
       const year = d.getFullYear();
       const month = String(d.getMonth() + 1).padStart(2, '0');
       const day = String(d.getDate()).padStart(2, '0');
-      const formattedDate = `${year}-${month}-${day}`;
+      const formattedDateForSchedules = `${year}-${month}-${day}`;
+      const formattedDateForAppointments = formatDate(selectedDate);
 
-      const response = await axios.get(`${BASE_URL}/api/schedules?doctorId=${docId}&date=${formattedDate}`);
-      let times = [];
-      response.data.forEach(schedule => {
-        if (schedule.status === 'Approved' && schedule.time) {
-          times = times.concat(schedule.time);
-        }
+      const [schedulesRes, appointmentsRes] = await Promise.all([
+        axios.get(`${BASE_URL}/api/schedules?date=${formattedDateForSchedules}`),
+        axios.get(`${BASE_URL}/api/emails/booked-timings?appointment_date=${formattedDateForAppointments}`)
+      ]);
+
+      const approvedSchedules = schedulesRes.data.filter(s => s.status === 'Approved');
+      setDateSchedules(approvedSchedules);
+
+      const appointments = appointmentsRes.data || [];
+      const bookedMap = {};
+      appointments.forEach(app => {
+         if (!bookedMap[app.doctor_name]) bookedMap[app.doctor_name] = [];
+         bookedMap[app.doctor_name].push(app.appointment_time);
       });
-      setAvailableTimings([...new Set(times)]);
+      setBookedByDoctor(bookedMap);
+
+      const doctorIdsWithSchedules = new Set(approvedSchedules.map(s => s.doctorId));
+      const availableDocs = allDoctors.filter(doc => {
+         if (!doctorIdsWithSchedules.has(doc.id || doc._id)) return false;
+         
+         const schedule = approvedSchedules.find(s => s.doctorId === (doc.id || doc._id));
+         const bookedTimingsForDoc = bookedMap[doc.doctorName] || [];
+         
+         // Are ALL timings in this schedule booked?
+         if (schedule && schedule.time && schedule.time.length > 0) {
+            const allBooked = schedule.time.every(t => bookedTimingsForDoc.includes(t));
+            if (allBooked) return false;
+         }
+         return true;
+      });
+      setAvailableDoctorsForDate(availableDocs);
+
+      // Reset selections
+      setSelectedCategory(null);
+      setSelectedDoctor(null);
+      setDoctorList([]);
     } catch (error) {
-      console.log("Error fetching timings", error);
-      setAvailableTimings([]);
+      console.log("Error fetching schedules", error);
     }
   };
 
@@ -135,8 +178,6 @@ const BookAppointmentScreen = ({ navigation }) => {
     setDate(currentDate);
   };
   const showMode = (currentMode) => { setShowPicker(true); setMode(currentMode); };
-
-  const formatDate = (rawDate) => { const d = new Date(rawDate); return `${d.getDate()}/${d.getMonth() + 1}/${d.getFullYear()}`; };
   const formatTime = (rawDate) => {
     let hours = rawDate.getHours();
     let minutes = rawDate.getMinutes();
@@ -296,7 +337,20 @@ const BookAppointmentScreen = ({ navigation }) => {
                 />
               </View>
 
-              {/* 4. DOCTOR CATEGORY (UPDATED TO USE DROPDOWN PACKAGE) */}
+              {/* 5. DATE (Moved up) */}
+              <View style={styles.section}>
+                <View style={styles.labelRow}>
+                  <Text style={styles.label}>Select Date</Text>
+                  <Text style={styles.labelTamil}>தேதியை தேர்ந்தெடுக்கவும்</Text>
+                </View>
+                <TouchableOpacity style={[styles.inputBox, { justifyContent: 'space-between', paddingHorizontal: 16 }]} onPress={() => showMode('date')}>
+                  <Text style={{ fontSize: 16, color: '#333' }}>{formatDate(date)}</Text>
+                  <Icon name="calendar-month" size={24} color="#888" />
+                </TouchableOpacity>
+              </View>
+              {showPicker && <DateTimePicker value={date} mode={mode} is24Hour={false} display="default" onChange={onChangeDate} />}
+
+              {/* 4. DOCTOR CATEGORY */}
               <View style={styles.section}>
                 <View style={styles.labelRow}>
                   <Text style={styles.label}>Select Treatment Category</Text>
@@ -323,7 +377,7 @@ const BookAppointmentScreen = ({ navigation }) => {
                   onChange={item => {
                     setSelectedCategory(item);
                     setIsFocus(false);
-                    const filtered = allDoctors.filter(d => {
+                    const filtered = availableDoctorsForDate.filter(d => {
                       if (!d.department) return item.name === 'Others';
                       const depts = d.department.split(',').map(cat => cat.trim());
                       return depts.includes(item.name);
@@ -347,7 +401,7 @@ const BookAppointmentScreen = ({ navigation }) => {
               <View style={styles.section}>
                 <View style={styles.labelRow}>
                   <Text style={styles.label}>Select Doctor Name</Text>
-                  <Text style={styles.labelTamil}>சிகிச்சை வகையை தேர்ந்தெடுக்கவும்</Text>
+                  <Text style={styles.labelTamil}>மருத்துவர் பெயரை தேர்ந்தெடுக்கவும்</Text>
                 </View>
 
                 <Dropdown
@@ -357,17 +411,18 @@ const BookAppointmentScreen = ({ navigation }) => {
                   inputSearchStyle={styles.inputSearchStyle}
                   iconStyle={styles.iconStyle}
                   itemTextStyle={{ color: 'black' }}
-                  data={doctorList}
+                  data={availableDoctorsForDate.length === 0 ? [{ _id: '0', name: 'Not available in doctor' }] : doctorList}
                   search
                   maxHeight={300}
                   labelField="name"
                   valueField="_id"
-                  placeholder={!isDoctorFocus ? 'Select Doctor...' : '...'}
+                  placeholder={!isDoctorFocus ? (availableDoctorsForDate.length === 0 ? 'Not available in doctor' : 'Select Doctor...') : '...'}
                   searchPlaceholder="Search..."
                   value={selectedDoctor ? selectedDoctor._id : null}
                   onFocus={() => setIsDoctorFocus(true)}
                   onBlur={() => setIsDoctorFocus(false)}
                   onChange={item => {
+                    if (item._id === '0') return;
                     setSelectedDoctor(item);
                     setIsDoctorFocus(false);
                   }}
@@ -382,19 +437,6 @@ const BookAppointmentScreen = ({ navigation }) => {
                 />
               </View>
 
-              {/* 5. DATE */}
-              <View style={styles.section}>
-                <View style={styles.labelRow}>
-                  <Text style={styles.label}>Select Date</Text>
-                  <Text style={styles.labelTamil}>சிகிச்சை வகையை தேர்ந்தெடுக்கவும்</Text>
-                </View>
-                <TouchableOpacity style={[styles.inputBox, { justifyContent: 'space-between', paddingHorizontal: 16 }]} onPress={() => showMode('date')}>
-                  <Text style={{ fontSize: 16, color: '#333' }}>{formatDate(date)}</Text>
-                  <Icon name="calendar-month" size={24} color="#888" />
-                </TouchableOpacity>
-              </View>
-              {showPicker && <DateTimePicker value={date} mode={mode} is24Hour={false} display="default" onChange={onChangeDate} />}
-
               {/* 6. AVAILABLE TIMINGS */}
               <View style={styles.section}>
                 <View style={styles.labelRow}>
@@ -406,24 +448,25 @@ const BookAppointmentScreen = ({ navigation }) => {
                   {availableTimings.length > 0 ? (
                     <View style={styles.timingsGrid}>
                       {availableTimings.map((time, index) => {
+                        const bookedTimingsForCurrentDoctor = selectedDoctor ? (bookedByDoctor[selectedDoctor.name] || []) : [];
+                        const isBooked = bookedTimingsForCurrentDoctor.includes(time);
                         const isSelected = selectedTimes.includes(time);
                         return (
                           <TouchableOpacity 
                             key={index} 
                             style={styles.timingCard} 
                             onPress={() => {
+                              if (isBooked) return;
                               setSelectedTimes(prev => 
-                                prev.includes(time) 
-                                  ? prev.filter(t => t !== time) 
-                                  : [...prev, time]
+                                prev.includes(time) ? [] : [time]
                               );
                             }}
-                            activeOpacity={0.7}
+                            activeOpacity={isBooked ? 1 : 0.7}
                           >
-                            <View style={[styles.timingBox, isSelected ? styles.timingBoxSelected : styles.timingBoxUnselected]}>
-                              {isSelected && <Icon name="check" size={14} color="#fff" style={{ alignSelf: 'center', marginTop: 1 }} />}
+                            <View style={[styles.timingBox, isBooked ? { backgroundColor: '#E74C3C' } : (isSelected ? styles.timingBoxSelected : styles.timingBoxUnselected)]}>
+                              {isSelected && !isBooked && <Icon name="check" size={14} color="#fff" style={{ alignSelf: 'center', marginTop: 1 }} />}
                             </View>
-                            <Text style={styles.timingText}>{time}</Text>
+                            <Text style={[styles.timingText, isBooked && { color: '#E74C3C', textDecorationLine: 'line-through' }]}>{time.split(' to ')[0]}</Text>
                           </TouchableOpacity>
                         );
                       })}
