@@ -2,7 +2,11 @@ const Schedule = require('../models/Schedule');
 
 const getSchedules = async (req, res) => {
     try {
-        const schedules = await Schedule.find({});
+        const filter = {};
+        if (req.query.doctorId) filter.doctorId = req.query.doctorId;
+        if (req.query.date) filter.date = req.query.date;
+
+        const schedules = await Schedule.find(filter);
         res.json(schedules);
     } catch (err) {
         res.status(500).json({ error: err.message });

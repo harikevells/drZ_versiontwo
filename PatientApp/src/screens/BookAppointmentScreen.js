@@ -12,10 +12,12 @@ import { Dropdown } from 'react-native-element-dropdown';
 import { AuthContext } from '../context/AuthContext';
 import { LanguageContext } from '../context/LanguageContext';
 
-const EMAILJS_SERVICE_ID = 'service_rxgwhn9';
-const EMAILJS_TEMPLATE_ID = 'template_wsof08o';
-const EMAILJS_PUBLIC_KEY = 'mc5FkWdKkzGMHk_Ai';
-const EMAILJS_PRIVATE_KEY = 'UKkdzP6j7soJqhJxiTWUC';
+// EmailJS credentials removed as we now use our custom backend endpoint
+
+// Important: If using Android Emulator, use '10.0.2.2'. If using Wired USB Debugging, use 'localhost'. If using Wi-Fi, use your local IP address.
+const IP_ADDRESS = 'localhost'; 
+const PORT = '5000'; // Make sure your backend server is running on port 5000!
+const BASE_URL = `http://${IP_ADDRESS}:${PORT}`;
 
 // --- Helper Components ---
 
@@ -52,10 +54,48 @@ const BookAppointmentScreen = ({ navigation }) => {
   // UI State
   const [isVideoCall, setIsVideoCall] = useState(false);
   const [isFocus, setIsFocus] = useState(false); // Used for Dropdown focus state
+  const [isDoctorFocus, setIsDoctorFocus] = useState(false); // Used for Doctor Dropdown focus
+  const [selectedDoctor, setSelectedDoctor] = useState(null);
   const [date, setDate] = useState(new Date());
+  const [selectedTimes, setSelectedTimes] = useState([]); // Changed to array for multiple selection
   const [mode, setMode] = useState('date');
   const [showPicker, setShowPicker] = useState(false);
   const [sendingEmail, setSendingEmail] = useState(false);
+
+  const [availableTimings, setAvailableTimings] = useState([]);
+  const [allDoctors, setAllDoctors] = useState([]);
+  const [doctorList, setDoctorList] = useState([]);
+
+  useEffect(() => {
+    if (selectedDoctor && date) {
+      fetchAvailableTimings(selectedDoctor._id, date);
+    } else {
+      setAvailableTimings([]);
+    }
+    setSelectedTimes([]);
+  }, [selectedDoctor, date]);
+
+  const fetchAvailableTimings = async (docId, selectedDate) => {
+    try {
+      const d = new Date(selectedDate);
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      const formattedDate = `${year}-${month}-${day}`;
+
+      const response = await axios.get(`${BASE_URL}/api/schedules?doctorId=${docId}&date=${formattedDate}`);
+      let times = [];
+      response.data.forEach(schedule => {
+        if (schedule.status === 'Approved' && schedule.time) {
+          times = times.concat(schedule.time);
+        }
+      });
+      setAvailableTimings([...new Set(times)]);
+    } catch (error) {
+      console.log("Error fetching timings", error);
+      setAvailableTimings([]);
+    }
+  };
 
   useEffect(() => {
     if (!user) { Alert.alert("Session Expired", "Please login again."); }
@@ -65,28 +105,28 @@ const BookAppointmentScreen = ({ navigation }) => {
   const fetchAllData = async () => {
     try {
       setLoadingData(true);
-      setDoctorCategories([
-        { _id: '1', name: 'Diabetics / சர்க்கரை நோய்' },
-        // { _id: '2', name: 'Hypertension / இரத்த அழுத்தம்' },
-        // { _id: '3', name: 'Asthma / ஆஸ்துமா' },
-        { _id: '4', name: 'Heart Disease / இதயநோய்' },
-        // { _id: '5', name: 'Hypothyroid / தைராய்டு பிரச்சனை' },
-        // { _id: '6', name: 'Kidney Disease / சிறுநீரக நோய்' },
-        // { _id: '7', name: 'Seizures / வலிப்பு / மயக்கம்' },
-        // { _id: '8', name: 'GERD / Gastritis' },
-        // { _id: '9', name: 'Anemia / இரத்த சோகை' },
-        // { _id: '10', name: 'Anxiety / மன அழுத்தம்' },
-        // { _id: '11', name: 'Allergy / அலர்ஜி' },
-        { _id: '12', name: 'Pediatrics / குழந்தைகள் நல மருத்துவம்' },
-        { _id: '13', name: 'Gynecologist / மகப்பேறு  மருத்துவம்' },
-        { _id: '14', name: 'Fever / காய்ச்சல்' },
-        { _id: '15', name: 'Head Ache / தலைவலி' },
-        { _id: '16', name: 'Accident / விபத்து' },
-        { _id: '17', name: 'Body Pain / உடல் வலி' },
-        { _id: '18', name: 'Chest Pain / நெஞ்சு வலி' },
-        { _id: '19', name: ' Others / மற்றவை' },
-      ]);
-    } catch (error) { console.log("Error loading data"); } finally { setLoadingData(false); }
+      const response = await axios.get(`${BASE_URL}/api/doctors`);
+      const doctors = response.data;
+      setAllDoctors(doctors);
+      
+      const allDepts = [];
+      doctors.forEach(d => {
+        if (d.department) {
+          const depts = d.department.split(',').map(item => item.trim()).filter(item => item);
+          allDepts.push(...depts);
+        } else {
+          allDepts.push('Others');
+        }
+      });
+      const categories = [...new Set(allDepts)];
+      const formattedCategories = categories.map((cat, index) => ({ _id: String(index + 1), name: cat }));
+      setDoctorCategories(formattedCategories);
+    } catch (error) { 
+      console.log("Error loading data", error); 
+      Alert.alert("Network Error", "Unable to fetch doctors. Please check your backend connection.\n" + error.message);
+    } finally { 
+      setLoadingData(false); 
+    }
   };
 
   const onChangeDate = (event, selectedDate) => {
@@ -128,32 +168,26 @@ const BookAppointmentScreen = ({ navigation }) => {
 
     setSendingEmail(true);
 
-    const emailData = {
-      service_id: EMAILJS_SERVICE_ID,
-      template_id: EMAILJS_TEMPLATE_ID,
-      user_id: EMAILJS_PUBLIC_KEY,
-      accessToken: EMAILJS_PRIVATE_KEY,
-      template_params: {
-        patient_name: patientName,
-        patient_age: age,
-        patient_gender: gender,
-        whatsapp_number: whatsapp,
-        login_mobile: user?.contactNumber || user?.mobile || "N/A",
-        doctor_name: selectedCategory.name,
-        appointment_date: formatDate(date),
-        appointment_time: formatTime(date),
-        video_call: isVideoCall ? "Yes" : "No",
-      }
+    const payload = {
+      patient_name: patientName,
+      patient_age: age,
+      patient_gender: gender,
+      whatsapp_number: whatsapp,
+      login_mobile: user?.contactNumber || user?.mobile || "N/A",
+      treatment_category: selectedCategory.name,
+      doctor_name: selectedDoctor ? selectedDoctor.name : "N/A",
+      appointment_date: formatDate(date),
+      appointment_time: selectedTimes.length > 0 ? selectedTimes.join(', ') : "Not Selected",
+      video_call: isVideoCall ? "Yes" : "No",
     };
 
     try {
-      const response = await axios.post('https://api.emailjs.com/api/v1.0/email/send', emailData, {
+      const response = await axios.post(`${BASE_URL}/api/emails/book`, payload, {
         headers: {
-          'Content-Type': 'application/json',
-          'origin': 'http://localhost' // Try to mimic browser origin
+          'Content-Type': 'application/json'
         }
       });
-      if (response.status === 200 || response.data === 'OK') {
+      if (response.status === 200 || response.data.message) {
         Alert.alert(
           "Success / வெற்றி",
           "Appointment Request Sent Successfully!\nஉங்கள் முன்பதிவு கோரிக்கை அனுப்பப்பட்டது.",
@@ -163,11 +197,11 @@ const BookAppointmentScreen = ({ navigation }) => {
         Alert.alert("Error", "Something went wrong sending the email.");
       }
     } catch (error) {
-      console.error("Email Error:", error);
+      console.error("Booking Error:", error);
       const errorMessage = error.response
         ? `Status: ${error.response.status}\n${JSON.stringify(error.response.data)}`
         : error.message;
-      Alert.alert("Failed", `Email sending failed.\n${errorMessage}`);
+      Alert.alert("Failed", `Booking failed.\n${errorMessage}`);
     }
     finally { setSendingEmail(false); }
   };
@@ -266,7 +300,7 @@ const BookAppointmentScreen = ({ navigation }) => {
               <View style={styles.section}>
                 <View style={styles.labelRow}>
                   <Text style={styles.label}>Select Treatment Category</Text>
-                  <Text style={styles.labelTamil}>சிகிச்சை பிரிவைத் தேர்ந்தெடுக்கவும்</Text>
+                  <Text style={styles.labelTamil}>சிகிச்சை வகையை தேர்ந்தெடுக்கவும்</Text>
                 </View>
 
                 <Dropdown
@@ -275,6 +309,7 @@ const BookAppointmentScreen = ({ navigation }) => {
                   selectedTextStyle={styles.selectedTextStyle}
                   inputSearchStyle={styles.inputSearchStyle}
                   iconStyle={styles.iconStyle}
+                  itemTextStyle={{ color: 'black' }}
                   data={doctorCategories}
                   search
                   maxHeight={300}
@@ -288,6 +323,14 @@ const BookAppointmentScreen = ({ navigation }) => {
                   onChange={item => {
                     setSelectedCategory(item);
                     setIsFocus(false);
+                    const filtered = allDoctors.filter(d => {
+                      if (!d.department) return item.name === 'Others';
+                      const depts = d.department.split(',').map(cat => cat.trim());
+                      return depts.includes(item.name);
+                    });
+                    const formattedDoctors = filtered.map(d => ({ _id: d.id || d._id, name: d.doctorName }));
+                    setDoctorList(formattedDoctors);
+                    setSelectedDoctor(null);
                   }}
                   renderLeftIcon={() => (
                     <Icon
@@ -300,27 +343,98 @@ const BookAppointmentScreen = ({ navigation }) => {
                 />
               </View>
 
-              {/* 5. DATE & TIME */}
-              <View style={[styles.section, styles.rowLayout]}>
-                <TouchableOpacity style={[styles.dateCard, { marginRight: 15 }]} onPress={() => showMode('date')}>
-                  <View>
-                    <Text style={styles.dateLabel}>Date</Text>
-                    <Text style={styles.dateLabelTamil}>தேதியை நிரப்பவும்</Text>
-                    <Text style={styles.dateValue}>{formatDate(date)}</Text>
-                  </View>
-                  <Icon name="calendar-month" size={26} color="#1C3E55" />
-                </TouchableOpacity>
+              {/* 4.5 SELECT DOCTOR NAME */}
+              <View style={styles.section}>
+                <View style={styles.labelRow}>
+                  <Text style={styles.label}>Select Doctor Name</Text>
+                  <Text style={styles.labelTamil}>சிகிச்சை வகையை தேர்ந்தெடுக்கவும்</Text>
+                </View>
 
-                <TouchableOpacity style={styles.dateCard} onPress={() => showMode('time')}>
-                  <View>
-                    <Text style={styles.dateLabel}>Time</Text>
-                    <Text style={styles.dateLabelTamil}>நேரத்தை நிரப்பவும்</Text>
-                    <Text style={styles.dateValue}>{formatTime(date)}</Text>
-                  </View>
-                  <Icon name="clock-outline" size={26} color="#1C3E55" />
+                <Dropdown
+                  style={[styles.dropdown, isDoctorFocus && { borderColor: '#1C3E55' }]}
+                  placeholderStyle={styles.placeholderStyle}
+                  selectedTextStyle={styles.selectedTextStyle}
+                  inputSearchStyle={styles.inputSearchStyle}
+                  iconStyle={styles.iconStyle}
+                  itemTextStyle={{ color: 'black' }}
+                  data={doctorList}
+                  search
+                  maxHeight={300}
+                  labelField="name"
+                  valueField="_id"
+                  placeholder={!isDoctorFocus ? 'Select Doctor...' : '...'}
+                  searchPlaceholder="Search..."
+                  value={selectedDoctor ? selectedDoctor._id : null}
+                  onFocus={() => setIsDoctorFocus(true)}
+                  onBlur={() => setIsDoctorFocus(false)}
+                  onChange={item => {
+                    setSelectedDoctor(item);
+                    setIsDoctorFocus(false);
+                  }}
+                  renderLeftIcon={() => (
+                    <Icon
+                      style={styles.icon}
+                      color={isDoctorFocus ? '#1C3E55' : 'black'}
+                      name="doctor"
+                      size={20}
+                    />
+                  )}
+                />
+              </View>
+
+              {/* 5. DATE */}
+              <View style={styles.section}>
+                <View style={styles.labelRow}>
+                  <Text style={styles.label}>Select Date</Text>
+                  <Text style={styles.labelTamil}>சிகிச்சை வகையை தேர்ந்தெடுக்கவும்</Text>
+                </View>
+                <TouchableOpacity style={[styles.inputBox, { justifyContent: 'space-between', paddingHorizontal: 16 }]} onPress={() => showMode('date')}>
+                  <Text style={{ fontSize: 16, color: '#333' }}>{formatDate(date)}</Text>
+                  <Icon name="calendar-month" size={24} color="#888" />
                 </TouchableOpacity>
               </View>
               {showPicker && <DateTimePicker value={date} mode={mode} is24Hour={false} display="default" onChange={onChangeDate} />}
+
+              {/* 6. AVAILABLE TIMINGS */}
+              <View style={styles.section}>
+                <View style={styles.labelRow}>
+                  <Text style={styles.label}>Select Available Timings</Text>
+                  <Text style={styles.labelTamil}>கிடைக்கும் நேரங்களை தேர்ந்தெடுக்கவும்</Text>
+                </View>
+                
+                <View style={styles.timingsContainer}>
+                  {availableTimings.length > 0 ? (
+                    <View style={styles.timingsGrid}>
+                      {availableTimings.map((time, index) => {
+                        const isSelected = selectedTimes.includes(time);
+                        return (
+                          <TouchableOpacity 
+                            key={index} 
+                            style={styles.timingCard} 
+                            onPress={() => {
+                              setSelectedTimes(prev => 
+                                prev.includes(time) 
+                                  ? prev.filter(t => t !== time) 
+                                  : [...prev, time]
+                              );
+                            }}
+                            activeOpacity={0.7}
+                          >
+                            <View style={[styles.timingBox, isSelected ? styles.timingBoxSelected : styles.timingBoxUnselected]}>
+                              {isSelected && <Icon name="check" size={14} color="#fff" style={{ alignSelf: 'center', marginTop: 1 }} />}
+                            </View>
+                            <Text style={styles.timingText}>{time}</Text>
+                          </TouchableOpacity>
+                        );
+                      })}
+                    </View>
+                  ) : (
+                    <Text style={{ textAlign: 'center', color: '#888', paddingVertical: 10 }}>
+                      No timings available / நேரங்கள் கிடைக்கவில்லை
+                    </Text>
+                  )}
+                </View>
+              </View>
 
               {/* 6. VIDEO CALL */}
               <View style={styles.section}>
@@ -335,7 +449,7 @@ const BookAppointmentScreen = ({ navigation }) => {
 
               {/* SUBMIT */}
               <TouchableOpacity style={[styles.submitButton, sendingEmail && { backgroundColor: '#888' }]} onPress={handleSubmit} disabled={sendingEmail}>
-                {sendingEmail ? <ActivityIndicator color="#fff" /> : <Text style={styles.submitButtonText}>CONFIRM BOOKING / உறுதி செய்</Text>}
+                {sendingEmail ? <ActivityIndicator color="#fff" /> : <Text style={styles.submitButtonText}>Confirm Booking / முன்பதிவை உறுதி செய்</Text>}
               </TouchableOpacity>
             </View>
           )}
@@ -466,11 +580,19 @@ const styles = StyleSheet.create({
     marginRight: 5,
   },
 
-  // Date Cards
+  // Date Cards & Timings Grid
   dateCard: { flex: 1, borderWidth: 1, borderColor: '#E0E0E0', borderRadius: 12, padding: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#FAFAFA' },
   dateLabel: { fontSize: 12, fontWeight: 'bold', color: '#555' },
   dateLabelTamil: { fontSize: 10, color: '#888' },
   dateValue: { fontSize: 16, fontWeight: 'bold', color: '#1C3E55', marginTop: 4 },
+  
+  timingsContainer: { borderWidth: 1, borderColor: '#E0E0E0', borderRadius: 12, padding: 16, backgroundColor: '#FAFAFA' },
+  timingsGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'flex-start' },
+  timingCard: { width: '33%', flexDirection: 'row', alignItems: 'center', marginBottom: 16 },
+  timingBox: { width: 18, height: 18, borderRadius: 4, marginRight: 8 },
+  timingBoxSelected: { backgroundColor: '#359E0E' },
+  timingBoxUnselected: { backgroundColor: '#E0E0E0' },
+  timingText: { fontSize: 12, fontWeight: '700', color: '#333' },
 
   // Video Card
   videoCard: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#F0F8FF', padding: 18, borderRadius: 12, borderWidth: 1, borderColor: '#D0E1E8' },
@@ -478,8 +600,8 @@ const styles = StyleSheet.create({
   videoSubtitle: { fontSize: 12, color: '#666', marginTop: 4 },
 
   // Submit Button
-  submitButton: { backgroundColor: '#359E0E', paddingVertical: 18, borderRadius: 12, alignItems: 'center', elevation: 4, marginTop: 10 },
-  submitButtonText: { color: '#fff', fontSize: 15, fontWeight: 'bold', letterSpacing: 0.8 },
+  submitButton: { backgroundColor: '#359E0E', paddingVertical: 18, paddingHorizontal: 10, borderRadius: 12, alignItems: 'center', elevation: 4, marginTop: 10 },
+  submitButtonText: { color: '#fff', fontSize: 15, fontWeight: 'bold', letterSpacing: 0.8, textAlign: 'center' },
 
   // Navbar
   navbar: { flexDirection: 'row', justifyContent: 'space-around', alignItems: 'center', backgroundColor: '#fff', borderTopWidth: 8, borderTopColor: '#eee', height: 85, position: 'absolute', bottom: 0, left: 0, right: 0, elevation: 20, paddingBottom: 5 },

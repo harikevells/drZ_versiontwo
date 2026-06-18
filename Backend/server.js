@@ -24,6 +24,10 @@ connectDB().then(async () => {
 const app = require('./app');
 const PORT = process.env.PORT || 5000;
 
+// Initialize dynamic email scheduling jobs
+const { initCronJobs } = require('./cron/scheduler');
+initCronJobs();
+
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
 });

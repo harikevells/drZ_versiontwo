@@ -3,11 +3,13 @@ const router = express.Router();
 const { getDoctors, createDoctor, updateDoctor, deleteDoctor } = require('../controllers/doctorController');
 const authenticateToken = require('../middleware/authMiddleware');
 
+// Public route to get doctors
+router.get('/', getDoctors);
+
+// Protect the following routes
 router.use(authenticateToken);
 
-router.route('/')
-    .get(getDoctors)
-    .post(createDoctor);
+router.post('/', createDoctor);
 
 router.route('/:id')
     .put(updateDoctor)
