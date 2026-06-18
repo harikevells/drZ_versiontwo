@@ -92,9 +92,9 @@ const DoctorManagement = () => {
 
   const handleEdit = (doctor) => {
     setFormData({
-      doctorName: doctor.doctorName,
+      doctorName: removeTamil(doctor.doctorName),
       gender: doctor.gender,
-      department: doctor.department,
+      department: removeTamil(doctor.department),
       experience: doctor.experience,
       email: doctor.email,
       mobile: doctor.mobile,
