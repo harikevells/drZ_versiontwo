@@ -32,7 +32,7 @@ const Layout = () => {
           </NavLink>
           <NavLink to="/patient" className={({isActive}) => isActive ? "nav-item active" : "nav-item"}>
             <FaUserInjured className="nav-icon" />
-            <span>Patient</span>
+            <span>Appointment</span>
           </NavLink>
         </nav>
       </aside>

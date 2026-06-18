@@ -28,6 +28,7 @@ const getSchedules = async (req, res) => {
     try {
         const filter = {};
         if (req.query.doctorId) filter.doctorId = req.query.doctorId;
+        if (req.query.doctorName) filter.doctorName = req.query.doctorName;
         if (req.query.date) filter.date = req.query.date;
 
         const schedules = await Schedule.find(filter);
