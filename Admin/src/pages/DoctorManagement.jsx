@@ -37,6 +37,11 @@ const DoctorManagement = () => {
     }
   };
 
+  const removeTamil = (text) => {
+    if (!text) return text;
+    return text.split(',').map(item => item.split('/')[0].trim()).join(', ');
+  };
+
   useEffect(() => {
     fetchDoctors();
   }, []);
@@ -221,13 +226,14 @@ const DoctorManagement = () => {
           </thead>
           <tbody>
             {doctors.map(doctor => {
-              const departments = doctor.department ? doctor.department.split(', ') : [];
+              const cleanDept = doctor.department ? removeTamil(doctor.department) : '';
+              const departments = cleanDept ? cleanDept.split(', ') : [];
               const visibleDepartments = departments.slice(0, 3);
               const hiddenDepartments = departments.slice(3);
               
               return (
               <tr key={doctor.id}>
-                <td>{doctor.doctorName}</td>
+                <td>{removeTamil(doctor.doctorName)}</td>
                 <td>
                   <div className="dept-cell">
                     {visibleDepartments.join(', ')}

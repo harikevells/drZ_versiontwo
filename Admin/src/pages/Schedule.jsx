@@ -39,6 +39,11 @@ const Schedule = () => {
     }
   };
 
+  const removeTamil = (text) => {
+    if (!text) return text;
+    return text.split(',').map(item => item.split('/')[0].trim()).join(', ');
+  };
+
   useEffect(() => {
     fetchSchedulesAndDoctors();
   }, []);
@@ -250,14 +255,14 @@ const Schedule = () => {
               <select name="doctorName" value={formData.doctorName} onChange={handleInputChange} required>
                 <option value="" disabled>Select Doctor</option>
                 {doctorsList.map(doc => (
-                  <option key={doc.id} value={doc.doctorName}>{doc.doctorName}</option>
+                  <option key={doc.id} value={doc.doctorName}>{removeTamil(doc.doctorName)}</option>
                 ))}
               </select>
             </div>
             
             <div className="form-group">
               <label>Department</label>
-              <input type="text" name="department" placeholder="Department" value={formData.department} readOnly className="readonly-input" required />
+              <input type="text" name="department" placeholder="Department" value={removeTamil(formData.department)} readOnly className="readonly-input" required />
             </div>
             
             <div className="form-group">
@@ -327,13 +332,14 @@ const Schedule = () => {
           </thead>
           <tbody>
             {schedules.map(schedule => {
-              const departments = schedule.department ? schedule.department.split(', ') : [];
+              const cleanDept = schedule.department ? removeTamil(schedule.department) : '';
+              const departments = cleanDept ? cleanDept.split(', ') : [];
               const visibleDepartments = departments.slice(0, 3);
               const hiddenDepartments = departments.slice(3);
               
               return (
               <tr key={schedule.id}>
-                <td>{schedule.doctorName}</td>
+                <td>{removeTamil(schedule.doctorName)}</td>
                 <td>
                   <div className="dept-cell" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
                     {visibleDepartments.join(', ')}

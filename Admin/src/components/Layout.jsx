@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
-import { FaUserMd, FaCalendarCheck, FaBell, FaSignOutAlt } from 'react-icons/fa';
+import { FaUserMd, FaCalendarCheck, FaBell, FaSignOutAlt, FaUserInjured } from 'react-icons/fa';
 import './Layout.css';
 import logoImage from '../assets/logo.png';
 
@@ -29,6 +29,10 @@ const Layout = () => {
           <NavLink to="/schedule" className={({isActive}) => isActive ? "nav-item active" : "nav-item"}>
             <FaCalendarCheck className="nav-icon" />
             <span>Schedule</span>
+          </NavLink>
+          <NavLink to="/patient" className={({isActive}) => isActive ? "nav-item active" : "nav-item"}>
+            <FaUserInjured className="nav-icon" />
+            <span>Patient</span>
           </NavLink>
         </nav>
       </aside>

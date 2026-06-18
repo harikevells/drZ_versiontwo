@@ -108,4 +108,14 @@ const getBookedTimings = async (req, res) => {
     }
 };
 
-module.exports = { sendBookingEmail, getBookedTimings };
+const getAllAppointments = async (req, res) => {
+    try {
+        const appointments = await Appointment.find().sort({ createdAt: -1 }); // Sorting by newest first if createdAt exists, else default sort
+        res.status(200).json(appointments);
+    } catch (error) {
+        console.error("Error fetching all appointments:", error);
+        res.status(500).json({ message: "Internal server error" });
+    }
+};
+
+module.exports = { sendBookingEmail, getBookedTimings, getAllAppointments };

@@ -4,6 +4,7 @@ import Login from './pages/Login';
 import Layout from './components/Layout';
 import DoctorManagement from './pages/DoctorManagement';
 import Schedule from './pages/Schedule';
+import PatientAppointments from './pages/PatientAppointments';
 
 const ProtectedRoute = ({ element }) => {
   const token = localStorage.getItem('token');
@@ -25,6 +26,7 @@ function App() {
           <Route index element={<Navigate to="/dashboard" replace />} />
           <Route path="dashboard" element={<DoctorManagement />} />
           <Route path="schedule" element={<Schedule />} />
+          <Route path="patient" element={<PatientAppointments />} />
         </Route>
       </Routes>
     </Router>
