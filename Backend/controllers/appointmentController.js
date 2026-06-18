@@ -1,4 +1,5 @@
 const Appointment = require('../models/Appointment');
+const { createNotification } = require('./notificationController');
 
 const getDoctorDashboard = async (req, res) => {
     try {
@@ -46,6 +47,15 @@ const updateAppointmentStatus = async (req, res) => {
         const appointment = await Appointment.findByIdAndUpdate(id, updateData, { new: true });
         if (!appointment) return res.status(404).json({ error: 'Appointment not found' });
         
+        // Notify Admin
+        await createNotification(
+            'admin',
+            'admin',
+            `Appointment ${status}`,
+            `Appointment for Patient ${appointment.patient_name} was marked as ${status} by Dr. ${appointment.doctor_name}.`,
+            'appointment_status'
+        );
+
         res.json(appointment);
     } catch (err) {
         res.status(500).json({ error: err.message });

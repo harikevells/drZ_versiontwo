@@ -1,5 +1,6 @@
 const nodemailer = require('nodemailer');
 const Appointment = require('../models/Appointment');
+const { createNotification } = require('./notificationController');
 
 const sendBookingEmail = async (req, res) => {
     try {
@@ -48,6 +49,15 @@ const sendBookingEmail = async (req, res) => {
             video_call
         });
         await newAppointment.save();
+
+        // Notify Admin
+        await createNotification(
+            'admin',
+            'admin',
+            'New Appointment Booked',
+            `A new appointment has been booked by Patient ${patient_name} with Dr. ${doctor_name} on ${appointment_date} at ${appointment_time}.`,
+            'appointment'
+        );
 
         // Configure transporter
         const transporter = nodemailer.createTransport({

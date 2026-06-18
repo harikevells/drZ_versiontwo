@@ -46,7 +46,7 @@ const Layout = () => {
             <p>Super admin For DrZ...</p>
           </div>
           <div className="topbar-actions">
-            <button className="icon-btn">
+            <button className="icon-btn" onClick={() => navigate('/notifications')}>
               <FaBell />
             </button>
             <button className="icon-btn" onClick={() => setIsLogoutModalOpen(true)}>

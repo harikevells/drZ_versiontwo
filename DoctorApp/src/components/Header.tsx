@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, Image, TouchableOpacity, Dimensions } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useIsFocused } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import axios from 'axios';
 
 const { width } = Dimensions.get('window');
 
@@ -13,9 +14,11 @@ interface HeaderProps {
 
 export default function Header({ title, isNotification = false }: HeaderProps) {
   const navigation = useNavigation<any>();
+  const isFocused = useIsFocused();
   const [doctorName, setDoctorName] = useState('Doctor');
   const [greeting, setGreeting] = useState('');
   const [currentDate, setCurrentDate] = useState('');
+  const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => {
     // Get Doctor Name
@@ -24,7 +27,10 @@ export default function Header({ title, isNotification = false }: HeaderProps) {
         const data = await AsyncStorage.getItem('userData');
         if (data) {
           const parsed = JSON.parse(data);
-          if (parsed.doctorName) setDoctorName(parsed.doctorName);
+          if (parsed.doctorName) {
+            setDoctorName(parsed.doctorName);
+            fetchUnreadCount(parsed.doctorName);
+          }
         }
       } catch (e) {
         console.error(e);
@@ -51,6 +57,22 @@ export default function Header({ title, isNotification = false }: HeaderProps) {
     setCurrentDate(`${dayName}, ${monthName} ${dayNum}, ${year}`);
   }, []);
 
+  useEffect(() => {
+    if (isFocused && doctorName !== 'Doctor') {
+      fetchUnreadCount(doctorName);
+    }
+  }, [isFocused]);
+
+  const fetchUnreadCount = async (name: string) => {
+    try {
+      const response = await axios.get(`http://192.168.0.116:5000/api/notifications/doctor/${name}`);
+      const count = response.data.filter((n: any) => !n.isRead).length;
+      setUnreadCount(count);
+    } catch (error) {
+      console.log('Error fetching notification count:', error);
+    }
+  };
+
   return (
     <View style={styles.headerContainer}>
       <View style={styles.headerContent}>
@@ -70,8 +92,13 @@ export default function Header({ title, isNotification = false }: HeaderProps) {
             )}
           </View>
         </View>
-        <TouchableOpacity onPress={() => navigation.navigate('Notifications')}>
+        <TouchableOpacity style={styles.notificationIconContainer} onPress={() => navigation.navigate('Notifications')}>
           <Ionicons name="notifications-outline" size={32} color="#FFF" />
+          {unreadCount > 0 && (
+            <View style={styles.badge}>
+              <Text style={styles.badgeText}>{unreadCount > 99 ? '99+' : unreadCount}</Text>
+            </View>
+          )}
         </TouchableOpacity>
       </View>
     </View>
@@ -123,5 +150,28 @@ const styles = StyleSheet.create({
     color: '#A0B3C1',
     fontSize: 13,
     marginTop: 4,
+  },
+  notificationIconContainer: {
+    position: 'relative',
+    padding: 5,
+  },
+  badge: {
+    position: 'absolute',
+    top: 0,
+    right: 2,
+    backgroundColor: '#E74C3C',
+    borderRadius: 10,
+    minWidth: 20,
+    height: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1.5,
+    borderColor: '#052A3F',
+    paddingHorizontal: 4,
+  },
+  badgeText: {
+    color: '#FFF',
+    fontSize: 10,
+    fontWeight: 'bold',
   },
 });

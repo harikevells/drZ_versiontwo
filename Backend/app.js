@@ -6,6 +6,7 @@ const doctorRoutes = require('./routes/doctorRoutes');
 const scheduleRoutes = require('./routes/scheduleRoutes');
 const emailRoutes = require('./routes/emailRoutes');
 const appointmentRoutes = require('./routes/appointmentRoutes');
+const notificationRoutes = require('./routes/notificationRoutes');
 
 const app = express();
 
@@ -17,5 +18,6 @@ app.use('/api/doctors', doctorRoutes);
 app.use('/api/schedules', scheduleRoutes);
 app.use('/api/emails', emailRoutes);
 app.use('/api/appointments', appointmentRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 module.exports = app;

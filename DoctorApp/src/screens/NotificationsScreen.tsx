@@ -1,41 +1,55 @@
-import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
 import Header from '../components/Header';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { useNavigation } from '@react-navigation/native';
+import axios from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const NOTIFICATIONS = [
-  {
-    id: '1',
-    title: 'New Appointment Booked',
-    description: 'A new appointment has been booked with Arjun Suresh on 3/25/2026, 1:12 PM. Please review your schedule and prepare for the consultation.',
-    date: '25/03/2026',
-    time: '14:24',
-    relativeTime: '10 Min Ago',
-    isNew: true,
-  },
-  {
-    id: '2',
-    title: 'Appointment Reminder - Tomorrow',
-    description: 'Reminder: You have an appointment with Patient Arjun Suresh scheduled tomorrow at 1:30 PM. Please ensure your availability.',
-    date: '19/02/2026',
-    time: '14:24',
-    relativeTime: '15 Min Ago',
-    isNew: false,
-  },
-  {
-    id: '3',
-    title: 'Appointment Reminder - [2 Hours Before]',
-    description: 'Your appointment with Patient Suresh is scheduled to begin in 2 hours at 12:30 PM. Please be ready for the consultation.',
-    date: '19/02/2026',
-    time: '14:24',
-    relativeTime: '2 Min Ago',
-    isNew: false,
-  },
-];
+const API_URL = 'http://192.168.0.116:5000/api/notifications';
 
 export default function NotificationsScreen() {
   const navigation = useNavigation();
+  const [notifications, setNotifications] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchNotifications();
+  }, []);
+
+  const fetchNotifications = async () => {
+    try {
+      setLoading(true);
+      const data = await AsyncStorage.getItem('userData');
+      if (data) {
+        const parsed = JSON.parse(data);
+        if (parsed.doctorName) {
+          const response = await axios.get(`${API_URL}/doctor/${parsed.doctorName}`);
+          setNotifications(response.data);
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching notifications:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleMarkAsRead = async (id: string) => {
+    try {
+      await axios.put(`${API_URL}/${id}/read`);
+      setNotifications((prev) => 
+        prev.map((notif: any) => (notif._id === id || notif.id === id ? { ...notif, isRead: true } : notif))
+      );
+    } catch (error) {
+      console.error('Error marking as read:', error);
+    }
+  };
+
+  const formatDate = (dateString: string) => {
+    const d = new Date(dateString);
+    return d.toLocaleDateString() + ' ' + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  };
 
   return (
     <View style={styles.container}>
@@ -46,23 +60,35 @@ export default function NotificationsScreen() {
         <Text style={styles.headerTitle}>Notifications</Text>
       </View>
       
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
-        {NOTIFICATIONS.map((item) => (
-          <View key={item.id} style={styles.notificationCard}>
-            <View style={styles.iconContainer}>
-              <Ionicons name="notifications-circle" size={40} color={item.isNew ? "#0084FF" : "#ccc"} />
-            </View>
-            <View style={styles.contentContainer}>
-              <Text style={[styles.title, item.isNew && styles.newTitle]}>{item.title}</Text>
-              <Text style={styles.description}>{item.description}</Text>
-              <View style={styles.footer}>
-                <Text style={styles.footerText}>{item.date} - {item.time}</Text>
-                <Text style={styles.footerText}>{item.relativeTime}</Text>
-              </View>
-            </View>
-          </View>
-        ))}
-      </ScrollView>
+      {loading ? (
+        <ActivityIndicator size="large" color="#0084FF" style={{ marginTop: 50 }} />
+      ) : (
+        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
+          {notifications.length === 0 ? (
+            <Text style={{ textAlign: 'center', color: '#999', marginTop: 50 }}>No notifications found.</Text>
+          ) : (
+            notifications.map((item: any) => (
+              <TouchableOpacity 
+                key={item.id || item._id} 
+                style={[styles.notificationCard, !item.isRead && { backgroundColor: '#f0f7ff', borderColor: '#0084FF', borderWidth: 1 }]}
+                onPress={() => { if (!item.isRead) handleMarkAsRead(item.id || item._id); }}
+              >
+                <View style={styles.iconContainer}>
+                  <Ionicons name="notifications-circle" size={40} color={!item.isRead ? "#0084FF" : "#ccc"} />
+                </View>
+                <View style={styles.contentContainer}>
+                  <Text style={[styles.title, !item.isRead && styles.newTitle]}>{item.title}</Text>
+                  <Text style={styles.description}>{item.message}</Text>
+                  <View style={styles.footer}>
+                    <Text style={styles.footerText}>{formatDate(item.createdAt)}</Text>
+                  </View>
+                </View>
+                {!item.isRead && <View style={styles.unreadDot} />}
+              </TouchableOpacity>
+            ))
+          )}
+        </ScrollView>
+      )}
     </View>
   );
 }
@@ -133,4 +159,12 @@ const styles = StyleSheet.create({
     fontSize: 10,
     color: '#A0A0A0',
   },
+  unreadDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: '#0084FF',
+    alignSelf: 'center',
+    marginLeft: 10,
+  }
 });
