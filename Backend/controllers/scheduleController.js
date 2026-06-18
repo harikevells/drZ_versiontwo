@@ -1,5 +1,29 @@
 const Schedule = require('../models/Schedule');
 
+const departmentTranslations = {
+    "General": "பொது",
+    "Cardiology": "கார்டியாலஜி",
+    "Pediatrics": "குழந்தைகள் மருத்துவம்",
+    "Neurology": "நரம்பியல்",
+    "Dermatology": "தோல் மருத்துவம்",
+    "Orthopedics": "எலும்பியல்",
+    "Gynecology": "மகப்பேறு மருத்துவம்",
+    "Dental": "பல் மருத்துவம்",
+    "ENT": "காது மூக்கு தொண்டை",
+    "Ophthalmology": "கண் மருத்துவம்",
+    "Psychiatry": "மனநல மருத்துவம்",
+    "Others": "மற்றவை"
+};
+
+const translateDepartment = (deptString) => {
+    if (!deptString) return deptString;
+    return deptString.split(',').map(d => {
+        const trimmed = d.trim();
+        if (trimmed.includes('/')) return trimmed; // Already translated
+        return departmentTranslations[trimmed] ? `${trimmed} / ${departmentTranslations[trimmed]}` : trimmed;
+    }).join(', ');
+};
+
 const getSchedules = async (req, res) => {
     try {
         const filter = {};
@@ -15,7 +39,11 @@ const getSchedules = async (req, res) => {
 
 const createSchedule = async (req, res) => {
     try {
-        const schedule = await Schedule.create(req.body);
+        const scheduleData = { ...req.body };
+        if (scheduleData.department) {
+            scheduleData.department = translateDepartment(scheduleData.department);
+        }
+        const schedule = await Schedule.create(scheduleData);
         res.status(201).json(schedule);
     } catch (err) {
         res.status(500).json({ error: err.message });
@@ -24,7 +52,11 @@ const createSchedule = async (req, res) => {
 
 const updateSchedule = async (req, res) => {
     try {
-        const schedule = await Schedule.findByIdAndUpdate(req.params.id, req.body, { new: true });
+        const scheduleData = { ...req.body };
+        if (scheduleData.department) {
+            scheduleData.department = translateDepartment(scheduleData.department);
+        }
+        const schedule = await Schedule.findByIdAndUpdate(req.params.id, scheduleData, { new: true });
         if (!schedule) return res.status(404).json({ error: 'Schedule not found' });
         res.json(schedule);
     } catch (err) {

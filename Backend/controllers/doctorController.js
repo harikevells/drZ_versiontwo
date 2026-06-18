@@ -1,5 +1,29 @@
 const Doctor = require('../models/Doctor');
 
+const departmentTranslations = {
+    "General": "பொது",
+    "Cardiology": "கார்டியாலஜி",
+    "Pediatrics": "குழந்தைகள் மருத்துவம்",
+    "Neurology": "நரம்பியல்",
+    "Dermatology": "தோல் மருத்துவம்",
+    "Orthopedics": "எலும்பியல்",
+    "Gynecology": "மகப்பேறு மருத்துவம்",
+    "Dental": "பல் மருத்துவம்",
+    "ENT": "காது மூக்கு தொண்டை",
+    "Ophthalmology": "கண் மருத்துவம்",
+    "Psychiatry": "மனநல மருத்துவம்",
+    "Others": "மற்றவை"
+};
+
+const translateDepartment = (deptString) => {
+    if (!deptString) return deptString;
+    return deptString.split(',').map(d => {
+        const trimmed = d.trim();
+        if (trimmed.includes('/')) return trimmed; // Already translated
+        return departmentTranslations[trimmed] ? `${trimmed} / ${departmentTranslations[trimmed]}` : trimmed;
+    }).join(', ');
+};
+
 const getDoctors = async (req, res) => {
     try {
         const doctors = await Doctor.find({});
@@ -11,7 +35,11 @@ const getDoctors = async (req, res) => {
 
 const createDoctor = async (req, res) => {
     try {
-        const doctor = await Doctor.create(req.body);
+        const doctorData = { ...req.body };
+        if (doctorData.department) {
+            doctorData.department = translateDepartment(doctorData.department);
+        }
+        const doctor = await Doctor.create(doctorData);
         res.status(201).json(doctor);
     } catch (err) {
         res.status(500).json({ error: err.message });
@@ -25,7 +53,7 @@ const updateDoctor = async (req, res) => {
 
         doctor.doctorName = req.body.doctorName;
         doctor.gender = req.body.gender;
-        doctor.department = req.body.department;
+        doctor.department = req.body.department ? translateDepartment(req.body.department) : doctor.department;
         doctor.experience = req.body.experience;
         doctor.email = req.body.email;
         doctor.mobile = req.body.mobile;
