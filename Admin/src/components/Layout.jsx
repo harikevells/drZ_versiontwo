@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
-import { Outlet, NavLink, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom';
+import axios from 'axios';
 import { FaUserMd, FaCalendarCheck, FaBell, FaSignOutAlt, FaUserInjured } from 'react-icons/fa';
 import './Layout.css';
 import logoImage from '../assets/logo.png';
@@ -11,6 +12,23 @@ const Layout = () => {
   const handleLogout = () => {
     localStorage.removeItem('token');
     navigate('/login');
+  };
+
+  const [unreadCount, setUnreadCount] = useState(0);
+  const location = useLocation();
+
+  useEffect(() => {
+    fetchUnreadCount();
+  }, [location.pathname]); // Refresh count when navigation changes
+
+  const fetchUnreadCount = async () => {
+    try {
+      const res = await axios.get('http://localhost:5000/api/notifications/admin/admin');
+      const unread = res.data.filter(n => !n.isRead).length;
+      setUnreadCount(unread);
+    } catch (error) {
+      console.error("Error fetching notification count:", error);
+    }
   };
 
   return (
@@ -46,8 +64,17 @@ const Layout = () => {
             <p>Super admin For DrZ...</p>
           </div>
           <div className="topbar-actions">
-            <button className="icon-btn" onClick={() => navigate('/notifications')}>
+            <button className="icon-btn" style={{ position: 'relative' }} onClick={() => navigate('/notifications')}>
               <FaBell />
+              {unreadCount > 0 && (
+                <span style={{
+                  position: 'absolute', top: '-5px', right: '-5px',
+                  backgroundColor: '#e74c3c', color: '#fff', fontSize: '10px',
+                  borderRadius: '50%', padding: '2px 6px', fontWeight: 'bold'
+                }}>
+                  {unreadCount > 9 ? '9+' : unreadCount}
+                </span>
+              )}
             </button>
             <button className="icon-btn" onClick={() => setIsLogoutModalOpen(true)}>
               <FaSignOutAlt />

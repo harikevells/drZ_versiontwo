@@ -1,12 +1,13 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, FlatList, ActivityIndicator } from 'react-native';
+import { useIsFocused } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import axios from 'axios';
 import { AuthContext } from '../context/AuthContext';
 
 // Use same IP configuration as other screens
-const IP_ADDRESS = '192.168.0.116'; 
+const IP_ADDRESS = 'localhost'; 
 const PORT = '5000';
 const BASE_URL = `http://${IP_ADDRESS}:${PORT}`;
 
@@ -15,9 +16,25 @@ const NotificationPatient = ({ navigation }) => {
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  const isFocused = useIsFocused();
+
   useEffect(() => {
-    fetchNotifications();
-  }, []);
+    if (isFocused) {
+      fetchNotifications();
+    }
+  }, [isFocused]);
+
+  const handleMarkAllAsRead = async () => {
+    if (!user || (!user.contactNumber && !user.mobile)) return;
+    try {
+      const mobile = user.contactNumber || user.mobile;
+      await axios.put(`${BASE_URL}/api/notifications/readAll/patient/${mobile}`);
+      // Update local state visually
+      setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
+    } catch (error) {
+      console.log("Error marking as read", error);
+    }
+  };
 
   const fetchNotifications = async () => {
     if (!user || (!user.contactNumber && !user.mobile)) {
@@ -27,67 +44,43 @@ const NotificationPatient = ({ navigation }) => {
     
     try {
       const mobile = user.contactNumber || user.mobile;
-      const response = await axios.get(`${BASE_URL}/api/emails/patient-appointments/${mobile}`);
+      const response = await axios.get(`${BASE_URL}/api/notifications/patient/${mobile}`);
       
-      const appointments = response.data || [];
+      const realNotifications = response.data || [];
       
-      // Transform appointments into notifications
-      const generatedNotifications = appointments.map(app => {
-        let title = '';
-        let message = '';
+      const formattedNotifications = realNotifications.map(n => {
         let iconName = 'bell-outline';
         let iconColor = '#1C3E55';
-
-        switch (app.status) {
-          case 'Pending':
-            title = 'Appointment Requested';
-            message = `Your request for Dr. ${app.doctor_name} is currently pending approval.`;
-            iconName = 'clock-outline';
-            iconColor = '#F39C12'; // Orange
-            break;
-          case 'Approved':
-            title = 'Appointment Approved';
-            message = `Your appointment with Dr. ${app.doctor_name} is confirmed for ${app.appointment_date} at ${app.appointment_time}.`;
-            iconName = 'check-circle-outline';
-            iconColor = '#27AE60'; // Green
-            break;
-          case 'Rescheduled':
-            title = 'Appointment Rescheduled';
-            message = `Your appointment with Dr. ${app.doctor_name} has been rescheduled to ${app.appointment_date} at ${app.appointment_time}.`;
-            iconName = 'calendar-clock-outline';
-            iconColor = '#3498DB'; // Blue
-            break;
-          case 'Completed':
-            title = 'Appointment Completed';
-            message = `Your appointment with Dr. ${app.doctor_name} has been completed. Thank you!`;
-            iconName = 'check-all';
-            iconColor = '#8E44AD'; // Purple
-            break;
-          case 'Cancelled':
-            title = 'Appointment Cancelled';
-            message = `Your appointment with Dr. ${app.doctor_name} has been cancelled.`;
-            iconName = 'close-circle-outline';
-            iconColor = '#E74C3C'; // Red
-            break;
-          default:
-            title = 'Appointment Update';
-            message = `Your appointment with Dr. ${app.doctor_name} status: ${app.status}.`;
-            iconName = 'information-outline';
-            iconColor = '#1C3E55';
+        
+        if (n.title.includes('Submitted') || n.title.includes('Booked')) {
+          iconColor = '#3498DB';
+          iconName = 'calendar-check-outline';
+        } else if (n.title.includes('Approved')) {
+          iconColor = '#27AE60';
+          iconName = 'check-circle-outline';
+        } else if (n.title.includes('Cancelled') || n.title.includes('Rejected')) {
+          iconColor = '#E74C3C';
+          iconName = 'close-circle-outline';
+        } else if (n.title.includes('Rescheduled')) {
+          iconColor = '#F39C12';
+          iconName = 'calendar-clock-outline';
+        } else if (n.title.includes('Completed')) {
+          iconColor = '#8E44AD';
+          iconName = 'check-all';
         }
 
         return {
-          id: app._id || Math.random().toString(),
-          title,
-          message,
+          id: n.id || Math.random().toString(),
+          title: n.title,
+          message: n.message,
           iconName,
           iconColor,
-          status: app.status,
-          date: new Date(app.updatedAt || app.createdAt).toLocaleDateString()
+          isRead: n.isRead,
+          date: new Date(n.createdAt).toLocaleDateString()
         };
       });
 
-      setNotifications(generatedNotifications);
+      setNotifications(formattedNotifications);
     } catch (error) {
       console.error("Error fetching notifications:", error);
     } finally {
@@ -96,12 +89,15 @@ const NotificationPatient = ({ navigation }) => {
   };
 
   const renderItem = ({ item }) => (
-    <View style={styles.notificationCard}>
+    <View style={[styles.notificationCard, !item.isRead && styles.unreadCard]}>
       <View style={[styles.iconContainer, { backgroundColor: item.iconColor + '20' }]}>
         <Icon name={item.iconName} size={30} color={item.iconColor} />
       </View>
       <View style={styles.textContainer}>
-        <Text style={styles.cardTitle}>{item.title}</Text>
+        <View style={styles.titleRow}>
+          <Text style={[styles.cardTitle, !item.isRead && styles.unreadText]}>{item.title}</Text>
+          {!item.isRead && <View style={styles.unreadDot} />}
+        </View>
         <Text style={styles.cardMessage}>{item.message}</Text>
         <Text style={styles.cardDate}>{item.date}</Text>
       </View>
@@ -116,7 +112,9 @@ const NotificationPatient = ({ navigation }) => {
           <Icon name="arrow-left" size={28} color="#1C3E55" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Notifications</Text>
-        <View style={{ width: 28 }} />
+        <TouchableOpacity onPress={handleMarkAllAsRead} style={{ padding: 4 }}>
+          <Icon name="check-all" size={26} color="#1C3E55" />
+        </TouchableOpacity>
       </View>
 
       {/* Content */}
@@ -183,7 +181,11 @@ const styles = StyleSheet.create({
     marginRight: 16
   },
   textContainer: { flex: 1 },
-  cardTitle: { fontSize: 16, fontWeight: 'bold', color: '#333', marginBottom: 4 },
+  titleRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
+  cardTitle: { fontSize: 18, fontWeight: 'bold', color: '#333', marginBottom: 4, flex: 1 },
+  unreadText: { color: '#000', fontWeight: '900' },
+  unreadCard: { backgroundColor: '#F4F9FC', borderColor: '#D0E1E8', borderWidth: 1 },
+  unreadDot: { width: 10, height: 10, borderRadius: 5, backgroundColor: '#E74C3C', marginTop: 4, marginLeft: 8 },
   cardMessage: { fontSize: 14, color: '#555', lineHeight: 20 },
   cardDate: { fontSize: 12, color: '#999', marginTop: 8, alignSelf: 'flex-end' },
   emptyContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },

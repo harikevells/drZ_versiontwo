@@ -9,7 +9,7 @@ import axios from 'axios';
 import { AuthContext } from '../context/AuthContext';
 
 // Important: Adjust IP address based on your setup (e.g., '10.0.2.2' for Android emulator, your WiFi IP for real device)
-const IP_ADDRESS = '192.168.0.116'; // Changed to 10.0.2.2 for emulator safety as default
+const IP_ADDRESS = 'localhost'; // Changed to localhost to work with adb reverse over USB
 const PORT = '5000';
 const BASE_URL = `http://${IP_ADDRESS}:${PORT}`;
 
@@ -23,6 +23,9 @@ const LoginScreen = ({ navigation }) => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
   const [loading, setLoading] = useState(false);
+  
+  const [securePassword, setSecurePassword] = useState(true);
+  const [secureConfirmPassword, setSecureConfirmPassword] = useState(true);
 
   // LOAD SAVED CREDENTIALS
   useEffect(() => {
@@ -139,28 +142,38 @@ const LoginScreen = ({ navigation }) => {
           <Text style={styles.label}>
             Password / கடவுச்சொல் <Text style={styles.star}>*</Text>
           </Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Enter Password"
-            placeholderTextColor="#888"
-            value={password}
-            onChangeText={setPassword}
-            secureTextEntry
-          />
+          <View style={styles.passwordContainer}>
+            <TextInput
+              style={styles.passwordInput}
+              placeholder="Enter Password"
+              placeholderTextColor="#888"
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry={securePassword}
+            />
+            <TouchableOpacity onPress={() => setSecurePassword(!securePassword)} style={styles.eyeIcon}>
+              <Icon name={securePassword ? "eye-off-outline" : "eye-outline"} size={24} color="#888" />
+            </TouchableOpacity>
+          </View>
 
           {!isLogin && (
             <>
               <Text style={styles.label}>
                 Confirm Password / உறுதிப்படுத்துக <Text style={styles.star}>*</Text>
               </Text>
-              <TextInput
-                style={styles.input}
-                placeholder="Confirm Password"
-                placeholderTextColor="#888"
-                value={confirmPassword}
-                onChangeText={setConfirmPassword}
-                secureTextEntry
-              />
+              <View style={styles.passwordContainer}>
+                <TextInput
+                  style={styles.passwordInput}
+                  placeholder="Confirm Password"
+                  placeholderTextColor="#888"
+                  value={confirmPassword}
+                  onChangeText={setConfirmPassword}
+                  secureTextEntry={secureConfirmPassword}
+                />
+                <TouchableOpacity onPress={() => setSecureConfirmPassword(!secureConfirmPassword)} style={styles.eyeIcon}>
+                  <Icon name={secureConfirmPassword ? "eye-off-outline" : "eye-outline"} size={24} color="#888" />
+                </TouchableOpacity>
+              </View>
             </>
           )}
 
@@ -224,6 +237,9 @@ const styles = StyleSheet.create({
   label: { fontSize: 14, fontWeight: 'bold', color: '#444', marginBottom: 8, marginTop: 15 },
   star: { color: 'red' },
   input: { borderWidth: 1.5, borderColor: '#777', borderRadius: 8, padding: 14, fontSize: 16, backgroundColor: '#fff', color: '#000' },
+  passwordContainer: { flexDirection: 'row', alignItems: 'center', borderWidth: 1.5, borderColor: '#777', borderRadius: 8, backgroundColor: '#fff' },
+  passwordInput: { flex: 1, padding: 14, fontSize: 16, color: '#000' },
+  eyeIcon: { padding: 10, paddingRight: 14 },
   checkboxContainer: { flexDirection: 'row', alignItems: 'center', marginTop: 15, marginBottom: 10 },
   checkboxText: { marginLeft: 8, fontSize: 13, fontWeight: 'bold', color: '#444' },
   button: { backgroundColor: '#1C4E63', paddingVertical: 15, borderRadius: 8, alignItems: 'center', elevation: 3, marginTop: 25, paddingHorizontal: 20 },

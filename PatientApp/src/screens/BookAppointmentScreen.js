@@ -15,7 +15,7 @@ import { LanguageContext } from '../context/LanguageContext';
 // EmailJS credentials removed as we now use our custom backend endpoint
 
 // Important: If using Android Emulator, use '10.0.2.2'. If using Wired USB Debugging, use 'localhost'. If using Wi-Fi, use your local IP address.
-const IP_ADDRESS = '192.168.0.116'; 
+const IP_ADDRESS = 'localhost'; 
 const PORT = '5000'; // Make sure your backend server is running on port 5000!
 const BASE_URL = `http://${IP_ADDRESS}:${PORT}`;
 
@@ -78,13 +78,22 @@ const BookAppointmentScreen = ({ navigation }) => {
 
   useEffect(() => {
     fetchSchedulesForDate(date);
-  }, [date, allDoctors]);
+  }, [date]);
 
   useEffect(() => {
     if (selectedDoctor) {
-      const schedule = dateSchedules.find(s => s.doctorId === selectedDoctor._id || s.doctorId === selectedDoctor.id);
-      if (schedule && schedule.time) {
-        setAvailableTimings(schedule.time);
+      const schedulesForDoctor = dateSchedules.filter(s => 
+        s.doctorId === selectedDoctor._id || 
+        s.doctorId === selectedDoctor.id || 
+        s.doctorName === selectedDoctor.name
+      );
+      
+      if (schedulesForDoctor.length > 0) {
+        // Merge all timings from all schedules for this doctor on this date
+        const allTimings = schedulesForDoctor.flatMap(s => s.time || []);
+        // Remove duplicates just in case
+        const uniqueTimings = [...new Set(allTimings)];
+        setAvailableTimings(uniqueTimings);
       } else {
         setAvailableTimings([]);
       }
@@ -95,7 +104,6 @@ const BookAppointmentScreen = ({ navigation }) => {
   }, [selectedDoctor, dateSchedules]);
 
   const fetchSchedulesForDate = async (selectedDate) => {
-    if (!allDoctors || allDoctors.length === 0) return;
     try {
       const d = new Date(selectedDate);
       const year = d.getFullYear();
@@ -104,12 +112,23 @@ const BookAppointmentScreen = ({ navigation }) => {
       const formattedDateForSchedules = `${year}-${month}-${day}`;
       const formattedDateForAppointments = formatDate(selectedDate);
 
-      const [schedulesRes, appointmentsRes] = await Promise.all([
+      const [schedulesRes, appointmentsRes, doctorsRes] = await Promise.all([
         axios.get(`${BASE_URL}/api/schedules?date=${formattedDateForSchedules}`),
-        axios.get(`${BASE_URL}/api/emails/booked-timings?appointment_date=${formattedDateForAppointments}`)
+        axios.get(`${BASE_URL}/api/emails/booked-timings?appointment_date=${formattedDateForAppointments}`),
+        axios.get(`${BASE_URL}/api/doctors`)
       ]);
 
-      const approvedSchedules = schedulesRes.data.filter(s => s.status === 'Approved');
+      const liveDoctorsData = doctorsRes.data || [];
+      setAllDoctors(liveDoctorsData);
+
+      const approvedSchedules = schedulesRes.data.filter(s => {
+         if (s.status !== 'Approved') return false;
+         // Ensure the doctor still exists in the active doctors database
+         return liveDoctorsData.some(doc => 
+            (doc._id === s.doctorId || doc.id === s.doctorId) || 
+            (doc.doctorName === s.doctorName)
+         );
+      });
       setDateSchedules(approvedSchedules);
 
       const appointments = appointmentsRes.data || [];
@@ -120,21 +139,33 @@ const BookAppointmentScreen = ({ navigation }) => {
       });
       setBookedByDoctor(bookedMap);
 
-      const doctorIdsWithSchedules = new Set(approvedSchedules.map(s => s.doctorId));
-      const availableDocs = allDoctors.filter(doc => {
-         if (!doctorIdsWithSchedules.has(doc.id || doc._id)) return false;
-         
-         const schedule = approvedSchedules.find(s => s.doctorId === (doc.id || doc._id));
-         const bookedTimingsForDoc = bookedMap[doc.doctorName] || [];
-         
-         // Are ALL timings in this schedule booked?
-         if (schedule && schedule.time && schedule.time.length > 0) {
-            const allBooked = schedule.time.every(t => bookedTimingsForDoc.includes(t));
-            if (allBooked) return false;
-         }
-         return true;
+      // Now we cross-reference: get LIVE doctors who have an approved schedule today
+      const activeDocsWithSchedules = liveDoctorsData.filter(doc => 
+         approvedSchedules.some(s => s.doctorId === doc._id || s.doctorId === doc.id || s.doctorName === doc.doctorName)
+      );
+      setAvailableDoctorsForDate(activeDocsWithSchedules);
+
+      // Dynamically extract unique departments from LIVE active doctors for this date
+      const uniqueDepts = new Set();
+      activeDocsWithSchedules.forEach(doc => {
+        if (doc.department) {
+           doc.department.split(',').forEach(dep => {
+               const fullDeptName = dep.trim();
+               if(fullDeptName) uniqueDepts.add(fullDeptName);
+           });
+        }
       });
-      setAvailableDoctorsForDate(availableDocs);
+      
+      const departments = Array.from(uniqueDepts);
+      const formattedCategories = departments.map((cat, index) => {
+        return { 
+          _id: String(index + 1), 
+          name: cat, 
+          originalName: cat.split('/')[0].trim(),
+          fullDepartment: cat
+        };
+      });
+      setDoctorCategories(formattedCategories);
 
       // Reset selections
       setSelectedCategory(null);
@@ -147,60 +178,8 @@ const BookAppointmentScreen = ({ navigation }) => {
 
   useEffect(() => {
     if (!user) { Alert.alert("Session Expired", "Please login again."); }
-    else { fetchAllData(); }
+    else { setLoadingData(false); }
   }, [user]);
-
-  const getTamilTranslation = (englishText) => {
-    const dictionary = {
-      'Cardiology': 'இதயவியல்',
-      'Neurology': 'நரம்பியல்',
-      'Orthopedics': 'எலும்பியல்',
-      'Pediatrics': 'குழந்தை மருத்துவம்',
-      'Gynecology': 'மகப்பேறு மருத்துவம்',
-      'Dermatology': 'தோல் மருத்துவம்',
-      'ENT': 'காது மூக்கு தொண்டை',
-      'Ophthalmology': 'கண் மருத்துவம்',
-      'Dentistry': 'பல் மருத்துவம்',
-      'Dental': 'பல் மருத்துவம்',
-      'General Medicine': 'பொது மருத்துவம்',
-      'General Surgery': 'பொது அறுவை சிகிச்சை',
-      'General': 'பொது மருத்துவம்',
-      'Psychiatry': 'மனநல மருத்துவம்',
-      'Oncology': 'புற்றுநோயியல்',
-      'Urology': 'சிறுநீரியல்',
-      'Radiology': 'கதிரியக்கவியல்',
-      'Physiotherapy': 'பிசியோதெரபி',
-      'Others': 'மற்றவை',
-    };
-    return dictionary[englishText] || englishText;
-  };
-
-  const fetchAllData = async () => {
-    try {
-      setLoadingData(true);
-      const response = await axios.get(`${BASE_URL}/api/doctors`);
-      const doctors = response.data;
-      setAllDoctors(doctors);
-      
-      const DEPARTMENT_OPTIONS = [
-        'Cardiology', 'Neurology', 'Orthopedics', 'Pediatrics', 
-        'Dermatology', 'General Surgery', 'Psychiatry', 'Gynecology',
-        'Oncology', 'Ophthalmology', 'Urology', 'ENT', 'Dentistry', 'Radiology'
-      ];
-      
-      const formattedCategories = DEPARTMENT_OPTIONS.map((cat, index) => {
-        const tamilCat = getTamilTranslation(cat);
-        const displayName = tamilCat !== cat ? `${cat} / ${tamilCat}` : cat;
-        return { _id: String(index + 1), name: displayName, originalName: cat };
-      });
-      setDoctorCategories(formattedCategories);
-    } catch (error) { 
-      console.log("Error loading data", error); 
-      Alert.alert("Network Error", "Unable to fetch doctors. Please check your backend connection.\n" + error.message);
-    } finally { 
-      setLoadingData(false); 
-    }
-  };
 
   const onChangeDate = (event, selectedDate) => {
     const currentDate = selectedDate || date;
@@ -394,25 +373,31 @@ const BookAppointmentScreen = ({ navigation }) => {
                   inputSearchStyle={styles.inputSearchStyle}
                   iconStyle={styles.iconStyle}
                   itemTextStyle={{ color: 'black' }}
-                  data={doctorCategories}
+                  data={doctorCategories.length === 0 ? [{ _id: '0', name: 'No categories found for this date' }] : doctorCategories}
                   search
                   maxHeight={300}
                   labelField="name"
                   valueField="_id"
-                  placeholder={!isFocus ? 'Select Category...' : '...'}
+                  placeholder={!isFocus ? (doctorCategories.length === 0 ? 'No categories found' : 'Select Category...') : '...'}
                   searchPlaceholder="Search..."
                   value={selectedCategory ? selectedCategory._id : null}
                   onFocus={() => setIsFocus(true)}
                   onBlur={() => setIsFocus(false)}
                   onChange={item => {
+                    if (item._id === '0') return;
                     setSelectedCategory(item);
                     setIsFocus(false);
-                    const filtered = allDoctors.filter(d => {
-                      if (!d.department) return item.originalName === 'Others';
-                      const depts = d.department.split(',').map(cat => cat.split('/')[0].trim());
-                      return depts.includes(item.originalName);
+                    // Filter LIVE doctors who are AVAILABLE on the selected date
+                    const docsForCategory = availableDoctorsForDate.filter(doc => {
+                      if (!doc.department) return item.originalName === 'Others';
+                      const depts = doc.department.split(',').map(cat => cat.trim());
+                      return depts.includes(item.fullDepartment);
                     });
-                    const formattedDoctors = filtered.map(d => ({ _id: d.id || d._id, name: d.doctorName }));
+                    
+                    const formattedDoctors = docsForCategory.map(doc => ({
+                       _id: doc._id || doc.id,
+                       name: doc.doctorName
+                    }));
                     setDoctorList(formattedDoctors);
                     setSelectedDoctor(null);
                   }}

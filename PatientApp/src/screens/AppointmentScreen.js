@@ -1,4 +1,6 @@
-import React, { useContext, useState } from 'react';
+import React, { useContext, useState, useEffect } from 'react';
+import axios from 'axios';
+import { useIsFocused } from '@react-navigation/native';
 import {
   View,
   Text,
@@ -21,9 +23,30 @@ const AppointmentScreen = ({ navigation }) => {
   const { user, logout } = useContext(AuthContext);
   const { language, changeLanguage, texts } = useContext(LanguageContext);
 
-  // State for Modals
   const [showLangModal, setShowLangModal] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const isFocused = useIsFocused();
+
+  // Fetch unread notifications count
+  useEffect(() => {
+    if (isFocused && user) {
+      const fetchUnreadCount = async () => {
+        try {
+          // IP_ADDRESS should match the global one if possible, assuming BASE_URL is same as other screens
+          const IP_ADDRESS = 'localhost'; // Usually imported or handled via apiClient, but hardcoding since no global BASE_URL here. Wait, let's construct BASE_URL.
+          const BASE_URL = `http://localhost:5000`; // Will define above or just here
+          const mobile = user.contactNumber || user.mobile;
+          const response = await axios.get(`${BASE_URL}/api/notifications/patient/${mobile}`);
+          const unread = response.data.filter(n => !n.isRead).length;
+          setUnreadCount(unread);
+        } catch (error) {
+          console.log("Error fetching notifications count", error);
+        }
+      };
+      fetchUnreadCount();
+    }
+  }, [isFocused, user]);
 
   // --- Handlers ---
   const handleLogoutPress = () => {
@@ -91,6 +114,11 @@ const AppointmentScreen = ({ navigation }) => {
             {/* Notification Icon */}
             <TouchableOpacity style={styles.iconButton} onPress={() => navigation.navigate('NotificationPatient')}>
               <Icon name="bell-outline" size={24} color="#1C3E55" />
+              {unreadCount > 0 && (
+                <View style={styles.badge}>
+                  <Text style={styles.badgeText}>{unreadCount > 9 ? '9+' : unreadCount}</Text>
+                </View>
+              )}
             </TouchableOpacity>
 
             {/* Logout Icon */}
@@ -262,7 +290,9 @@ const styles = StyleSheet.create({
   greeting: { fontSize: scaleFont(20), fontWeight: 'bold', color: '#1C3E55' },
   subGreeting: { fontSize: scaleFont(14), color: 'gray' },
   headerIcons: { flexDirection: 'row' },
-  iconButton: { backgroundColor: '#fff', padding: 8, borderRadius: 20, elevation: 2 },
+  iconButton: { backgroundColor: '#fff', padding: 8, borderRadius: 20, elevation: 2, position: 'relative' },
+  badge: { position: 'absolute', right: 2, top: 2, backgroundColor: '#E74C3C', borderRadius: 10, width: 20, height: 20, justifyContent: 'center', alignItems: 'center', elevation: 3 },
+  badgeText: { color: '#fff', fontSize: 10, fontWeight: 'bold' },
 
   // Card Wrapper
   cardWrapper: { alignItems: 'center', justifyContent: 'center', marginTop: height * 0.02, paddingHorizontal: width * 0.05 },

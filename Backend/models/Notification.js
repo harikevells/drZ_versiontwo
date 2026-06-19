@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const notificationSchema = new mongoose.Schema({
     role: { 
         type: String, 
-        enum: ['admin', 'doctor'], 
+        enum: ['admin', 'doctor', 'patient'], 
         required: true 
     },
     identifier: { 

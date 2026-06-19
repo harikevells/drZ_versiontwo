@@ -56,6 +56,17 @@ const updateAppointmentStatus = async (req, res) => {
             'appointment_status'
         );
 
+        // Notify Patient
+        if (appointment.login_mobile) {
+            await createNotification(
+                'patient',
+                appointment.login_mobile,
+                `Appointment ${status}`,
+                `Your appointment with Dr. ${appointment.doctor_name} for ${appointment.appointment_date} has been marked as ${status}.`,
+                'appointment_status'
+            );
+        }
+
         res.json(appointment);
     } catch (err) {
         res.status(500).json({ error: err.message });

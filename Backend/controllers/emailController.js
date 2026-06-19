@@ -59,6 +59,15 @@ const sendBookingEmail = async (req, res) => {
             'appointment'
         );
 
+        // Notify Patient
+        await createNotification(
+            'patient',
+            login_mobile, // Identifier for patient is their login mobile
+            'Appointment Request Submitted',
+            `Your appointment request with Dr. ${doctor_name} for ${appointment_date} at ${appointment_time} has been submitted successfully.`,
+            'appointment'
+        );
+
         // Configure transporter
         const transporter = nodemailer.createTransport({
             service: process.env.EMAIL_SERVICE || 'gmail',
