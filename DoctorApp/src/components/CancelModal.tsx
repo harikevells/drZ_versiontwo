@@ -9,7 +9,7 @@ interface Props {
   patientName?: string;
 }
 
-export default function ApproveModal({ visible, onClose, onConfirm, patientName }: Props) {
+export default function CancelModal({ visible, onClose, onConfirm, patientName }: Props) {
   return (
     <Modal visible={visible} transparent animationType="fade">
       <View style={styles.overlay}>
@@ -18,10 +18,10 @@ export default function ApproveModal({ visible, onClose, onConfirm, patientName 
             <Ionicons name="close-circle" size={24} color="#666" />
           </TouchableOpacity>
           
-          <Text style={styles.title}>Approve</Text>
+          <Text style={styles.title}>Cancel</Text>
           <Text style={styles.patientName}>{patientName}</Text>
           
-          <Text style={styles.message}>Are you sure to Approve Appointment?</Text>
+          <Text style={styles.message}>Are you sure to Cancel Appointment?</Text>
           
           <View style={styles.buttonRow}>
             <TouchableOpacity style={[styles.btn, styles.yesBtn]} onPress={onConfirm}>
@@ -75,8 +75,7 @@ const styles = StyleSheet.create({
     color: '#333',
     textAlign: 'center',
     marginBottom: 25,
-     width:'100%',
-    textAlign:'center'
+    width:'100%',
   },
   buttonRow: {
     flexDirection: 'row',
@@ -92,7 +91,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   yesBtn: {
-    backgroundColor: '#2CA01C',
+    backgroundColor: '#FF4C4C',
   },
   noBtn: {
     backgroundColor: '#8C8C8C',

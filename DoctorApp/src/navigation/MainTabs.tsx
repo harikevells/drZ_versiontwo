@@ -1,4 +1,5 @@
 import React from 'react';
+import { View, Text } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import HomeScreen from '../screens/HomeScreen';
@@ -12,8 +13,22 @@ export default function MainTabs() {
     <Tab.Navigator
       screenOptions={({ route }) => ({
         headerShown: false,
-        tabBarIcon: ({ focused, color, size }) => {
+        tabBarShowLabel: false,
+        tabBarStyle: {
+          backgroundColor: '#052A3F',
+          height: 80,
+          borderTopWidth: 0,
+          elevation: 0,
+          paddingTop: 10,
+          paddingBottom: 10,
+        },
+        tabBarIconStyle: {
+          flex: 1,
+          width: '100%',
+        },
+        tabBarIcon: ({ focused }) => {
           let iconName = 'ellipse';
+          let labelName = route.name;
 
           if (route.name === 'Home') {
             iconName = focused ? 'home' : 'home-outline';
@@ -23,10 +38,24 @@ export default function MainTabs() {
             iconName = focused ? 'person' : 'person-outline';
           }
 
-          return <Ionicons name={iconName} size={size} color={color} />;
+          return (
+            <View
+              style={{
+                alignItems: 'center',
+                justifyContent: 'center',
+                backgroundColor: focused ? '#114563' : 'transparent',
+                borderRadius: 16,
+                paddingVertical: 10,
+                paddingHorizontal: 15,
+              }}
+            >
+              <Ionicons name={iconName} size={24} color="#FFF" />
+              <Text numberOfLines={1} style={{ color: '#FFF', fontSize: 10, marginTop: 4, fontWeight: focused ? 'bold' : 'normal' }}>
+                {labelName}
+              </Text>
+            </View>
+          );
         },
-        tabBarActiveTintColor: '#2CA01C',
-        tabBarInactiveTintColor: 'gray',
       })}
     >
       <Tab.Screen name="Home" component={HomeScreen} />

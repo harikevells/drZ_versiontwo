@@ -78,16 +78,16 @@ export default function Header({ title, isNotification = false }: HeaderProps) {
       <View style={styles.headerContent}>
         <View style={styles.userInfo}>
           <Image 
-            source={require('../assets/doctorlogo.png')} 
-            style={styles.avatar}
+            source={require('../assets/DoctorlogoApp1.png')} 
+            style={[styles.avatar, { resizeMode: 'contain' }]}
           />
           <View style={styles.textContainer}>
             {title ? (
               <Text style={styles.greeting}>{title}</Text>
             ) : (
               <>
-                <Text style={styles.greeting}>{greeting}, Dr. {doctorName}</Text>
-                <Text style={styles.date}>{currentDate}</Text>
+                {/* <Text style={styles.greeting}>{greeting}</Text> */}
+                {/* <Text style={styles.date}>{currentDate}</Text> */}
               </>
             )}
           </View>
@@ -108,14 +108,14 @@ export default function Header({ title, isNotification = false }: HeaderProps) {
 const styles = StyleSheet.create({
   headerContainer: {
     backgroundColor: '#052A3F',
-    height: 140,
+    height: 120,
     // width: '100%',
     // borderBottomLeftRadius: width * 0.95,
     // borderBottomRightRadius: width * 0.95,
     // transform: [{ scaleX: 1.5 }],
     alignItems: 'center',
     justifyContent: 'flex-end',
-    paddingBottom: 30,
+    paddingBottom: 20,
     marginBottom: 20,
   },
   headerContent: {
@@ -131,12 +131,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   avatar: {
-    width: 50,
-    height: 50,
+    width: 90,
+    height: 40,
     borderRadius: 25,
-    borderWidth: 2,
+    // borderWidth: 2,
     borderColor: '#FFF',
-    backgroundColor: '#FFF',
+    // backgroundColor: '#FFF',
   },
   textContainer: {
     marginLeft: 12,

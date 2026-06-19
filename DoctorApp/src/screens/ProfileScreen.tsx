@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, ActivityIndicator, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, ActivityIndicator, TouchableOpacity, Alert, Image } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -81,8 +81,11 @@ export default function ProfileScreen() {
       
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
         <View style={styles.profileHeader}>
-          <View style={styles.avatarContainer}>
-            <Ionicons name="person" size={60} color="#052A3F" />
+          <View style={[styles.avatarContainer, { overflow: 'hidden' }]}>
+            <Image 
+              source={require('../assets/doctorlogo.png')} 
+              style={{ width: '100%', height: '100%', resizeMode: 'contain' }} 
+            />
           </View>
           <Text style={styles.doctorName}>Dr. {userData?.doctorName || 'Doctor'}</Text>
         </View>
@@ -106,7 +109,7 @@ export default function ProfileScreen() {
             </View>
             <View style={styles.detailTextContainer}>
               <Text style={styles.detailLabel}>Specialization</Text>
-              <Text style={styles.detailValue}>{userData?.department || 'N/A'}</Text>
+              <Text style={styles.detailValue}>{userData?.department ? userData.department.split(',').map((dept: string) => dept.split('/')[0].split('-')[0].trim()).filter(Boolean).join(', ') : 'N/A'}</Text>
             </View>
           </View>
 
@@ -166,7 +169,7 @@ const styles = StyleSheet.create({
   },
   profileHeader: {
     backgroundColor: 'transparent',
-    paddingTop: 10,
+    paddingTop: 0,
     paddingBottom: 20,
     alignItems: 'center',
     borderBottomLeftRadius: 30,
@@ -180,8 +183,8 @@ const styles = StyleSheet.create({
     backgroundColor: 'transparent',
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 15,
-    borderWidth: 4,
+    marginBottom: 10,
+    borderWidth: 3,
     borderColor: '#052A3F',
   },
   doctorName: {
