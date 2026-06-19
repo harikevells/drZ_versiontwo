@@ -146,6 +146,7 @@
 
 .time-slot:hover {
   border-color: #1173ba;
+  color: #000000 !important;
 }
 
 .time-slot.selected {
@@ -153,6 +154,10 @@
   background-color: #f0f9ff;
   color: #1173ba;
   font-weight: 600;
+}
+
+.time-slot.selected:hover {
+  color: #000000 !important;
 }
 
 .modal-footer {
