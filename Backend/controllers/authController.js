@@ -1,7 +1,7 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
-
 const Doctor = require('../models/Doctor');
+const Patient = require('../models/Patient');
 
 const login = async (req, res) => {
     const { email, password } = req.body;
@@ -50,4 +50,37 @@ const doctorLogin = async (req, res) => {
     }
 };
 
-module.exports = { login, doctorLogin };
+const patientRegister = async (req, res) => {
+    const { identifier, password } = req.body;
+    try {
+        const existing = await Patient.findOne({ identifier });
+        if (existing) {
+            return res.status(400).json({ error: 'Patient already exists with this email/number' });
+        }
+        const patient = await Patient.create({ identifier, password, role: 'patient' });
+        const token = jwt.sign({ id: patient._id, identifier: patient.identifier, role: patient.role }, process.env.JWT_SECRET || 'supersecret123', { expiresIn: '7d' });
+        res.json({ token, user: { id: patient._id, identifier: patient.identifier, role: patient.role } });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+};
+
+const patientLogin = async (req, res) => {
+    const { identifier, password } = req.body;
+    try {
+        const patient = await Patient.findOne({ identifier });
+        if (!patient) return res.status(401).json({ error: 'Invalid credentials' });
+        
+        const isMatch = await patient.matchPassword(password);
+        if (isMatch) {
+            const token = jwt.sign({ id: patient._id, identifier: patient.identifier, role: patient.role }, process.env.JWT_SECRET || 'supersecret123', { expiresIn: '7d' });
+            res.json({ token, user: { id: patient._id, identifier: patient.identifier, role: patient.role } });
+        } else {
+            res.status(401).json({ error: 'Invalid credentials' });
+        }
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+};
+
+module.exports = { login, doctorLogin, patientRegister, patientLogin };

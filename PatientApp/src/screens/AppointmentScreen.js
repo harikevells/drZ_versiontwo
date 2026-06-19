@@ -88,6 +88,11 @@ const AppointmentScreen = ({ navigation }) => {
 
           {/* Header Icons */}
           <View style={styles.headerIcons}>
+            {/* Notification Icon */}
+            <TouchableOpacity style={styles.iconButton} onPress={() => navigation.navigate('NotificationPatient')}>
+              <Icon name="bell-outline" size={24} color="#1C3E55" />
+            </TouchableOpacity>
+
             {/* Logout Icon */}
             <TouchableOpacity style={[styles.iconButton, { marginLeft: 10 }]} onPress={handleLogoutPress}>
               <Icon name="logout" size={24} color="#E74C3C" />

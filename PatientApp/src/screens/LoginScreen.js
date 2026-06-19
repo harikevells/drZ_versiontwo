@@ -5,24 +5,32 @@ import {
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import axios from 'axios';
 import { AuthContext } from '../context/AuthContext';
+
+// Important: Adjust IP address based on your setup (e.g., '10.0.2.2' for Android emulator, your WiFi IP for real device)
+const IP_ADDRESS = '192.168.0.116'; // Changed to 10.0.2.2 for emulator safety as default
+const PORT = '5000';
+const BASE_URL = `http://${IP_ADDRESS}:${PORT}`;
 
 const LoginScreen = ({ navigation }) => {
   const { login } = useContext(AuthContext);
 
   // UI State
-  const [mobile, setMobile] = useState('');
+  const [isLogin, setIsLogin] = useState(true);
+  const [identifier, setIdentifier] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  // ✅ 1. LOAD SAVED MOBILE NUMBER (No Password)
+  // LOAD SAVED CREDENTIALS
   useEffect(() => {
     const loadCredentials = async () => {
       try {
-        const savedMobile = await AsyncStorage.getItem('savedMobile');
-
-        if (savedMobile) {
-          setMobile(savedMobile);
+        const savedIdentifier = await AsyncStorage.getItem('savedIdentifier');
+        if (savedIdentifier) {
+          setIdentifier(savedIdentifier);
           setRememberMe(true);
         }
       } catch (error) {
@@ -32,49 +40,55 @@ const LoginScreen = ({ navigation }) => {
     loadCredentials();
   }, []);
 
-  const handleLogin = async () => {
-    // ✅ VALIDATION: Check if mobile is empty or not 10 digits
-    if (!mobile) {
-      Alert.alert("Error", "Please enter mobile number");
+  const handleAuth = async () => {
+    if (!identifier) {
+      Alert.alert("Error / பிழை", "Please enter email or mobile number / மின்னஞ்சல் அல்லது மொபைல் எண்ணை உள்ளிடவும்");
+      return;
+    }
+    if (!password) {
+      Alert.alert("Error / பிழை", "Please enter password / கடவுச்சொல்லை உள்ளிடவும்");
       return;
     }
 
-    if (mobile.length !== 10) {
-      Alert.alert("Invalid Number", "Mobile number must be exactly 10 digits.\nமொபைல் எண் 10 இலக்கங்களாக இருக்க வேண்டும்.");
+    if (!isLogin && password !== confirmPassword) {
+      Alert.alert("Error / பிழை", "Passwords do not match / கடவுச்சொற்கள் பொருந்தவில்லை");
       return;
     }
 
     setLoading(true);
 
-    // Simulate API Delay
-    setTimeout(async () => {
-
-      // ✅ 2. SAVE OR REMOVE MOBILE NUMBER
-      try {
-        if (rememberMe) {
-          await AsyncStorage.setItem('savedMobile', mobile);
-        } else {
-          await AsyncStorage.removeItem('savedMobile');
-        }
-      } catch (error) {
-        console.error("Error saving credentials", error);
+    try {
+      if (rememberMe) {
+        await AsyncStorage.setItem('savedIdentifier', identifier);
+      } else {
+        await AsyncStorage.removeItem('savedIdentifier');
       }
 
-      // ✅ 3. LOG IN (With Any 10-digit Number)
-      const userPayload = {
-        uhid: `MOB-${mobile}`,
-        name: "Patient", // You can default this or fetch from an API later
-        contactNumber: mobile,
-        token: "dummy-token-123"
-      };
-
-      login(userPayload);
-
+      const endpoint = isLogin ? '/api/auth/patient/login' : '/api/auth/patient/register';
+      const payload = { identifier, password };
+      
+      const response = await axios.post(`${BASE_URL}${endpoint}`, payload);
+      
+      if (response.data && response.data.token) {
+        // Save token or handle user session
+        const userPayload = {
+          ...response.data.user,
+          contactNumber: identifier,
+          token: response.data.token
+        };
+        login(userPayload);
+      } else {
+        Alert.alert("Error", "Authentication failed.");
+      }
+    } catch (error) {
+      console.error("Auth error", error);
+      const errMsg = error.response?.data?.error || "Network error. Please check your connection.";
+      Alert.alert("Error / பிழை", errMsg);
+    } finally {
       setLoading(false);
-    }, 1000);
+    }
   };
 
-  // ✅ Handler for Logo Click (Same as AppointmentScreen)
   const handleLogoClick = () => {
     const phoneNumber = '9876543210';
     let url = Platform.OS === 'android' ? `tel:${phoneNumber}` : `telprompt:${phoneNumber}`;
@@ -95,42 +109,60 @@ const LoginScreen = ({ navigation }) => {
     >
       <ScrollView contentContainerStyle={styles.container}>
 
-        {/* ✅ WRAPPED IN TOUCHABLE OPACITY FOR CLICK FUNCTIONALITY */}
         <TouchableOpacity onPress={handleLogoClick} style={{ alignItems: 'center', width: '100%' }}>
-          {/* <View style={styles.topImageContainer}>
-            <Image source={require('../assets/motherteressa.png')} style={styles.topImage} resizeMode="contain" />
-          </View> */}
-
-          {/* <Text style={styles.hospitalName}>VICTOR</Text>
-          <Text style={styles.hospitalSubName}>Hospital</Text> */}
-
           <View style={styles.poweredByContainer}>
-            {/* <Text style={styles.poweredByText}>Powered by</Text> */}
             <Image source={require('../assets/logo.png')} style={styles.drzLogo} resizeMode="contain" />
           </View>
         </TouchableOpacity>
 
         <View style={styles.loginTitleContainer}>
-          <Icon name="cellphone" size={28} color="#000" style={{ marginRight: 8 }} />
-          <Text style={styles.loginTitle}>Login</Text>
+          <Icon name={isLogin ? "login" : "account-plus"} size={28} color="#000" style={{ marginRight: 8 }} />
+          <Text style={styles.loginTitle}>
+            {isLogin ? 'Login / உள்நுழைய' : 'Register / பதிவு செய்ய'}
+          </Text>
         </View>
 
         <View style={styles.form}>
-
           <Text style={styles.label}>
-            Phone No/ தொலைபேசி எண் <Text style={styles.star}>*</Text>
+            Email or Mobile / மின்னஞ்சல் அல்லது எண் <Text style={styles.star}>*</Text>
           </Text>
           <TextInput
             style={styles.input}
-            placeholder="Enter 10-digit Mobile No"
+            placeholder="Enter Email or Number"
             placeholderTextColor="#888"
-            value={mobile}
-            onChangeText={(text) => setMobile(text.replace(/[^0-9]/g, ''))} // Only allow numbers
-            keyboardType="phone-pad"
-            maxLength={10}
+            value={identifier}
+            onChangeText={setIdentifier}
+            keyboardType="email-address"
+            autoCapitalize="none"
           />
 
-          {/* ❌ PASSWORD FIELD REMOVED */}
+          <Text style={styles.label}>
+            Password / கடவுச்சொல் <Text style={styles.star}>*</Text>
+          </Text>
+          <TextInput
+            style={styles.input}
+            placeholder="Enter Password"
+            placeholderTextColor="#888"
+            value={password}
+            onChangeText={setPassword}
+            secureTextEntry
+          />
+
+          {!isLogin && (
+            <>
+              <Text style={styles.label}>
+                Confirm Password / உறுதிப்படுத்துக <Text style={styles.star}>*</Text>
+              </Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Confirm Password"
+                placeholderTextColor="#888"
+                value={confirmPassword}
+                onChangeText={setConfirmPassword}
+                secureTextEntry
+              />
+            </>
+          )}
 
           <TouchableOpacity
             style={styles.checkboxContainer}
@@ -141,22 +173,39 @@ const LoginScreen = ({ navigation }) => {
               size={24}
               color={rememberMe ? "#1C4E63" : "#888"}
             />
-            <Text style={styles.checkboxText}>Remember Me/நினைவில் கொள்ளுங்கள்</Text>
+            <Text style={styles.checkboxText}>
+              Remember Me / நினைவில் கொள்க
+            </Text>
           </TouchableOpacity>
 
           {loading ? (
             <ActivityIndicator size="large" color="#1C4E63" style={{ marginTop: 20 }} />
           ) : (
-            <TouchableOpacity style={styles.button} onPress={handleLogin}>
-              <Text style={styles.buttonText}>Login/ உள்நுழைவு</Text>
+            <TouchableOpacity style={styles.button} onPress={handleAuth}>
+              <Text style={styles.buttonText}>
+                {isLogin ? 'Login / உள்நுழைய' : 'Register / பதிவு செய்ய'}
+              </Text>
             </TouchableOpacity>
           )}
+
+          <View style={styles.toggleAuthContainer}>
+            <Text style={styles.toggleAuthText}>
+              {isLogin ? "Don't have an account? / கணக்கு இல்லையா? " : "Already have an account? / ஏற்கனவே கணக்கு உள்ளதா? "}
+            </Text>
+            <TouchableOpacity onPress={() => { setIsLogin(!isLogin); setPassword(''); setConfirmPassword(''); }}>
+              <Text style={styles.toggleAuthLink}>
+                {isLogin ? "Register" : "Login"}
+              </Text>
+            </TouchableOpacity>
+          </View>
 
           <View style={{ alignItems: 'center', marginTop: 40 }}>
             <TouchableOpacity style={styles.ambulanceButton} onPress={handleAmbulance}>
               <Icon name="ambulance" size={32} color="#fff" />
             </TouchableOpacity>
-            <Text style={styles.ambulanceText}>Emergency / அவசர உதவி</Text>
+            <Text style={styles.ambulanceText}>
+              Emergency / அவசர உதவி
+            </Text>
           </View>
 
         </View>
@@ -167,23 +216,21 @@ const LoginScreen = ({ navigation }) => {
 
 const styles = StyleSheet.create({
   container: { flexGrow: 1, backgroundColor: '#fff', paddingHorizontal: 25, paddingTop: 50, paddingBottom: 40, alignItems: 'center' },
-  topImageContainer: { marginBottom: 5 },
-  topImage: { width: 90, height: 90, borderRadius: 45 },
-  hospitalName: { fontSize: 40, fontWeight: '900', color: '#032541', letterSpacing: 1, textAlign: 'center', marginBottom: 0 },
-  hospitalSubName: { fontSize: 22, fontWeight: 'bold', color: '#032541', marginTop: -5, textAlign: 'center', marginBottom: 5 },
   poweredByContainer: { alignItems: 'center', marginTop: 5, marginBottom: 30 },
-  poweredByText: { fontSize: 10, color: '#555', fontWeight: 'bold', marginBottom: 2 },
   drzLogo: { width: 100, height: 100 },
   loginTitleContainer: { flexDirection: 'row', alignItems: 'center', marginBottom: 20 },
-  loginTitle: { fontSize: 26, fontWeight: 'bold', color: '#000' },
+  loginTitle: { fontSize: 24, fontWeight: 'bold', color: '#000' },
   form: { width: '100%' },
-  label: { fontSize: 15, fontWeight: 'bold', color: '#444', marginBottom: 8, marginTop: 15 },
+  label: { fontSize: 14, fontWeight: 'bold', color: '#444', marginBottom: 8, marginTop: 15 },
   star: { color: 'red' },
-  input: { borderWidth: 1.5, borderColor: '#777', borderRadius: 8, padding: 14, fontSize: 18, fontWeight: 'bold', backgroundColor: '#fff', color: '#000', letterSpacing: 2 }, // Increased font size and letter spacing for mobile number
+  input: { borderWidth: 1.5, borderColor: '#777', borderRadius: 8, padding: 14, fontSize: 16, backgroundColor: '#fff', color: '#000' },
   checkboxContainer: { flexDirection: 'row', alignItems: 'center', marginTop: 15, marginBottom: 10 },
-  checkboxText: { marginLeft: 8, fontSize: 14, fontWeight: 'bold', color: '#444' },
+  checkboxText: { marginLeft: 8, fontSize: 13, fontWeight: 'bold', color: '#444' },
   button: { backgroundColor: '#1C4E63', paddingVertical: 15, borderRadius: 8, alignItems: 'center', elevation: 3, marginTop: 25, paddingHorizontal: 20 },
-  buttonText: { color: '#fff', fontSize: 18, fontWeight: 'bold', textAlign: 'center' },
+  buttonText: { color: '#fff', fontSize: 16, fontWeight: 'bold', textAlign: 'center' },
+  toggleAuthContainer: { flexDirection: 'row', justifyContent: 'center', marginTop: 20, flexWrap: 'wrap' },
+  toggleAuthText: { fontSize: 13, color: '#444', textAlign: 'center' },
+  toggleAuthLink: { fontSize: 13, color: '#1C4E63', fontWeight: 'bold' },
   ambulanceButton: { width: 65, height: 65, borderRadius: 32.5, backgroundColor: '#D32F2F', alignItems: 'center', justifyContent: 'center', elevation: 8, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 4, marginBottom: 5, borderWidth: 2, borderColor: '#fff' },
   ambulanceText: { color: '#D32F2F', fontWeight: 'bold', fontSize: 12 }
 });

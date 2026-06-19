@@ -128,4 +128,17 @@ const getAllAppointments = async (req, res) => {
     }
 };
 
-module.exports = { sendBookingEmail, getBookedTimings, getAllAppointments };
+const getPatientAppointments = async (req, res) => {
+    try {
+        const { mobile } = req.params;
+        if (!mobile) return res.status(400).json({ message: "Mobile number is required" });
+        
+        const appointments = await Appointment.find({ login_mobile: mobile }).sort({ updatedAt: -1 });
+        res.status(200).json(appointments);
+    } catch (error) {
+        console.error("Error fetching patient appointments:", error);
+        res.status(500).json({ message: "Internal server error" });
+    }
+};
+
+module.exports = { sendBookingEmail, getBookedTimings, getAllAppointments, getPatientAppointments };

@@ -63,6 +63,10 @@ const DoctorManagement = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!formData.department || formData.department.trim() === '') {
+      alert("Please select at least one department.");
+      return;
+    }
     try {
       const token = localStorage.getItem('token');
       const config = { headers: { Authorization: `Bearer ${token}` } };
@@ -87,6 +91,7 @@ const DoctorManagement = () => {
       fetchDoctors();
     } catch (err) {
       console.error(err);
+      alert(err.response?.data?.error || err.message);
     }
   };
 
