@@ -52,7 +52,7 @@ export default function LoginScreen() {
       <View style={styles.header}>
         <View style={styles.logoContainer}>
           <Image 
-            source={require('../../assets/images/logo.png')} 
+            source={require('../assets/DoctorlogoApp.png')} 
             style={styles.logo} 
             resizeMode="contain"
           />
@@ -112,7 +112,7 @@ const styles = StyleSheet.create({
   },
   header: {
     backgroundColor: '#052A3F', // Dark blue from mockup
-    height: '40%',
+    height: '50%',
     width: '100%',
     borderBottomLeftRadius: width * 0.5,
     borderBottomRightRadius: width * 0.5,
@@ -127,8 +127,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   logo: {
-    width: 200,
-    height: 80,
+    width: 260,
+    height: 200,
   },
   formContainer: {
     flex: 1,

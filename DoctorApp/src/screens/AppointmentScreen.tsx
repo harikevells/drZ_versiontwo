@@ -7,19 +7,21 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import RescheduleModal from '../components/RescheduleModal';
 import ApproveModal from '../components/ApproveModal';
 import CompleteModal from '../components/CompleteModal';
+import CancelModal from '../components/CancelModal';
 
 const API_URL = 'http://192.168.0.116:5000/api/appointments';
 
 export default function AppointmentScreen() {
   const [appointments, setAppointments] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'Pending' | 'Approved' | 'Completed'>('Pending');
+  const [activeTab, setActiveTab] = useState<'Pending' | 'Approved' | 'Completed' | 'Cancelled'>('Pending');
   const [doctorName, setDoctorName] = useState('');
 
   // Modal states
   const [rescheduleVisible, setRescheduleVisible] = useState(false);
   const [approveVisible, setApproveVisible] = useState(false);
   const [completeVisible, setCompleteVisible] = useState(false);
+  const [cancelVisible, setCancelVisible] = useState(false);
   const [selectedPatient, setSelectedPatient] = useState<any>(null);
 
   const fetchAppointments = async () => {
@@ -54,6 +56,11 @@ export default function AppointmentScreen() {
     }
   };
 
+  const openCancel = (patient: any) => {
+    setSelectedPatient(patient);
+    setCancelVisible(true);
+  };
+
   const openReschedule = (patient: any) => {
     setSelectedPatient(patient);
     setRescheduleVisible(true);
@@ -76,7 +83,7 @@ export default function AppointmentScreen() {
       case 'approved': return '#2CA01C';
       case 'rescheduled': return '#0084FF';
       case 'cancelled': return '#FF4C4C';
-      case 'completed': return '#052A3F';
+      case 'completed': return '#2CA01C';
       default: return '#666';
     }
   };
@@ -123,6 +130,12 @@ export default function AppointmentScreen() {
           >
             <Text style={[styles.tabText, activeTab === 'Completed' && styles.activeTabText]}>Completed</Text>
           </TouchableOpacity>
+          <TouchableOpacity 
+            style={[styles.tabBtn, activeTab === 'Cancelled' && styles.activeTabBtn]}
+            onPress={() => setActiveTab('Cancelled')}
+          >
+            <Text style={[styles.tabText, activeTab === 'Cancelled' && styles.activeTabText]}>Cancelled</Text>
+          </TouchableOpacity>
         </View>
 
         {filteredAppointments.length === 0 ? (
@@ -149,7 +162,7 @@ export default function AppointmentScreen() {
                 </View>
                 <View style={styles.detailRow}>
                   <Ionicons name="medical-outline" size={14} color="#666" />
-                  <Text style={styles.detailText}>{item.treatment_category || 'General'}</Text>
+                  <Text style={[styles.detailText, { width: 200 }]}>{item.treatment_category || 'General'}</Text>
                 </View>
 
                 {activeTab === 'Pending' && (
@@ -158,7 +171,7 @@ export default function AppointmentScreen() {
                       style={[styles.btn, styles.approveBtn]}
                       onPress={() => openApprove(item)}
                     >
-                      <Text style={styles.btnText}>Approval Required</Text>
+                      <Text style={styles.btnText}>Approve</Text>
                     </TouchableOpacity>
                     <TouchableOpacity 
                       style={[styles.btn, styles.rescheduleBtn]}
@@ -168,7 +181,7 @@ export default function AppointmentScreen() {
                     </TouchableOpacity>
                     <TouchableOpacity 
                       style={[styles.btn, styles.cancelBtn]}
-                      onPress={() => handleStatusUpdate(item.id || item._id, 'Cancelled')}
+                      onPress={() => openCancel(item)}
                     >
                       <Text style={styles.btnTextDark}>Cancel</Text>
                     </TouchableOpacity>
@@ -201,7 +214,11 @@ export default function AppointmentScreen() {
       />
       <ApproveModal 
         visible={approveVisible} 
-        onClose={() => { setApproveVisible(false); fetchAppointments(); }} 
+        onClose={() => setApproveVisible(false)} 
+        onConfirm={() => {
+          setApproveVisible(false);
+          handleStatusUpdate(selectedPatient?.id || selectedPatient?._id, 'Approved');
+        }}
         patientName={selectedPatient?.patient_name}
       />
       
@@ -211,6 +228,16 @@ export default function AppointmentScreen() {
         onComplete={() => {
           setCompleteVisible(false);
           handleStatusUpdate(selectedPatient?.id || selectedPatient?._id, 'Completed');
+        }}
+        patientName={selectedPatient?.patient_name}
+      />
+
+      <CancelModal 
+        visible={cancelVisible} 
+        onClose={() => setCancelVisible(false)} 
+        onConfirm={() => {
+          setCancelVisible(false);
+          handleStatusUpdate(selectedPatient?.id || selectedPatient?._id, 'Cancelled');
         }}
         patientName={selectedPatient?.patient_name}
       />
@@ -247,7 +274,7 @@ const styles = StyleSheet.create({
   tabText: {
     color: '#052A3F',
     fontWeight: 'bold',
-    fontSize: 14,
+    fontSize: 13,
   },
   activeTabText: {
     color: '#FFF',
@@ -256,6 +283,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     color: '#999',
     marginTop: 40,
+    fontSize: 16,
   },
   listContainer: {
     paddingBottom: 30,
@@ -277,7 +305,7 @@ const styles = StyleSheet.create({
     marginBottom: 5,
   },
   patientName: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: 'bold',
     color: '#333',
   },
@@ -288,7 +316,7 @@ const styles = StyleSheet.create({
   },
   statusText: {
     color: '#FFF',
-    fontSize: 10,
+    fontSize: 12,
     fontWeight: 'bold',
   },
   detailRow: {
@@ -299,11 +327,11 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
   },
   detailText: {
-    fontSize: 12,
+    fontSize: 14,
     color: '#666',
     marginLeft: 6,
     flexShrink: 1,
-    width:100
+    width: 110,
   },
   actionButtons: {
     flexDirection: 'row',
@@ -323,23 +351,24 @@ const styles = StyleSheet.create({
     backgroundColor: '#2CA01C',
   },
   completeBtn: {
-    backgroundColor: '#0084FF',
+    backgroundColor: '#2CA01C',
   },
   rescheduleBtn: {
     backgroundColor: '#0084FF',
   },
   cancelBtn: {
     backgroundColor: '#E0E0E0',
+    
   },
   btnText: {
     color: '#FFF',
-    fontSize: 10,
+    fontSize: 15,
     fontWeight: 'bold',
     textAlign: 'center'
   },
   btnTextDark: {
     color: '#666',
-    fontSize: 10,
+    fontSize: 15,
     fontWeight: 'bold',
     textAlign: 'center'
   },

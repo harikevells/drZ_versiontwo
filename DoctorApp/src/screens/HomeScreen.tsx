@@ -7,6 +7,7 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import { useNavigation } from '@react-navigation/native';
 import RescheduleModal from '../components/RescheduleModal';
 import ApproveModal from '../components/ApproveModal';
+import CancelModal from '../components/CancelModal';
 
 const API_URL = 'http://192.168.0.116:5000/api/appointments';
 
@@ -14,6 +15,7 @@ export default function HomeScreen() {
   const navigation = useNavigation<any>();
   const [rescheduleVisible, setRescheduleVisible] = useState(false);
   const [approveVisible, setApproveVisible] = useState(false);
+  const [cancelVisible, setCancelVisible] = useState(false);
   const [selectedPatient, setSelectedPatient] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -72,6 +74,11 @@ export default function HomeScreen() {
     setApproveVisible(true);
   };
 
+  const openCancel = (patient: any) => {
+    setSelectedPatient(patient);
+    setCancelVisible(true);
+  };
+
   const getStatusColor = (status: string) => {
     if (!status) return '#666';
     switch (status.toLowerCase()) {
@@ -108,17 +115,12 @@ export default function HomeScreen() {
           <View style={styles.statCard}>
             <Text style={styles.statNumber}>{stats.todaysAppointments < 10 ? `0${stats.todaysAppointments}` : stats.todaysAppointments}</Text>
             <Text style={styles.statLabel}>Today's{'\n'}Appointment</Text>
-            <Ionicons name="calendar-outline" size={16} color="#2CA01C" style={styles.statIcon} />
+            <Ionicons name="calendar-outline" size={24} color="#2CA01C" style={styles.statIcon} />
           </View>
           <View style={styles.statCard}>
             <Text style={styles.statNumber}>{stats.pendingAppointments < 10 ? `0${stats.pendingAppointments}` : stats.pendingAppointments}</Text>
             <Text style={styles.statLabel}>Pending{'\n'}Appointment</Text>
-            <Ionicons name="time-outline" size={16} color="#FFA500" style={styles.statIcon} />
-          </View>
-          <View style={styles.statCard}>
-            <Text style={styles.statNumber}>{stats.totalAttended < 10 ? `0${stats.totalAttended}` : stats.totalAttended}</Text>
-            <Text style={styles.statLabel}>Total Patients{'\n'}Attended</Text>
-            <Ionicons name="people-outline" size={16} color="#052A3F" style={styles.statIcon} />
+            <Ionicons name="time-outline" size={24} color="#FFA500" style={styles.statIcon} />
           </View>
         </View>
 
@@ -145,9 +147,9 @@ export default function HomeScreen() {
               <View style={styles.actionButtons}>
                 <TouchableOpacity 
                   style={[styles.btn, styles.approveBtn]}
-                  onPress={() => handleStatusUpdate(patient.id || patient._id, 'Approved')}
+                  onPress={() => openApprove(patient)}
                 >
-                  <Text style={styles.btnText}>Approval Required</Text>
+                  <Text style={styles.btnText}>Approve</Text>
                 </TouchableOpacity>
                 <TouchableOpacity 
                   style={[styles.btn, styles.rescheduleBtn]}
@@ -157,7 +159,7 @@ export default function HomeScreen() {
                 </TouchableOpacity>
                 <TouchableOpacity 
                   style={[styles.btn, styles.cancelBtn]}
-                  onPress={() => handleStatusUpdate(patient.id || patient._id, 'Cancelled')}
+                  onPress={() => openCancel(patient)}
                 >
                   <Text style={styles.btnTextDark}>Cancel</Text>
                 </TouchableOpacity>
@@ -204,7 +206,20 @@ export default function HomeScreen() {
       />
       <ApproveModal 
         visible={approveVisible} 
-        onClose={() => { setApproveVisible(false); fetchDashboardData(); }} 
+        onClose={() => setApproveVisible(false)} 
+        onConfirm={() => {
+          setApproveVisible(false);
+          handleStatusUpdate(selectedPatient?.id || selectedPatient?._id, 'Approved');
+        }}
+        patientName={selectedPatient?.patient_name}
+      />
+      <CancelModal 
+        visible={cancelVisible} 
+        onClose={() => setCancelVisible(false)} 
+        onConfirm={() => {
+          setCancelVisible(false);
+          handleStatusUpdate(selectedPatient?.id || selectedPatient?._id, 'Cancelled');
+        }}
         patientName={selectedPatient?.patient_name}
       />
     </View>
@@ -228,7 +243,7 @@ const styles = StyleSheet.create({
     marginBottom: 15,
   },
   sectionTitle: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: 'bold',
     color: '#333',
     marginBottom: 15,
@@ -245,28 +260,30 @@ const styles = StyleSheet.create({
   statCard: {
     backgroundColor: '#FFF',
     borderRadius: 12,
-    padding: 15,
-    width: '31%',
+    paddingVertical: 25,
+    paddingHorizontal: 20,
+    width: '48%',
     shadowColor: '#000',
     shadowOpacity: 0.05,
     shadowRadius: 5,
     elevation: 2,
     position: 'relative',
+    minHeight: 110,
   },
   statNumber: {
-    fontSize: 20,
+    fontSize: 28,
     fontWeight: 'bold',
     color: '#052A3F',
-    marginBottom: 5,
+    marginBottom: 8,
   },
   statLabel: {
-    fontSize: 10,
+    fontSize: 15,
     color: '#666',
   },
   statIcon: {
     position: 'absolute',
-    top: 15,
-    right: 15,
+    top: 25,
+    right: 20,
   },
   requestCard: {
     backgroundColor: '#FFF',
@@ -300,7 +317,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   dateTime: {
-    fontSize: 12,
+    fontSize: 14,
     color: '#666',
     marginBottom: 15,
     marginTop: 5,
@@ -329,14 +346,14 @@ const styles = StyleSheet.create({
   },
   btnText: {
     color: '#FFF',
-    fontSize: 10,
+    fontSize: 14,
     fontWeight: 'bold',
     width:100,
     textAlign:'center'
   },
   btnTextDark: {
     color: '#666',
-    fontSize: 10,
+    fontSize: 14,
     fontWeight: 'bold',
   },
   recentList: {
