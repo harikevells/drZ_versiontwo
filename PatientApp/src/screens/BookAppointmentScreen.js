@@ -15,7 +15,7 @@ import { LanguageContext } from '../context/LanguageContext';
 // EmailJS credentials removed as we now use our custom backend endpoint
 
 // Important: If using Android Emulator, use '10.0.2.2'. If using Wired USB Debugging, use 'localhost'. If using Wi-Fi, use your local IP address.
-const IP_ADDRESS = 'localhost'; 
+const IP_ADDRESS = '192.168.0.116'; 
 const PORT = '5000'; // Make sure your backend server is running on port 5000!
 const BASE_URL = `http://${IP_ADDRESS}:${PORT}`;
 
@@ -69,7 +69,12 @@ const BookAppointmentScreen = ({ navigation }) => {
   const [dateSchedules, setDateSchedules] = useState([]);
   const [bookedByDoctor, setBookedByDoctor] = useState({});
 
-  const formatDate = (rawDate) => { const d = new Date(rawDate); return `${d.getDate()}/${d.getMonth() + 1}/${d.getFullYear()}`; };
+  const formatDate = (rawDate) => { 
+    const d = new Date(rawDate); 
+    const day = String(d.getDate()).padStart(2, '0');
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    return `${day} / ${month} / ${d.getFullYear()}`; 
+  };
 
   useEffect(() => {
     fetchSchedulesForDate(date);
@@ -145,6 +150,31 @@ const BookAppointmentScreen = ({ navigation }) => {
     else { fetchAllData(); }
   }, [user]);
 
+  const getTamilTranslation = (englishText) => {
+    const dictionary = {
+      'Cardiology': 'இதயவியல்',
+      'Neurology': 'நரம்பியல்',
+      'Orthopedics': 'எலும்பியல்',
+      'Pediatrics': 'குழந்தை மருத்துவம்',
+      'Gynecology': 'மகப்பேறு மருத்துவம்',
+      'Dermatology': 'தோல் மருத்துவம்',
+      'ENT': 'காது மூக்கு தொண்டை',
+      'Ophthalmology': 'கண் மருத்துவம்',
+      'Dentistry': 'பல் மருத்துவம்',
+      'Dental': 'பல் மருத்துவம்',
+      'General Medicine': 'பொது மருத்துவம்',
+      'General Surgery': 'பொது அறுவை சிகிச்சை',
+      'General': 'பொது மருத்துவம்',
+      'Psychiatry': 'மனநல மருத்துவம்',
+      'Oncology': 'புற்றுநோயியல்',
+      'Urology': 'சிறுநீரியல்',
+      'Radiology': 'கதிரியக்கவியல்',
+      'Physiotherapy': 'பிசியோதெரபி',
+      'Others': 'மற்றவை',
+    };
+    return dictionary[englishText] || englishText;
+  };
+
   const fetchAllData = async () => {
     try {
       setLoadingData(true);
@@ -152,17 +182,17 @@ const BookAppointmentScreen = ({ navigation }) => {
       const doctors = response.data;
       setAllDoctors(doctors);
       
-      const allDepts = [];
-      doctors.forEach(d => {
-        if (d.department) {
-          const depts = d.department.split(',').map(item => item.trim()).filter(item => item);
-          allDepts.push(...depts);
-        } else {
-          allDepts.push('Others');
-        }
+      const DEPARTMENT_OPTIONS = [
+        'Cardiology', 'Neurology', 'Orthopedics', 'Pediatrics', 
+        'Dermatology', 'General Surgery', 'Psychiatry', 'Gynecology',
+        'Oncology', 'Ophthalmology', 'Urology', 'ENT', 'Dentistry', 'Radiology'
+      ];
+      
+      const formattedCategories = DEPARTMENT_OPTIONS.map((cat, index) => {
+        const tamilCat = getTamilTranslation(cat);
+        const displayName = tamilCat !== cat ? `${cat} / ${tamilCat}` : cat;
+        return { _id: String(index + 1), name: displayName, originalName: cat };
       });
-      const categories = [...new Set(allDepts)];
-      const formattedCategories = categories.map((cat, index) => ({ _id: String(index + 1), name: cat }));
       setDoctorCategories(formattedCategories);
     } catch (error) { 
       console.log("Error loading data", error); 
@@ -215,7 +245,7 @@ const BookAppointmentScreen = ({ navigation }) => {
       patient_gender: gender,
       whatsapp_number: whatsapp,
       login_mobile: user?.contactNumber || user?.mobile || "N/A",
-      treatment_category: selectedCategory.name,
+      treatment_category: selectedCategory.originalName,
       doctor_name: selectedDoctor ? selectedDoctor.name : "N/A",
       appointment_date: formatDate(date),
       appointment_time: selectedTimes.length > 0 ? selectedTimes.join(', ') : "Not Selected",
@@ -259,7 +289,7 @@ const BookAppointmentScreen = ({ navigation }) => {
             <View style={styles.userInfo}>
               <Image source={require('../assets/logo.png')} style={styles.userImage} resizeMode="contain" />
               <View style={styles.textContainer}>
-                <Text style={styles.greeting}>Victor Hospital</Text>
+                <Text style={styles.greeting}>DrZ</Text>
                 <Text style={styles.subGreeting}>Book Appointment</Text>
               </View>
             </View>
@@ -344,7 +374,7 @@ const BookAppointmentScreen = ({ navigation }) => {
                   <Text style={styles.labelTamil}>தேதியை தேர்ந்தெடுக்கவும்</Text>
                 </View>
                 <TouchableOpacity style={[styles.inputBox, { justifyContent: 'space-between', paddingHorizontal: 16 }]} onPress={() => showMode('date')}>
-                  <Text style={{ fontSize: 16, color: '#333' }}>{formatDate(date)}</Text>
+                  <Text style={{ flex: 1, fontSize: 16, color: '#333' }}>{formatDate(date)}</Text>
                   <Icon name="calendar-month" size={24} color="#888" />
                 </TouchableOpacity>
               </View>
@@ -377,10 +407,10 @@ const BookAppointmentScreen = ({ navigation }) => {
                   onChange={item => {
                     setSelectedCategory(item);
                     setIsFocus(false);
-                    const filtered = availableDoctorsForDate.filter(d => {
-                      if (!d.department) return item.name === 'Others';
-                      const depts = d.department.split(',').map(cat => cat.trim());
-                      return depts.includes(item.name);
+                    const filtered = allDoctors.filter(d => {
+                      if (!d.department) return item.originalName === 'Others';
+                      const depts = d.department.split(',').map(cat => cat.split('/')[0].trim());
+                      return depts.includes(item.originalName);
                     });
                     const formattedDoctors = filtered.map(d => ({ _id: d.id || d._id, name: d.doctorName }));
                     setDoctorList(formattedDoctors);
@@ -411,12 +441,12 @@ const BookAppointmentScreen = ({ navigation }) => {
                   inputSearchStyle={styles.inputSearchStyle}
                   iconStyle={styles.iconStyle}
                   itemTextStyle={{ color: 'black' }}
-                  data={availableDoctorsForDate.length === 0 ? [{ _id: '0', name: 'Not available in doctor' }] : doctorList}
+                  data={doctorList.length === 0 ? [{ _id: '0', name: 'No doctors found' }] : doctorList}
                   search
                   maxHeight={300}
                   labelField="name"
                   valueField="_id"
-                  placeholder={!isDoctorFocus ? (availableDoctorsForDate.length === 0 ? 'Not available in doctor' : 'Select Doctor...') : '...'}
+                  placeholder={!isDoctorFocus ? (doctorList.length === 0 ? 'No doctors found' : 'Select Doctor...') : '...'}
                   searchPlaceholder="Search..."
                   value={selectedDoctor ? selectedDoctor._id : null}
                   onFocus={() => setIsDoctorFocus(true)}
@@ -555,7 +585,7 @@ const styles = StyleSheet.create({
   userImage: { width: width * 0.15, height: width * 0.08, marginRight: 15 },
   textContainer: { justifyContent: 'center' },
   greeting: { fontSize: 20, fontWeight: 'bold', color: '#1C3E55' },
-  subGreeting: { fontSize: 14, color: '#666' },
+  subGreeting: { fontSize: 14, color: '#666' , width:150},
   iconButton: { backgroundColor: '#f5f5f5', padding: 10, borderRadius: 30 },
 
   backButtonRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 25 },
@@ -597,6 +627,7 @@ const styles = StyleSheet.create({
     height: 56,
     borderColor: '#E0E0E0',
     borderWidth: 1,
+    width:'100%',
     borderRadius: 12,
     paddingHorizontal: 8,
     backgroundColor: '#FAFAFA',

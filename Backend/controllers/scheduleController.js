@@ -1,4 +1,5 @@
 const Schedule = require('../models/Schedule');
+const { createNotification } = require('./notificationController');
 
 const departmentTranslations = {
     "General": "பொது",
@@ -28,6 +29,7 @@ const getSchedules = async (req, res) => {
     try {
         const filter = {};
         if (req.query.doctorId) filter.doctorId = req.query.doctorId;
+        if (req.query.doctorName) filter.doctorName = req.query.doctorName;
         if (req.query.date) filter.date = req.query.date;
 
         const schedules = await Schedule.find(filter);
@@ -44,6 +46,41 @@ const createSchedule = async (req, res) => {
             scheduleData.department = translateDepartment(scheduleData.department);
         }
         const schedule = await Schedule.create(scheduleData);
+
+        // Determine who created the schedule based on JWT payload
+        const createdByDoctor = req.user && req.user.role === 'doctor';
+
+        if (createdByDoctor) {
+            // Doctor created the schedule -> Notify Admin only
+            await createNotification(
+                'admin',
+                'admin',
+                'New Schedule Created',
+                `Dr. ${scheduleData.doctorName || 'A Doctor'} has created a new schedule for ${scheduleData.date}.`,
+                'schedule'
+            );
+        } else {
+            // Admin created the schedule -> Notify Doctor only
+            if (scheduleData.doctorName) {
+                let timeString = scheduleData.time;
+                if (Array.isArray(scheduleData.time) && scheduleData.time.length > 0) {
+                    const firstSlot = scheduleData.time[0];
+                    const lastSlot = scheduleData.time[scheduleData.time.length - 1];
+                    const startTime = firstSlot.includes(' to ') ? firstSlot.split(' to ')[0] : firstSlot;
+                    const endTime = lastSlot.includes(' to ') ? lastSlot.split(' to ')[1] : lastSlot;
+                    timeString = `${startTime} to ${endTime}`;
+                }
+
+                await createNotification(
+                    'doctor',
+                    scheduleData.doctorName,
+                    'New Schedule Assigned',
+                    `Admin has assigned a new schedule to you for ${scheduleData.date} at ${timeString}.`,
+                    'schedule'
+                );
+            }
+        }
+
         res.status(201).json(schedule);
     } catch (err) {
         res.status(500).json({ error: err.message });

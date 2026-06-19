@@ -32,7 +32,7 @@ const Layout = () => {
           </NavLink>
           <NavLink to="/patient" className={({isActive}) => isActive ? "nav-item active" : "nav-item"}>
             <FaUserInjured className="nav-icon" />
-            <span>Patient</span>
+            <span>Appointment</span>
           </NavLink>
         </nav>
       </aside>
@@ -46,7 +46,7 @@ const Layout = () => {
             <p>Super admin For DrZ...</p>
           </div>
           <div className="topbar-actions">
-            <button className="icon-btn">
+            <button className="icon-btn" onClick={() => navigate('/notifications')}>
               <FaBell />
             </button>
             <button className="icon-btn" onClick={() => setIsLogoutModalOpen(true)}>

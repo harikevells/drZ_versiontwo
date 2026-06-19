@@ -11,6 +11,7 @@ import { LanguageContext } from '../context/LanguageContext';
 import LoginScreen from '../screens/LoginScreen'; 
 import AppointmentScreen from '../screens/AppointmentScreen'; 
 import BookAppointmentScreen from '../screens/BookAppointmentScreen';
+import NotificationPatient from '../screens/NotificationPatient';
 // import ReportScreen from '../screens/ReportScreen';
 
 const Stack = createNativeStackNavigator();
@@ -166,6 +167,7 @@ const AppNavigator = () => {
           <>
             <Stack.Screen name="Dashboard" component={DashboardTabs} />
             <Stack.Screen name="BookAppointment" component={BookAppointmentScreen} />
+            <Stack.Screen name="NotificationPatient" component={NotificationPatient} />
           </>
         )}
       </Stack.Navigator>
