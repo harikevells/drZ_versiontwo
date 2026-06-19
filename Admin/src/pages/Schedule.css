@@ -86,6 +86,54 @@
   }
 }
 
+.combined-date-time-input {
+  display: flex;
+  align-items: center;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  background-color: #ffffff;
+  padding: 0 16px;
+  height: 48px; /* matching other input heights roughly */
+}
+
+.combined-date-time-input:focus-within {
+  border-color: #1173ba;
+}
+
+.combined-date-time-input .date-section,
+.combined-date-time-input .time-section {
+  display: flex;
+  align-items: center;
+  position: relative;
+}
+
+.combined-date-time-input .date-section {
+  margin-right: 20px;
+}
+
+.combined-date-time-input .input-icon {
+  color: #9ca3af;
+  margin-right: 10px;
+  font-size: 16px;
+}
+
+.form-group .combined-date-time-input input[type="date"],
+.form-group .combined-date-time-input input[type="time"] {
+  border: none !important;
+  outline: none !important;
+  background: transparent !important;
+  padding: 0 !important;
+  color: #374151;
+  font-size: 14px;
+  height: auto;
+  width: auto;
+}
+
+.combined-date-time-input .time-separator {
+  margin: 0 10px;
+  color: #6b7280;
+}
+
 .form-group select {
   padding: 14px 16px;
   border: 1px solid #e5e7eb;

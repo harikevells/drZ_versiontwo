@@ -252,41 +252,7 @@ const RescheduleModal = ({ isOpen, onClose, onSave, initialDate, allSchedules, d
             <div className="slots-list" style={{ display: 'flex', flexDirection: 'column', gap: '10px', maxHeight: '300px', overflowY: 'auto', paddingRight: '10px' }}>
               {slots.length > 0 ? slots.map((slot, index) => (
                 <div key={index} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#f9fafb', padding: '10px', borderRadius: '6px', border: '1px solid #e5e7eb' }}>
-                  {editingIndex === index ? (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '5px', flex: 1 }}>
-                      <input 
-                        type="time" 
-                        value={editStart} 
-                        onChange={(e) => setEditStart(e.target.value)} 
-                        style={{ padding: '6px', border: '1px solid #d1d5db', borderRadius: '4px', outline: 'none' }}
-                      />
-                      <span style={{ color: '#6b7280' }}>to</span>
-                      <input 
-                        type="time" 
-                        value={editEnd} 
-                        onChange={(e) => setEditEnd(e.target.value)} 
-                        style={{ padding: '6px', border: '1px solid #d1d5db', borderRadius: '4px', outline: 'none' }}
-                      />
-                      <button onClick={() => saveEdit(index)} style={{ background: 'none', border: 'none', color: '#22c55e', cursor: 'pointer', padding: '5px' }}>
-                        <FaCheck size={16} />
-                      </button>
-                      <button onClick={() => setEditingIndex(null)} style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', padding: '5px' }}>
-                        <FaTimes size={16} />
-                      </button>
-                    </div>
-                  ) : (
-                    <>
-                      <span style={{ fontSize: '14px', color: '#374151', fontWeight: '500' }}>{slot}</span>
-                      <div style={{ display: 'flex', gap: '15px' }}>
-                        <button onClick={() => startEdit(index, slot)} style={{ background: 'none', border: 'none', color: '#6b7280', cursor: 'pointer' }} title="Edit Slot">
-                          <FaEdit size={16} />
-                        </button>
-                        <button onClick={() => deleteSlot(index)} style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer' }} title="Delete Slot">
-                          <FaTrash size={16} />
-                        </button>
-                      </div>
-                    </>
-                  )}
+                  <span style={{ fontSize: '14px', fontWeight: '500' }}>{slot}</span>
                 </div>
               )) : (
                 <div style={{color: '#6b7280', fontSize: '14px', textAlign: 'center', marginTop: '20px'}}>No schedule time slot</div>

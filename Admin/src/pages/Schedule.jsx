@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { FaEdit, FaTrash, FaCalendarAlt, FaClock, FaInfoCircle } from 'react-icons/fa';
+import { FaEdit, FaTrash, FaRegCalendarAlt, FaRegClock, FaInfoCircle } from 'react-icons/fa';
 import RescheduleModal from '../components/RescheduleModal';
+import ScheduleCreateModal from '../components/ScheduleCreateModal';
 import './Schedule.css';
 
 const Schedule = () => {
@@ -14,8 +15,11 @@ const Schedule = () => {
     department: '',
     date: '',
     startTime: '',
-    endTime: ''
+    endTime: '',
+    time: []
   });
+  
+  const [isPickerModalOpen, setIsPickerModalOpen] = useState(false);
   
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentEditId, setCurrentEditId] = useState(null);
@@ -51,12 +55,19 @@ const Schedule = () => {
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     
-    if (name === 'doctorName') {
+    if (name === 'department') {
+      setFormData(prev => ({
+        ...prev,
+        department: value,
+        doctorName: '',
+        doctorId: 0
+      }));
+    } else if (name === 'doctorName') {
       const selectedDoc = doctorsList.find(d => d.doctorName === value);
       setFormData(prev => ({
         ...prev,
         doctorName: value,
-        department: selectedDoc ? selectedDoc.department : '',
+        department: selectedDoc ? selectedDoc.department : prev.department,
         doctorId: selectedDoc ? selectedDoc.id : 0
       }));
     } else {
@@ -66,6 +77,9 @@ const Schedule = () => {
       }));
     }
   };
+
+  // Get unique departments from doctorsList
+  const uniqueDepartments = [...new Set(doctorsList.map(doc => doc.department).filter(Boolean))];
 
   const generateTimeSlots = (start, end) => {
     if (!start || !end) return [];
@@ -109,10 +123,10 @@ const Schedule = () => {
       const token = localStorage.getItem('token');
       const config = { headers: { Authorization: `Bearer ${token}` } };
       
-      const generatedSlots = generateTimeSlots(formData.startTime, formData.endTime);
+      const generatedSlots = formData.time && formData.time.length > 0 ? formData.time : generateTimeSlots(formData.startTime, formData.endTime);
       
-      if (generatedSlots.length === 0) {
-        alert("Please select a valid time range.");
+      if (!generatedSlots || generatedSlots.length === 0) {
+        alert("Please select a valid time range or slots.");
         return;
       }
       
@@ -137,7 +151,8 @@ const Schedule = () => {
         department: '',
         date: '',
         startTime: '',
-        endTime: ''
+        endTime: '',
+        time: []
       });
       setEditingId(null);
       fetchSchedulesAndDoctors();
@@ -180,7 +195,8 @@ const Schedule = () => {
       department: schedule.department,
       date: schedule.date,
       startTime: st,
-      endTime: et
+      endTime: et,
+      time: timeArray
     });
   };
 
@@ -254,36 +270,43 @@ const Schedule = () => {
               <label>Doctor Name</label>
               <select name="doctorName" value={formData.doctorName} onChange={handleInputChange} required>
                 <option value="" disabled>Select Doctor</option>
-                {doctorsList.map(doc => (
+                {doctorsList
+                  .filter(doc => formData.department === '' || doc.department === formData.department)
+                  .map(doc => (
                   <option key={doc.id} value={doc.doctorName}>{removeTamil(doc.doctorName)}</option>
                 ))}
               </select>
             </div>
-            
+
             <div className="form-group">
               <label>Department</label>
-              <input type="text" name="department" placeholder="Department" value={removeTamil(formData.department)} readOnly className="readonly-input" required />
+              <select name="department" value={formData.department} onChange={handleInputChange} required>
+                <option value="" disabled>Select Department</option>
+                {uniqueDepartments.map(dept => (
+                  <option key={dept} value={dept}>{removeTamil(dept)}</option>
+                ))}
+              </select>
             </div>
             
-            <div className="form-group">
-              <label>Date</label>
-              <div className="input-with-icon">
-                <FaCalendarAlt className="input-icon" />
-                <input type="date" name="date" value={formData.date} onChange={handleInputChange} required />
-              </div>
-            </div>
-
-            <div className="form-group date-time-group">
-              <label>Time Range</label>
-              <div className="date-time-inputs">
-                <div className="input-with-icon">
-                  <FaClock className="input-icon" />
-                  <input type="time" name="startTime" value={formData.startTime} onChange={handleInputChange} required />
+            <div className="form-group date-time-group combined-group">
+              <label>Date & Time</label>
+              <div 
+                className="combined-date-time-input" 
+                onClick={() => setIsPickerModalOpen(true)}
+                style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', padding: '0 16px', height: '48px', border: '1px solid #e5e7eb', borderRadius: '6px', backgroundColor: '#fff', gap: '30px' }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <FaRegCalendarAlt style={{ color: '#9ca3af', fontSize: '15px' }} />
+                  <span style={{ color: formData.date ? '#6b7280' : '#9ca3af', fontSize: '14px' }}>
+                    {formData.date ? formatDate(formData.date) : "Select Date"}
+                  </span>
                 </div>
-                <div style={{display: 'flex', alignItems: 'center', color: '#6b7280'}}>to</div>
-                <div className="input-with-icon">
-                  <FaClock className="input-icon" />
-                  <input type="time" name="endTime" value={formData.endTime} onChange={handleInputChange} required />
+                
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <FaRegClock style={{ color: '#9ca3af', fontSize: '15px' }} />
+                  <span style={{ color: formData.time && formData.time.length > 0 ? '#6b7280' : '#9ca3af', fontSize: '14px' }}>
+                    {formData.time && formData.time.length > 0 ? getSummaryTimeString(formData.time) : "Select Time"}
+                  </span>
                 </div>
               </div>
             </div>
@@ -304,7 +327,8 @@ const Schedule = () => {
                     department: '',
                     date: '',
                     startTime: '',
-                    endTime: ''
+                    endTime: '',
+                    time: []
                   });
                 }}
               >
@@ -400,6 +424,17 @@ const Schedule = () => {
         initialDate={modalInitialDate}
         allSchedules={schedules}
         doctorId={currentDoctorId}
+      />
+      
+      <ScheduleCreateModal
+        isOpen={isPickerModalOpen}
+        onClose={() => setIsPickerModalOpen(false)}
+        onSave={(date, slots) => {
+          setFormData(prev => ({ ...prev, date, time: slots }));
+          setIsPickerModalOpen(false);
+        }}
+        initialDate={formData.date}
+        initialSlots={formData.time}
       />
     </div>
   );
