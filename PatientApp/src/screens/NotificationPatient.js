@@ -7,7 +7,7 @@ import axios from 'axios';
 import { AuthContext } from '../context/AuthContext';
 
 // Use same IP configuration as other screens
-const IP_ADDRESS = 'localhost'; 
+const IP_ADDRESS = '192.168.0.116'; 
 const PORT = '5000';
 const BASE_URL = `http://${IP_ADDRESS}:${PORT}`;
 

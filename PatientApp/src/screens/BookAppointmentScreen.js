@@ -15,7 +15,7 @@ import { LanguageContext } from '../context/LanguageContext';
 // EmailJS credentials removed as we now use our custom backend endpoint
 
 // Important: If using Android Emulator, use '10.0.2.2'. If using Wired USB Debugging, use 'localhost'. If using Wi-Fi, use your local IP address.
-const IP_ADDRESS = 'localhost'; 
+const IP_ADDRESS = '192.168.0.116'; 
 const PORT = '5000'; // Make sure your backend server is running on port 5000!
 const BASE_URL = `http://${IP_ADDRESS}:${PORT}`;
 

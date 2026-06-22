@@ -48,12 +48,12 @@ export default function Header({ title, isNotification = false }: HeaderProps) {
     const date = new Date();
     const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
     const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-    
+
     const dayName = days[date.getDay()];
     const monthName = months[date.getMonth()];
     const dayNum = date.getDate();
     const year = date.getFullYear();
-    
+
     setCurrentDate(`${dayName}, ${monthName} ${dayNum}, ${year}`);
   }, []);
 
@@ -77,8 +77,8 @@ export default function Header({ title, isNotification = false }: HeaderProps) {
     <View style={styles.headerContainer}>
       <View style={styles.headerContent}>
         <View style={styles.userInfo}>
-          <Image 
-            source={require('../assets/DoctorlogoApp1.png')} 
+          <Image
+            source={require('../assets/DoctorlogoApp1.png')}
             style={[styles.avatar, { resizeMode: 'contain' }]}
           />
           <View style={styles.textContainer}>
@@ -108,8 +108,8 @@ export default function Header({ title, isNotification = false }: HeaderProps) {
 const styles = StyleSheet.create({
   headerContainer: {
     backgroundColor: '#052A3F',
-    height: 120,
-    // width: '100%',
+    height: 100,
+    width: '100%',
     // borderBottomLeftRadius: width * 0.95,
     // borderBottomRightRadius: width * 0.95,
     // transform: [{ scaleX: 1.5 }],

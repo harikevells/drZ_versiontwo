@@ -17,7 +17,7 @@ import axios from 'axios';
 import { AuthContext } from '../context/AuthContext'; 
 import { LanguageContext } from '../context/LanguageContext';
 
-const IP_ADDRESS = '10.10.11.75'; 
+const IP_ADDRESS = '192.168.0.116'; 
 const PORT = '3005'; 
 const BASE_URL = `http://${IP_ADDRESS}:${PORT}`; 
 

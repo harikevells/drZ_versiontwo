@@ -9,7 +9,7 @@ import axios from 'axios';
 import { AuthContext } from '../context/AuthContext';
 
 // Important: Adjust IP address based on your setup (e.g., '10.0.2.2' for Android emulator, your WiFi IP for real device)
-const IP_ADDRESS = 'localhost'; // Changed to localhost to work with adb reverse over USB
+const IP_ADDRESS = '192.168.0.116';
 const PORT = '5000';
 const BASE_URL = `http://${IP_ADDRESS}:${PORT}`;
 

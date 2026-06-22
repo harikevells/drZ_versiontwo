@@ -34,8 +34,8 @@ const AppointmentScreen = ({ navigation }) => {
       const fetchUnreadCount = async () => {
         try {
           // IP_ADDRESS should match the global one if possible, assuming BASE_URL is same as other screens
-          const IP_ADDRESS = 'localhost'; // Usually imported or handled via apiClient, but hardcoding since no global BASE_URL here. Wait, let's construct BASE_URL.
-          const BASE_URL = `http://localhost:5000`; // Will define above or just here
+          const IP_ADDRESS = '192.168.0.116'; // Usually imported or handled via apiClient, but hardcoding since no global BASE_URL here. Wait, let's construct BASE_URL.
+          const BASE_URL = `http://${IP_ADDRESS}:5000`; // Will define above or just here
           const mobile = user.contactNumber || user.mobile;
           const response = await axios.get(`${BASE_URL}/api/notifications/patient/${mobile}`);
           const unread = response.data.filter(n => !n.isRead).length;

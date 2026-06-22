@@ -22,8 +22,13 @@ export default function MainTabs() {
           paddingTop: 10,
           paddingBottom: 10,
         },
+        tabBarItemStyle: {
+          paddingTop: 5,
+          paddingBottom: 5,
+        },
         tabBarIconStyle: {
           flex: 1,
+          height: 65,
           width: '100%',
         },
         tabBarIcon: ({ focused }) => {
