@@ -46,7 +46,8 @@ const sendBookingEmail = async (req, res) => {
             doctor_name,
             appointment_date,
             appointment_time,
-            video_call
+            video_call,
+            status: 'Pending'
         });
         await newAppointment.save();
 
