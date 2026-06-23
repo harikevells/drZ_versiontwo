@@ -13,6 +13,10 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+// Health check endpoints for Render load balancer
+app.get('/health', (req, res) => res.status(200).send('OK'));
+app.get('/', (req, res) => res.status(200).send('OK'));
+
 // Support both local server and Firebase cloud function prefixes
 app.use((req, res, next) => {
     if (!req.url.startsWith('/api')) {
