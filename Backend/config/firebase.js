@@ -11,6 +11,10 @@ const projectIdEnv = process.env.project_id || process.env.PROJECT_ID;
 
 if (privateKeyEnv && clientEmailEnv && projectIdEnv) {
     try {
+        console.log("DEBUG: private_key raw length:", privateKeyEnv.length);
+        console.log("DEBUG: private_key raw starts with:", JSON.stringify(privateKeyEnv.substring(0, 40)));
+        console.log("DEBUG: private_key raw ends with:", JSON.stringify(privateKeyEnv.substring(privateKeyEnv.length - 40)));
+        
         let formattedPrivateKey = privateKeyEnv.trim();
         if (formattedPrivateKey.startsWith('"') && formattedPrivateKey.endsWith('"')) {
             formattedPrivateKey = formattedPrivateKey.slice(1, -1);
@@ -19,6 +23,10 @@ if (privateKeyEnv && clientEmailEnv && projectIdEnv) {
             formattedPrivateKey = formattedPrivateKey.slice(1, -1);
         }
         formattedPrivateKey = formattedPrivateKey.replace(/\\n/g, '\n').trim();
+
+        console.log("DEBUG: formattedPrivateKey starts with:", JSON.stringify(formattedPrivateKey.substring(0, 40)));
+        console.log("DEBUG: formattedPrivateKey ends with:", JSON.stringify(formattedPrivateKey.substring(formattedPrivateKey.length - 40)));
+        console.log("DEBUG: formattedPrivateKey has actual newlines:", formattedPrivateKey.includes('\n'));
 
         admin.initializeApp({
             credential: admin.credential.cert({
