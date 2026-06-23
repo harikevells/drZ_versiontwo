@@ -4,7 +4,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import Header from '../components/Header';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useIsFocused } from '@react-navigation/native';
 import RescheduleModal from '../components/RescheduleModal';
 import ApproveModal from '../components/ApproveModal';
 import CancelModal from '../components/CancelModal';
@@ -14,6 +14,7 @@ const API_URL = `${API_BASE_URL}/appointments`;
 
 export default function HomeScreen() {
   const navigation = useNavigation<any>();
+  const isFocused = useIsFocused();
   const [rescheduleVisible, setRescheduleVisible] = useState(false);
   const [approveVisible, setApproveVisible] = useState(false);
   const [cancelVisible, setCancelVisible] = useState(false);
@@ -46,8 +47,10 @@ export default function HomeScreen() {
   };
 
   useEffect(() => {
-    fetchDashboardData();
-  }, []);
+    if (isFocused) {
+      fetchDashboardData();
+    }
+  }, [isFocused]);
 
   const onRefresh = () => {
     setRefreshing(true);

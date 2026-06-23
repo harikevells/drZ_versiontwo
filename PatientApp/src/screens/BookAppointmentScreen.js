@@ -68,11 +68,11 @@ const BookAppointmentScreen = ({ navigation }) => {
   const [dateSchedules, setDateSchedules] = useState([]);
   const [bookedByDoctor, setBookedByDoctor] = useState({});
 
-  const formatDate = (rawDate) => { 
-    const d = new Date(rawDate); 
+  const formatDate = (rawDate) => {
+    const d = new Date(rawDate);
     const day = String(d.getDate()).padStart(2, '0');
     const month = String(d.getMonth() + 1).padStart(2, '0');
-    return `${day} / ${month} / ${d.getFullYear()}`; 
+    return `${day} / ${month} / ${d.getFullYear()}`;
   };
 
   useEffect(() => {
@@ -81,12 +81,12 @@ const BookAppointmentScreen = ({ navigation }) => {
 
   useEffect(() => {
     if (selectedDoctor) {
-      const schedulesForDoctor = dateSchedules.filter(s => 
-        s.doctorId === selectedDoctor._id || 
-        s.doctorId === selectedDoctor.id || 
+      const schedulesForDoctor = dateSchedules.filter(s =>
+        s.doctorId === selectedDoctor._id ||
+        s.doctorId === selectedDoctor.id ||
         s.doctorName === selectedDoctor.name
       );
-      
+
       if (schedulesForDoctor.length > 0) {
         // Merge all timings from all schedules for this doctor on this date
         const allTimings = schedulesForDoctor.flatMap(s => s.time || []);
@@ -121,26 +121,26 @@ const BookAppointmentScreen = ({ navigation }) => {
       setAllDoctors(liveDoctorsData);
 
       const approvedSchedules = schedulesRes.data.filter(s => {
-         if (s.status !== 'Approved') return false;
-         // Ensure the doctor still exists in the active doctors database
-         return liveDoctorsData.some(doc => 
-            (doc._id === s.doctorId || doc.id === s.doctorId) || 
-            (doc.doctorName === s.doctorName)
-         );
+        if (s.status !== 'Approved') return false;
+        // Ensure the doctor still exists in the active doctors database
+        return liveDoctorsData.some(doc =>
+          (doc._id === s.doctorId || doc.id === s.doctorId) ||
+          (doc.doctorName === s.doctorName)
+        );
       });
       setDateSchedules(approvedSchedules);
 
       const appointments = appointmentsRes.data || [];
       const bookedMap = {};
       appointments.forEach(app => {
-         if (!bookedMap[app.doctor_name]) bookedMap[app.doctor_name] = [];
-         bookedMap[app.doctor_name].push(app.appointment_time);
+        if (!bookedMap[app.doctor_name]) bookedMap[app.doctor_name] = [];
+        bookedMap[app.doctor_name].push(app.appointment_time);
       });
       setBookedByDoctor(bookedMap);
 
       // Now we cross-reference: get LIVE doctors who have an approved schedule today
-      const activeDocsWithSchedules = liveDoctorsData.filter(doc => 
-         approvedSchedules.some(s => s.doctorId === doc._id || s.doctorId === doc.id || s.doctorName === doc.doctorName)
+      const activeDocsWithSchedules = liveDoctorsData.filter(doc =>
+        approvedSchedules.some(s => s.doctorId === doc._id || s.doctorId === doc.id || s.doctorName === doc.doctorName)
       );
       setAvailableDoctorsForDate(activeDocsWithSchedules);
 
@@ -148,18 +148,18 @@ const BookAppointmentScreen = ({ navigation }) => {
       const uniqueDepts = new Set();
       activeDocsWithSchedules.forEach(doc => {
         if (doc.department) {
-           doc.department.split(',').forEach(dep => {
-               const fullDeptName = dep.trim();
-               if(fullDeptName) uniqueDepts.add(fullDeptName);
-           });
+          doc.department.split(',').forEach(dep => {
+            const fullDeptName = dep.trim();
+            if (fullDeptName) uniqueDepts.add(fullDeptName);
+          });
         }
       });
-      
+
       const departments = Array.from(uniqueDepts);
       const formattedCategories = departments.map((cat, index) => {
-        return { 
-          _id: String(index + 1), 
-          name: cat, 
+        return {
+          _id: String(index + 1),
+          name: cat,
           originalName: cat.split('/')[0].trim(),
           fullDepartment: cat
         };
@@ -392,10 +392,10 @@ const BookAppointmentScreen = ({ navigation }) => {
                       const depts = doc.department.split(',').map(cat => cat.trim());
                       return depts.includes(item.fullDepartment);
                     });
-                    
+
                     const formattedDoctors = docsForCategory.map(doc => ({
-                       _id: doc._id || doc.id,
-                       name: doc.doctorName
+                      _id: doc._id || doc.id,
+                      name: doc.doctorName
                     }));
                     setDoctorList(formattedDoctors);
                     setSelectedDoctor(null);
@@ -457,7 +457,7 @@ const BookAppointmentScreen = ({ navigation }) => {
                   <Text style={styles.label}>Select Available Timings</Text>
                   <Text style={styles.labelTamil}>கிடைக்கும் நேரங்களை தேர்ந்தெடுக்கவும்</Text>
                 </View>
-                
+
                 <View style={styles.timingsContainer}>
                   {availableTimings.length > 0 ? (
                     <View style={styles.timingsGrid}>
@@ -466,12 +466,12 @@ const BookAppointmentScreen = ({ navigation }) => {
                         const isBooked = bookedTimingsForCurrentDoctor.includes(time);
                         const isSelected = selectedTimes.includes(time);
                         return (
-                          <TouchableOpacity 
-                            key={index} 
-                            style={styles.timingCard} 
+                          <TouchableOpacity
+                            key={index}
+                            style={styles.timingCard}
                             onPress={() => {
                               if (isBooked) return;
-                              setSelectedTimes(prev => 
+                              setSelectedTimes(prev =>
                                 prev.includes(time) ? [] : [time]
                               );
                             }}
@@ -569,7 +569,7 @@ const styles = StyleSheet.create({
   userImage: { width: width * 0.15, height: width * 0.08, marginRight: 15 },
   textContainer: { justifyContent: 'center' },
   greeting: { fontSize: 20, fontWeight: 'bold', color: '#1C3E55' },
-  subGreeting: { fontSize: 14, color: '#666' , width:150},
+  subGreeting: { fontSize: 14, color: '#666', width: 150 },
   iconButton: { backgroundColor: '#f5f5f5', padding: 10, borderRadius: 30 },
 
   backButtonRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 25 },
@@ -611,7 +611,7 @@ const styles = StyleSheet.create({
     height: 56,
     borderColor: '#E0E0E0',
     borderWidth: 1,
-    width:'100%',
+    width: '100%',
     borderRadius: 12,
     paddingHorizontal: 8,
     backgroundColor: '#FAFAFA',
@@ -643,7 +643,7 @@ const styles = StyleSheet.create({
   dateLabel: { fontSize: 12, fontWeight: 'bold', color: '#555' },
   dateLabelTamil: { fontSize: 10, color: '#888' },
   dateValue: { fontSize: 16, fontWeight: 'bold', color: '#1C3E55', marginTop: 4 },
-  
+
   timingsContainer: { borderWidth: 1, borderColor: '#E0E0E0', borderRadius: 12, padding: 16, backgroundColor: '#FAFAFA' },
   timingsGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'flex-start' },
   timingCard: { width: '33%', flexDirection: 'row', alignItems: 'center', marginBottom: 16 },

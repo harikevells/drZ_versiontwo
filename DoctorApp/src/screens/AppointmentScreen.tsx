@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, FlatList, ActivityIndicator, Alert, TouchableOpacity, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, FlatList, ActivityIndicator, Alert, TouchableOpacity, ScrollView, RefreshControl } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import Header from '../components/Header';
@@ -8,6 +8,7 @@ import RescheduleModal from '../components/RescheduleModal';
 import ApproveModal from '../components/ApproveModal';
 import CompleteModal from '../components/CompleteModal';
 import CancelModal from '../components/CancelModal';
+import { useIsFocused } from '@react-navigation/native';
 
 import { API_BASE_URL } from '../config';
 const API_URL = `${API_BASE_URL}/appointments`;
@@ -17,6 +18,8 @@ export default function AppointmentScreen() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'Pending' | 'Approved' | 'Completed' | 'Cancelled'>('Pending');
   const [doctorName, setDoctorName] = useState('');
+  const isFocused = useIsFocused();
+  const [refreshing, setRefreshing] = useState(false);
 
   // Modal states
   const [rescheduleVisible, setRescheduleVisible] = useState(false);
@@ -25,8 +28,9 @@ export default function AppointmentScreen() {
   const [cancelVisible, setCancelVisible] = useState(false);
   const [selectedPatient, setSelectedPatient] = useState<any>(null);
 
-  const fetchAppointments = async () => {
+  const fetchAppointments = async (showLoading = true) => {
     try {
+      if (showLoading) setLoading(true);
       const storedData = await AsyncStorage.getItem('userData');
       if (storedData) {
         const user = JSON.parse(storedData);
@@ -39,12 +43,20 @@ export default function AppointmentScreen() {
       Alert.alert('Error', 'Could not load appointments.');
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
   };
 
   useEffect(() => {
-    fetchAppointments();
-  }, []);
+    if (isFocused) {
+      fetchAppointments(appointments.length === 0);
+    }
+  }, [isFocused]);
+
+  const onRefresh = () => {
+    setRefreshing(true);
+    fetchAppointments(false);
+  };
 
   const handleStatusUpdate = async (id: string, status: string) => {
     try {
@@ -146,6 +158,9 @@ export default function AppointmentScreen() {
             data={filteredAppointments}
             keyExtractor={(item: any) => item.id || item._id}
             showsVerticalScrollIndicator={false}
+            refreshControl={
+              <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+            }
             renderItem={({ item }) => (
               <View style={styles.requestCard}>
                 <View style={styles.cardHeader}>
