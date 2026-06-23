@@ -9,30 +9,36 @@ const privateKeyEnv = process.env.private_key || process.env.PRIVATE_KEY;
 const clientEmailEnv = process.env.client_email || process.env.CLIENT_EMAIL;
 const projectIdEnv = process.env.project_id || process.env.PROJECT_ID;
 
+function cleanEnvVar(val) {
+    if (!val) return '';
+    let cleaned = val.trim();
+    if (cleaned.endsWith(',')) {
+        cleaned = cleaned.slice(0, -1).trim();
+    }
+    if (cleaned.startsWith('"') && cleaned.endsWith('"')) {
+        cleaned = cleaned.slice(1, -1);
+    }
+    if (cleaned.startsWith("'") && cleaned.endsWith("'")) {
+        cleaned = cleaned.slice(1, -1);
+    }
+    return cleaned.replace(/\\n/g, '\n').trim();
+}
+
 if (privateKeyEnv && clientEmailEnv && projectIdEnv) {
     try {
-        console.log("DEBUG: private_key raw length:", privateKeyEnv.length);
-        console.log("DEBUG: private_key raw starts with:", JSON.stringify(privateKeyEnv.substring(0, 40)));
-        console.log("DEBUG: private_key raw ends with:", JSON.stringify(privateKeyEnv.substring(privateKeyEnv.length - 40)));
-        
-        let formattedPrivateKey = privateKeyEnv.trim();
-        if (formattedPrivateKey.startsWith('"') && formattedPrivateKey.endsWith('"')) {
-            formattedPrivateKey = formattedPrivateKey.slice(1, -1);
-        }
-        if (formattedPrivateKey.startsWith("'") && formattedPrivateKey.endsWith("'")) {
-            formattedPrivateKey = formattedPrivateKey.slice(1, -1);
-        }
-        formattedPrivateKey = formattedPrivateKey.replace(/\\n/g, '\n').trim();
+        const privateKey = cleanEnvVar(privateKeyEnv);
+        const clientEmail = cleanEnvVar(clientEmailEnv);
+        const projectId = cleanEnvVar(projectIdEnv);
 
-        console.log("DEBUG: formattedPrivateKey starts with:", JSON.stringify(formattedPrivateKey.substring(0, 40)));
-        console.log("DEBUG: formattedPrivateKey ends with:", JSON.stringify(formattedPrivateKey.substring(formattedPrivateKey.length - 40)));
-        console.log("DEBUG: formattedPrivateKey has actual newlines:", formattedPrivateKey.includes('\n'));
+        console.log("DEBUG: privateKey cleaned starts with:", JSON.stringify(privateKey.substring(0, 40)));
+        console.log("DEBUG: privateKey cleaned ends with:", JSON.stringify(privateKey.substring(privateKey.length - 40)));
+        console.log("DEBUG: privateKey cleaned has actual newlines:", privateKey.includes('\n'));
 
         admin.initializeApp({
             credential: admin.credential.cert({
-                projectId: projectIdEnv,
-                clientEmail: clientEmailEnv,
-                privateKey: formattedPrivateKey
+                projectId,
+                clientEmail,
+                privateKey
             }),
             databaseURL
         });
