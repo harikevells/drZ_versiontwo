@@ -11,7 +11,15 @@ const projectIdEnv = process.env.project_id || process.env.PROJECT_ID;
 
 if (privateKeyEnv && clientEmailEnv && projectIdEnv) {
     try {
-        const formattedPrivateKey = privateKeyEnv.replace(/\\n/g, '\n');
+        let formattedPrivateKey = privateKeyEnv.trim();
+        if (formattedPrivateKey.startsWith('"') && formattedPrivateKey.endsWith('"')) {
+            formattedPrivateKey = formattedPrivateKey.slice(1, -1);
+        }
+        if (formattedPrivateKey.startsWith("'") && formattedPrivateKey.endsWith("'")) {
+            formattedPrivateKey = formattedPrivateKey.slice(1, -1);
+        }
+        formattedPrivateKey = formattedPrivateKey.replace(/\\n/g, '\n').trim();
+
         admin.initializeApp({
             credential: admin.credential.cert({
                 projectId: projectIdEnv,
