@@ -5,7 +5,27 @@ const fs = require('fs');
 const serviceAccountPath = path.join(__dirname, '../serviceAccountKey.json');
 const databaseURL = 'https://drzapp-61e27-default-rtdb.firebaseio.com';
 
-if (process.env.FIREBASE_SERVICE_ACCOUNT) {
+const privateKeyEnv = process.env.private_key || process.env.PRIVATE_KEY;
+const clientEmailEnv = process.env.client_email || process.env.CLIENT_EMAIL;
+const projectIdEnv = process.env.project_id || process.env.PROJECT_ID;
+
+if (privateKeyEnv && clientEmailEnv && projectIdEnv) {
+    try {
+        const formattedPrivateKey = privateKeyEnv.replace(/\\n/g, '\n');
+        admin.initializeApp({
+            credential: admin.credential.cert({
+                projectId: projectIdEnv,
+                clientEmail: clientEmailEnv,
+                privateKey: formattedPrivateKey
+            }),
+            databaseURL
+        });
+        console.log("Firebase Admin initialized using individual environment variables");
+    } catch (err) {
+        console.error("Error initializing Firebase Admin with individual env variables:", err.message);
+        process.exit(1);
+    }
+} else if (process.env.FIREBASE_SERVICE_ACCOUNT) {
     try {
         const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
         admin.initializeApp({
