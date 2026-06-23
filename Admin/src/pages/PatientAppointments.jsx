@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { FaEye, FaTimes } from 'react-icons/fa';
+import Pagination from '../components/Pagination';
 import './PatientAppointments.css';
 
 const PatientAppointments = () => {
@@ -8,6 +9,12 @@ const PatientAppointments = () => {
   const [selectedAppointment, setSelectedAppointment] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [loading, setLoading] = useState(true);
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 3;
+
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterDate, setFilterDate] = useState('');
 
   const removeTamil = (text) => {
     if (!text) return text;
@@ -43,6 +50,29 @@ const PatientAppointments = () => {
     }
   };
 
+  const filteredAppointments = appointments.filter(appt => {
+    const searchLower = searchTerm.toLowerCase();
+    const matchesSearch = 
+      (appt.patient_name || '').toLowerCase().includes(searchLower) ||
+      (appt.doctor_name || '').toLowerCase().includes(searchLower) ||
+      ((appt.id || appt._id) || '').toLowerCase().includes(searchLower) ||
+      (appt.appointment_time || '').toLowerCase().includes(searchLower);
+
+    let matchesDate = true;
+    if (filterDate) {
+      const [y, m, d] = filterDate.split('-');
+      const normalizedFilter = `${d}/${m}/${y}`;
+      const apptDate = appt.appointment_date || '';
+      matchesDate = apptDate.replace(/\s+/g, '') === normalizedFilter.replace(/\s+/g, '');
+    }
+
+    return matchesSearch && matchesDate;
+  });
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, filterDate]);
+
   const handleView = (appointment) => {
     setSelectedAppointment(appointment);
     setIsModalOpen(true);
@@ -57,6 +87,25 @@ const PatientAppointments = () => {
     <div className="patient-appointments-container">
       <div className="header-section">
         <h2>Patient Appointments</h2>
+      </div>
+
+      <div className="filters-container">
+        <input 
+          type="text" 
+          placeholder="Search by Patient, Doctor, or ID..." 
+          value={searchTerm} 
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="search-input"
+        />
+        <input 
+          type="date" 
+          value={filterDate} 
+          onChange={(e) => setFilterDate(e.target.value)}
+          className="date-input"
+        />
+        {(searchTerm || filterDate) && (
+          <button className="clear-filter-btn" onClick={() => { setSearchTerm(''); setFilterDate(''); }}>Clear</button>
+        )}
       </div>
 
       <div className="table-container">
@@ -76,7 +125,7 @@ const PatientAppointments = () => {
               </tr>
             </thead>
             <tbody>
-              {appointments.length > 0 ? appointments.map((appt) => (
+              {filteredAppointments.length > 0 ? filteredAppointments.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage).map((appt) => (
                 <tr key={appt.id || appt._id}>
                   <td>{(appt.id || appt._id).slice(-6).toUpperCase()}</td>
                   <td>{appt.patient_name}</td>
@@ -103,6 +152,14 @@ const PatientAppointments = () => {
           </table>
         )}
       </div>
+      
+      {!loading && filteredAppointments.length > 0 && (
+        <Pagination 
+          currentPage={currentPage} 
+          totalPages={Math.ceil(filteredAppointments.length / itemsPerPage)} 
+          onPageChange={setCurrentPage} 
+        />
+      )}
 
       {isModalOpen && selectedAppointment && (
         <div className="modal-overlay">

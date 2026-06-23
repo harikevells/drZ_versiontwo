@@ -9,7 +9,7 @@ const { width } = Dimensions.get('window');
 
 // Replace with your local machine's IP address if testing on physical device,
 // or use 10.0.2.2 for Android emulator
-const API_URL = 'http://192.168.0.116:5000/api/auth/doctor/login';
+const API_URL = 'http://localhost:5000/api/auth/doctor/login';
 
 export default function LoginScreen() {
   const [email, setEmail] = useState('');

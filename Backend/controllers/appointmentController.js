@@ -62,7 +62,7 @@ const updateAppointmentStatus = async (req, res) => {
                 'patient',
                 appointment.login_mobile,
                 `Appointment ${status}`,
-                `Your appointment with Dr. ${appointment.doctor_name} for ${appointment.appointment_date} has been marked as ${status}.`,
+                `Your appointment with Dr. ${appointment.doctor_name} for ${appointment.appointment_date} at ${appointment.appointment_time} has been marked as ${status}.`,
                 'appointment_status'
             );
         }

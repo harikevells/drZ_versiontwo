@@ -1,33 +1,4 @@
 {
   "name": "doctorapp",
-  "displayName": "DoctorApp",
-  "expo": {
-    "name": "DoctorApp",
-    "slug": "DoctorApp",
-    "version": "1.0.0",
-    "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
-    "scheme": "doctorapp",
-    "userInterfaceStyle": "automatic",
-    "ios": {
-      "icon": "./assets/expo.icon"
-    },
-    "android": {
-      "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
-        "foregroundImage": "./assets/images/android-icon-foreground.png",
-        "backgroundImage": "./assets/images/android-icon-background.png",
-        "monochromeImage": "./assets/images/android-icon-monochrome.png"
-      },
-      "predictiveBackGestureEnabled": false,
-      "package": "com.anonymous.DoctorApp"
-    },
-    "web": {
-      "output": "single",
-      "favicon": "./assets/images/favicon.png"
-    },
-    "experiments": {
-      "reactCompiler": true
-    }
-  }
+  "displayName": "DoctorApp"
 }

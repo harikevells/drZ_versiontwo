@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { FaEdit, FaTrash, FaEye, FaEyeSlash } from 'react-icons/fa';
 import MultiSelectDropdown from '../components/MultiSelectDropdown';
+import Pagination from '../components/Pagination';
 import './DoctorManagement.css';
 
 const DEPARTMENT_OPTIONS = [
@@ -24,6 +25,11 @@ const DoctorManagement = () => {
   });
   const [editingId, setEditingId] = useState(null);
   const [showPassword, setShowPassword] = useState(false);
+  
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 3;
+
+  const [searchTerm, setSearchTerm] = useState('');
 
   const fetchDoctors = async () => {
     try {
@@ -123,6 +129,20 @@ const DoctorManagement = () => {
     }
   };
 
+  const filteredDoctors = doctors.filter(doc => {
+    const searchLower = searchTerm.toLowerCase();
+    return (
+      (doc.doctorName || '').toLowerCase().includes(searchLower) ||
+      (doc.department || '').toLowerCase().includes(searchLower) ||
+      (doc.email || '').toLowerCase().includes(searchLower) ||
+      (doc.mobile || '').toLowerCase().includes(searchLower)
+    );
+  });
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm]);
+
   return (
     <div className="page-container">
       <h1 className="page-title">Doctor Management</h1>
@@ -216,6 +236,19 @@ const DoctorManagement = () => {
         <h2 className="list-title">List:</h2>
       </div>
 
+      <div className="filters-container">
+        <input 
+          type="text" 
+          placeholder="Search by Name, Department, Email, or Mobile..." 
+          value={searchTerm} 
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="search-input"
+        />
+        {searchTerm && (
+          <button className="clear-filter-btn" onClick={() => setSearchTerm('')}>Clear</button>
+        )}
+      </div>
+
       <div className="table-container">
         <table className="data-table">
           <thead>
@@ -230,7 +263,7 @@ const DoctorManagement = () => {
             </tr>
           </thead>
           <tbody>
-            {doctors.map(doctor => {
+            {filteredDoctors.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage).map(doctor => {
               const cleanDept = doctor.department ? removeTamil(doctor.department) : '';
               const departments = cleanDept ? cleanDept.split(', ') : [];
               const visibleDepartments = departments.slice(0, 3);
@@ -267,7 +300,7 @@ const DoctorManagement = () => {
               </tr>
               );
             })}
-            {doctors.length === 0 && (
+            {filteredDoctors.length === 0 && (
               <tr>
                 <td colSpan="7" style={{textAlign: 'center', padding: '20px'}}>No doctors found</td>
               </tr>
@@ -275,6 +308,11 @@ const DoctorManagement = () => {
           </tbody>
         </table>
       </div>
+      <Pagination 
+        currentPage={currentPage} 
+        totalPages={Math.ceil(filteredDoctors.length / itemsPerPage)} 
+        onPageChange={setCurrentPage} 
+      />
     </div>
   );
 };

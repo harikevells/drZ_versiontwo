@@ -65,7 +65,7 @@ export default function Header({ title, isNotification = false }: HeaderProps) {
 
   const fetchUnreadCount = async (name: string) => {
     try {
-      const response = await axios.get(`http://192.168.0.116:5000/api/notifications/doctor/${name}`);
+      const response = await axios.get(`http://localhost:5000/api/notifications/doctor/${name}`);
       const count = response.data.filter((n: any) => !n.isRead).length;
       setUnreadCount(count);
     } catch (error) {

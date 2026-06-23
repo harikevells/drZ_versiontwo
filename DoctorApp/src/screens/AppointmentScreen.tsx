@@ -9,7 +9,7 @@ import ApproveModal from '../components/ApproveModal';
 import CompleteModal from '../components/CompleteModal';
 import CancelModal from '../components/CancelModal';
 
-const API_URL = 'http://192.168.0.116:5000/api/appointments';
+const API_URL = 'http://localhost:5000/api/appointments';
 
 export default function AppointmentScreen() {
   const [appointments, setAppointments] = useState<any[]>([]);

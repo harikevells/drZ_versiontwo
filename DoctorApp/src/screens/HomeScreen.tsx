@@ -9,7 +9,7 @@ import RescheduleModal from '../components/RescheduleModal';
 import ApproveModal from '../components/ApproveModal';
 import CancelModal from '../components/CancelModal';
 
-const API_URL = 'http://192.168.0.116:5000/api/appointments';
+const API_URL = 'http://localhost:5000/api/appointments';
 
 export default function HomeScreen() {
   const navigation = useNavigation<any>();

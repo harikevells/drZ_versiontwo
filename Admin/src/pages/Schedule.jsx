@@ -3,6 +3,7 @@ import axios from 'axios';
 import { FaEdit, FaTrash, FaRegCalendarAlt, FaRegClock, FaInfoCircle } from 'react-icons/fa';
 import RescheduleModal from '../components/RescheduleModal';
 import ScheduleCreateModal from '../components/ScheduleCreateModal';
+import Pagination from '../components/Pagination';
 import './Schedule.css';
 
 const Schedule = () => {
@@ -25,6 +26,12 @@ const Schedule = () => {
   const [currentEditId, setCurrentEditId] = useState(null);
   const [currentDoctorId, setCurrentDoctorId] = useState(null);
   const [modalInitialDate, setModalInitialDate] = useState('');
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 3;
+
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterDate, setFilterDate] = useState('');
 
   const fetchSchedulesAndDoctors = async () => {
     try {
@@ -51,6 +58,29 @@ const Schedule = () => {
   useEffect(() => {
     fetchSchedulesAndDoctors();
   }, []);
+
+  const filteredSchedules = schedules.filter(schedule => {
+    const searchLower = searchTerm.toLowerCase();
+    const timeString = Array.isArray(schedule.time) ? schedule.time.join(' ') : (schedule.time || '');
+    const matchesSearch = 
+      (schedule.doctorName || '').toLowerCase().includes(searchLower) ||
+      (schedule.department || '').toLowerCase().includes(searchLower) ||
+      timeString.toLowerCase().includes(searchLower);
+
+    let matchesDate = true;
+    if (filterDate) {
+      const [y, m, d] = filterDate.split('-');
+      const normalizedFilter = `${d}/${m}/${y}`;
+      const schedDate = schedule.date || '';
+      matchesDate = schedDate.replace(/\s+/g, '') === normalizedFilter.replace(/\s+/g, '');
+    }
+
+    return matchesSearch && matchesDate;
+  });
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, filterDate]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -343,6 +373,25 @@ const Schedule = () => {
         <h2 className="list-title">List:</h2>
       </div>
 
+      <div className="filters-container">
+        <input 
+          type="text" 
+          placeholder="Search by Doctor or Department..." 
+          value={searchTerm} 
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="search-input"
+        />
+        <input 
+          type="date" 
+          value={filterDate} 
+          onChange={(e) => setFilterDate(e.target.value)}
+          className="date-input"
+        />
+        {(searchTerm || filterDate) && (
+          <button className="clear-filter-btn" onClick={() => { setSearchTerm(''); setFilterDate(''); }}>Clear</button>
+        )}
+      </div>
+
       <div className="table-container">
         <table className="data-table">
           <thead>
@@ -355,7 +404,7 @@ const Schedule = () => {
             </tr>
           </thead>
           <tbody>
-            {schedules.map(schedule => {
+            {filteredSchedules.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage).map(schedule => {
               const cleanDept = schedule.department ? removeTamil(schedule.department) : '';
               const departments = cleanDept ? cleanDept.split(', ') : [];
               const visibleDepartments = departments.slice(0, 3);
@@ -416,6 +465,11 @@ const Schedule = () => {
           </tbody>
         </table>
       </div>
+      <Pagination 
+        currentPage={currentPage} 
+        totalPages={Math.ceil(filteredSchedules.length / itemsPerPage)} 
+        onPageChange={setCurrentPage} 
+      />
 
       <RescheduleModal 
         isOpen={isModalOpen} 

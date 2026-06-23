@@ -11,7 +11,7 @@ interface Props {
   doctorName: string;
 }
 
-const API_URL = 'http://192.168.0.116:5000/api/appointments';
+const API_URL = 'http://localhost:5000/api/appointments';
 
 export default function RescheduleModal({ visible, onClose, patientId, doctorName }: Props) {
   const [selectedTime, setSelectedTime] = useState('');
@@ -58,7 +58,7 @@ export default function RescheduleModal({ visible, onClose, patientId, doctorNam
       const parts = date.split('/');
       const scheduleDate = `${parts[2]}-${parts[1]}-${parts[0]}`;
 
-      const scheduleRes = await axios.get(`http://192.168.0.116:5000/api/schedules?doctorName=${encodeURIComponent(doctorName)}&date=${encodeURIComponent(scheduleDate)}`);
+      const scheduleRes = await axios.get(`http://localhost:5000/api/schedules?doctorName=${encodeURIComponent(doctorName)}&date=${encodeURIComponent(scheduleDate)}`);
       if (scheduleRes.data && scheduleRes.data.length > 0) {
         const schedule = scheduleRes.data.find((s: any) => s.status === 'Approved') || scheduleRes.data[0];
         let normalizedAvailable = schedule.time.map((t: string) => t.split(' to ')[0].trim().toLowerCase());

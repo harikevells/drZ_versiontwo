@@ -209,3 +209,39 @@
   color: #1976d2;
   font-weight: 600;
 }
+
+.filters-container {
+  display: flex;
+  gap: 15px;
+  margin-bottom: 20px;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.search-input, .date-input {
+  padding: 10px 15px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 14px;
+  outline: none;
+}
+
+.search-input {
+  flex: 1;
+  max-width: 400px;
+}
+
+.clear-filter-btn {
+  padding: 10px 15px;
+  background-color: #f3f4f6;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  cursor: pointer;
+  color: #374151;
+  font-size: 14px;
+  transition: all 0.2s;
+}
+
+.clear-filter-btn:hover {
+  background-color: #e5e7eb;
+}

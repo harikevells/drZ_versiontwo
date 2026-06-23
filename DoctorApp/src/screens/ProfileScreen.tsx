@@ -49,7 +49,7 @@ export default function ProfileScreen() {
           setUserData(parsedData);
           
           try {
-            const res = await axios.get('http://192.168.0.116:5000/api/doctors');
+            const res = await axios.get('http://localhost:5000/api/doctors');
             const fullProfile = res.data.find((d: any) => d.email === parsedData.email);
             if (fullProfile) {
               setUserData({ ...parsedData, ...fullProfile });
