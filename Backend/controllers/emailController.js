@@ -60,6 +60,15 @@ const sendBookingEmail = async (req, res) => {
             'appointment'
         );
 
+        // Notify Doctor
+        await createNotification(
+            'doctor',
+            doctor_name,
+            'New Appointment Booked',
+            `Patient ${patient_name} has booked a new appointment with you on ${appointment_date} at ${appointment_time}.`,
+            'appointment'
+        );
+
         // Notify Patient
         await createNotification(
             'patient',

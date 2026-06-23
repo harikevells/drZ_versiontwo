@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, RefreshControl, Alert } from 'react-native';
 import Header from '../components/Header';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useIsFocused } from '@react-navigation/native';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -11,16 +11,14 @@ const API_URL = `${API_BASE_URL}/notifications`;
 
 export default function NotificationsScreen() {
   const navigation = useNavigation();
+  const isFocused = useIsFocused();
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
-  useEffect(() => {
-    fetchNotifications();
-  }, []);
-
-  const fetchNotifications = async () => {
+  const fetchNotifications = async (showLoading = true) => {
     try {
-      setLoading(true);
+      if (showLoading) setLoading(true);
       const data = await AsyncStorage.getItem('userData');
       if (data) {
         const parsed = JSON.parse(data);
@@ -29,11 +27,24 @@ export default function NotificationsScreen() {
           setNotifications(response.data);
         }
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error fetching notifications:', error);
+      Alert.alert('Error', 'Failed to fetch notifications: ' + error.message);
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
+  };
+
+  useEffect(() => {
+    if (isFocused) {
+      fetchNotifications(notifications.length === 0);
+    }
+  }, [isFocused]);
+
+  const onRefresh = () => {
+    setRefreshing(true);
+    fetchNotifications(false);
   };
 
   const handleMarkAsRead = async (id: string) => {
@@ -48,7 +59,9 @@ export default function NotificationsScreen() {
   };
 
   const formatDate = (dateString: string) => {
+    if (!dateString) return '';
     const d = new Date(dateString);
+    if (isNaN(d.getTime())) return '';
     return d.toLocaleDateString() + ' ' + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
@@ -64,7 +77,13 @@ export default function NotificationsScreen() {
       {loading ? (
         <ActivityIndicator size="large" color="#0084FF" style={{ marginTop: 50 }} />
       ) : (
-        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
+        <ScrollView 
+          showsVerticalScrollIndicator={false} 
+          contentContainerStyle={styles.scrollContent}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          }
+        >
           {notifications.length === 0 ? (
             <Text style={{ textAlign: 'center', color: '#999', marginTop: 50 }}>No notifications found.</Text>
           ) : (
