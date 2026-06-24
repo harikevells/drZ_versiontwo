@@ -1,15 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, FlatList, ActivityIndicator, Alert, TouchableOpacity, ScrollView } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import axios from 'axios';
 import Header from '../components/Header';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import RescheduleModal from '../components/RescheduleModal';
 import ApproveModal from '../components/ApproveModal';
 import CompleteModal from '../components/CompleteModal';
 import CancelModal from '../components/CancelModal';
-
-const API_URL = 'http://localhost:5000/api/appointments';
+import { getAppointments, updateAppointmentStatus } from '../utils/database';
 
 export default function AppointmentScreen() {
   const [appointments, setAppointments] = useState<any[]>([]);
@@ -29,9 +27,10 @@ export default function AppointmentScreen() {
       const storedData = await AsyncStorage.getItem('userData');
       if (storedData) {
         const user = JSON.parse(storedData);
-        setDoctorName(user.doctorName);
-        const response = await axios.get(`${API_URL}/all/${encodeURIComponent(user.doctorName)}`);
-        setAppointments(response.data);
+        const docName = user.doctorName || user.name || 'Dr. John Doe';
+        setDoctorName(docName);
+        const data = await getAppointments(docName);
+        setAppointments(data);
       }
     } catch (error) {
       console.error('Error fetching appointments:', error);
@@ -43,11 +42,18 @@ export default function AppointmentScreen() {
 
   useEffect(() => {
     fetchAppointments();
+    
+    // Auto refresh every 10 seconds to reflect deleted old data
+    const interval = setInterval(() => {
+      fetchAppointments();
+    }, 10000);
+    
+    return () => clearInterval(interval);
   }, []);
 
   const handleStatusUpdate = async (id: string, status: string) => {
     try {
-      await axios.put(`${API_URL}/${id}/status`, { status });
+      await updateAppointmentStatus(id, status);
       Alert.alert('Success', `Appointment ${status.toLowerCase()} successfully!`);
       fetchAppointments();
     } catch (error) {
@@ -173,12 +179,7 @@ export default function AppointmentScreen() {
                     >
                       <Text style={styles.btnText}>Approve</Text>
                     </TouchableOpacity>
-                    <TouchableOpacity 
-                      style={[styles.btn, styles.rescheduleBtn]}
-                      onPress={() => openReschedule(item)}
-                    >
-                      <Text style={styles.btnText}>Reschedule</Text>
-                    </TouchableOpacity>
+
                     <TouchableOpacity 
                       style={[styles.btn, styles.cancelBtn]}
                       onPress={() => openCancel(item)}

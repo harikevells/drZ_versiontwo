@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, ActivityIndicator, TouchableOpacity, Alert, Image } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import axios from 'axios';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import Header from '../components/Header';
 import { useNavigation } from '@react-navigation/native';
+import { getDoctorProfile, clearAllDatabaseData } from '../utils/database';
 
 export default function ProfileScreen() {
   const navigation = useNavigation<any>();
@@ -40,6 +40,29 @@ export default function ProfileScreen() {
     );
   };
 
+  const handleClearData = () => {
+    Alert.alert(
+      "Clear All Data",
+      "Are you sure you want to clear all appointments and notifications? This action cannot be undone.",
+      [
+        { text: "Cancel", style: "cancel" },
+        { 
+          text: "Clear Data", 
+          onPress: async () => {
+            try {
+              await clearAllDatabaseData();
+              Alert.alert("Success", "All stored database data has been cleared.");
+            } catch (error) {
+              console.error("Clear data failed", error);
+              Alert.alert("Error", "Failed to clear data");
+            }
+          },
+          style: "destructive"
+        }
+      ]
+    );
+  };
+
   useEffect(() => {
     const fetchUserData = async () => {
       try {
@@ -49,13 +72,12 @@ export default function ProfileScreen() {
           setUserData(parsedData);
           
           try {
-            const res = await axios.get('http://localhost:5000/api/doctors');
-            const fullProfile = res.data.find((d: any) => d.email === parsedData.email);
+            const fullProfile = await getDoctorProfile(parsedData.email);
             if (fullProfile) {
               setUserData({ ...parsedData, ...fullProfile });
             }
           } catch (apiError) {
-            console.error('Failed to fetch full doctor profile', apiError);
+            console.error('Failed to fetch full doctor profile from db', apiError);
           }
         }
       } catch (error) {
@@ -87,7 +109,7 @@ export default function ProfileScreen() {
               style={{ width: '100%', height: '100%', resizeMode: 'contain' }} 
             />
           </View>
-          <Text style={styles.doctorName}>Dr. {userData?.doctorName || 'Doctor'}</Text>
+          <Text style={styles.doctorName}>{userData?.doctorName?.startsWith('Dr.') ? userData.doctorName : `Dr. ${userData?.doctorName || 'Doctor'}`}</Text>
         </View>
 
         <View style={styles.detailsContainer}>
@@ -147,6 +169,11 @@ export default function ProfileScreen() {
         <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
           <Ionicons name="log-out-outline" size={24} color="#FFF" />
           <Text style={styles.logoutText}>Logout</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity style={[styles.logoutButton, { backgroundColor: '#FFA500', marginBottom: 20 }]} onPress={handleClearData}>
+          <Ionicons name="trash-bin-outline" size={24} color="#FFF" />
+          <Text style={styles.logoutText}>Clear Database Data</Text>
         </TouchableOpacity>
       </ScrollView>
     </View>

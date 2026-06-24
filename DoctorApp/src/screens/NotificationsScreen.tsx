@@ -3,10 +3,8 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator
 import Header from '../components/Header';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { useNavigation } from '@react-navigation/native';
-import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-
-const API_URL = 'http://localhost:5000/api/notifications';
+import { getNotifications, markNotificationAsRead, markAllNotificationsAsRead } from '../utils/database';
 
 export default function NotificationsScreen() {
   const navigation = useNavigation();
@@ -15,6 +13,13 @@ export default function NotificationsScreen() {
 
   useEffect(() => {
     fetchNotifications();
+    
+    // Auto refresh every 10 seconds to reflect deleted old data
+    const interval = setInterval(() => {
+      fetchNotifications();
+    }, 10000);
+    
+    return () => clearInterval(interval);
   }, []);
 
   const fetchNotifications = async () => {
@@ -23,9 +28,10 @@ export default function NotificationsScreen() {
       const data = await AsyncStorage.getItem('userData');
       if (data) {
         const parsed = JSON.parse(data);
-        if (parsed.doctorName) {
-          const response = await axios.get(`${API_URL}/doctor/${parsed.doctorName}`);
-          setNotifications(response.data);
+        const docName = parsed.doctorName || parsed.name || 'Dr. John Doe';
+        if (docName) {
+          const notifs = await getNotifications(docName);
+          setNotifications(notifs as any);
         }
       }
     } catch (error) {
@@ -37,7 +43,7 @@ export default function NotificationsScreen() {
 
   const handleMarkAsRead = async (id: string) => {
     try {
-      await axios.put(`${API_URL}/${id}/read`);
+      await markNotificationAsRead(id);
       setNotifications((prev) => 
         prev.map((notif: any) => (notif._id === id || notif.id === id ? { ...notif, isRead: true } : notif))
       );
@@ -46,18 +52,43 @@ export default function NotificationsScreen() {
     }
   };
 
+  const handleMarkAllAsRead = async () => {
+    try {
+      const data = await AsyncStorage.getItem('userData');
+      if (data) {
+        const parsed = JSON.parse(data);
+        const docName = parsed.doctorName || parsed.name || 'Dr. John Doe';
+        await markAllNotificationsAsRead(docName);
+        setNotifications((prev) => prev.map((notif: any) => ({ ...notif, isRead: true })));
+      }
+    } catch (error) {
+      console.error('Error marking all as read:', error);
+    }
+  };
+
   const formatDate = (dateString: string) => {
     const d = new Date(dateString);
     return d.toLocaleDateString() + ' ' + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
+  const unreadCount = notifications.filter((n: any) => !n.isRead).length;
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-          <Ionicons name="arrow-back" size={24} color="#FFF" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Notifications</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+            <Ionicons name="arrow-back" size={24} color="#FFF" />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Notifications</Text>
+        </View>
+        
+        {unreadCount > 0 && (
+          <TouchableOpacity onPress={handleMarkAllAsRead} style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <Ionicons name="checkmark-done" size={20} color="#0084FF" />
+            <Text style={{ color: '#0084FF', marginLeft: 5, fontSize: 14 }}>Mark all</Text>
+          </TouchableOpacity>
+        )}
       </View>
       
       {loading ? (
@@ -102,6 +133,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#052A3F',
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
     paddingTop: 50,
     paddingBottom: 20,
     paddingHorizontal: 20,

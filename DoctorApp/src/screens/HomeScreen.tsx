@@ -1,15 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, FlatList, ActivityIndicator, Alert, RefreshControl } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import axios from 'axios';
 import Header from '../components/Header';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { useNavigation } from '@react-navigation/native';
 import RescheduleModal from '../components/RescheduleModal';
 import ApproveModal from '../components/ApproveModal';
 import CancelModal from '../components/CancelModal';
-
-const API_URL = 'http://localhost:5000/api/appointments';
+import { getDashboardData, updateAppointmentStatus } from '../utils/database';
 
 export default function HomeScreen() {
   const navigation = useNavigation<any>();
@@ -30,11 +28,12 @@ export default function HomeScreen() {
       const storedData = await AsyncStorage.getItem('userData');
       if (storedData) {
         const user = JSON.parse(storedData);
-        setDoctorName(user.doctorName);
-        const response = await axios.get(`${API_URL}/dashboard/${user.doctorName}`);
-        setStats(response.data.stats);
-        setPatientRequests(response.data.patientRequests);
-        setRecentPatients(response.data.recentPatients);
+        const docName = user.doctorName || user.name || 'Dr. John Doe';
+        setDoctorName(docName);
+        const data = await getDashboardData(docName);
+        setStats(data.stats);
+        setPatientRequests(data.patientRequests);
+        setRecentPatients(data.recentPatients);
       }
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
@@ -46,6 +45,13 @@ export default function HomeScreen() {
 
   useEffect(() => {
     fetchDashboardData();
+    
+    // Auto refresh every 10 seconds to reflect deleted old data
+    const interval = setInterval(() => {
+      fetchDashboardData();
+    }, 10000);
+    
+    return () => clearInterval(interval);
   }, []);
 
   const onRefresh = () => {
@@ -55,7 +61,7 @@ export default function HomeScreen() {
 
   const handleStatusUpdate = async (id: string, status: string) => {
     try {
-      await axios.put(`${API_URL}/${id}/status`, { status });
+      await updateAppointmentStatus(id, status);
       Alert.alert('Success', `Appointment ${status.toLowerCase()} successfully!`);
       fetchDashboardData(); // Refresh list after update
     } catch (error) {
@@ -151,12 +157,7 @@ export default function HomeScreen() {
                 >
                   <Text style={styles.btnText}>Approve</Text>
                 </TouchableOpacity>
-                <TouchableOpacity 
-                  style={[styles.btn, styles.rescheduleBtn]}
-                  onPress={() => openReschedule(patient)}
-                >
-                  <Text style={styles.btnText}>Reschedule</Text>
-                </TouchableOpacity>
+
                 <TouchableOpacity 
                   style={[styles.btn, styles.cancelBtn]}
                   onPress={() => openCancel(patient)}

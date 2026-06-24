@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, Image, TouchableOpacity, Dimensions } from 'rea
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { useNavigation, useIsFocused } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import axios from 'axios';
+import { getNotifications } from '../utils/database';
 
 const { width } = Dimensions.get('window');
 
@@ -65,8 +65,8 @@ export default function Header({ title, isNotification = false }: HeaderProps) {
 
   const fetchUnreadCount = async (name: string) => {
     try {
-      const response = await axios.get(`http://localhost:5000/api/notifications/doctor/${name}`);
-      const count = response.data.filter((n: any) => !n.isRead).length;
+      const data = await getNotifications(name);
+      const count = data.filter((n: any) => !n.isRead).length;
       setUnreadCount(count);
     } catch (error) {
       console.log('Error fetching notification count:', error);
