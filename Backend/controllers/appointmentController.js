@@ -58,11 +58,17 @@ const updateAppointmentStatus = async (req, res) => {
 
         // Notify Patient
         if (appointment.login_mobile) {
+            let patientMessage;
+            if (status === 'Rescheduled') {
+                patientMessage = `Your appointment with Dr. ${appointment.doctor_name} has been Rescheduled to ${appointment.appointment_date} ${appointment.appointment_time}.`;
+            } else {
+                patientMessage = `Your appointment with Dr. ${appointment.doctor_name} for ${appointment.appointment_date} has been marked as ${status}.`;
+            }
             await createNotification(
                 'patient',
                 appointment.login_mobile,
                 `Appointment ${status}`,
-                `Your appointment with Dr. ${appointment.doctor_name} for ${appointment.appointment_date} has been marked as ${status}.`,
+                patientMessage,
                 'appointment_status'
             );
         }
