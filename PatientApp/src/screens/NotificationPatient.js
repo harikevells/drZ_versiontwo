@@ -23,15 +23,27 @@ const NotificationPatient = ({ navigation }) => {
     }
   }, [isFocused]);
 
+  // Tick icon click → mark ALL as read (count = 0)
   const handleMarkAllAsRead = async () => {
     if (!user || (!user.contactNumber && !user.mobile)) return;
     try {
       const mobile = user.contactNumber || user.mobile;
       await axios.put(`${BASE_URL}/api/notifications/readAll/patient/${mobile}`);
-      // Update local state visually
       setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
     } catch (error) {
-      console.log("Error marking as read", error);
+      console.log('Error marking all as read', error);
+    }
+  };
+
+  // Notification box/card click → mark SINGLE notification as read (count -1)
+  const handleMarkSingleRead = async (notifId) => {
+    try {
+      await axios.put(`${BASE_URL}/api/notifications/${notifId}/read`);
+      setNotifications(prev =>
+        prev.map(n => (n.id === notifId ? { ...n, isRead: true } : n))
+      );
+    } catch (error) {
+      console.log('Error marking notification as read', error);
     }
   };
 
@@ -40,17 +52,18 @@ const NotificationPatient = ({ navigation }) => {
       setLoading(false);
       return;
     }
-    
+
     try {
       const mobile = user.contactNumber || user.mobile;
-      const response = await axios.get(`${BASE_URL}/api/notifications/patient/${mobile}`);
+      const timestamp = new Date().getTime();
+      const response = await axios.get(`${BASE_URL}/api/notifications/patient/${mobile}?t=${timestamp}`);
       
       const realNotifications = response.data || [];
-      
+
       const formattedNotifications = realNotifications.map(n => {
         let iconName = 'bell-outline';
         let iconColor = '#1C3E55';
-        
+
         if (n.title.includes('Submitted') || n.title.includes('Booked')) {
           iconColor = '#3498DB';
           iconName = 'calendar-check-outline';
@@ -69,7 +82,7 @@ const NotificationPatient = ({ navigation }) => {
         }
 
         return {
-          id: n.id || Math.random().toString(),
+          id: n.id || n._id || Math.random().toString(),
           title: n.title,
           message: n.message,
           iconName,
@@ -81,14 +94,22 @@ const NotificationPatient = ({ navigation }) => {
 
       setNotifications(formattedNotifications);
     } catch (error) {
-      console.error("Error fetching notifications:", error);
+      console.error('Error fetching notifications:', error);
     } finally {
       setLoading(false);
     }
   };
 
   const renderItem = ({ item }) => (
-    <View style={[styles.notificationCard, !item.isRead && styles.unreadCard]}>
+    <TouchableOpacity
+      activeOpacity={item.isRead ? 1 : 0.7}
+      onPress={() => {
+        if (!item.isRead) {
+          handleMarkSingleRead(item.id);
+        }
+      }}
+      style={[styles.notificationCard, !item.isRead && styles.unreadCard]}
+    >
       <View style={[styles.iconContainer, { backgroundColor: item.iconColor + '20' }]}>
         <Icon name={item.iconName} size={30} color={item.iconColor} />
       </View>
@@ -100,7 +121,7 @@ const NotificationPatient = ({ navigation }) => {
         <Text style={styles.cardMessage}>{item.message}</Text>
         <Text style={styles.cardDate}>{item.date}</Text>
       </View>
-    </View>
+    </TouchableOpacity>
   );
 
   return (
@@ -111,6 +132,7 @@ const NotificationPatient = ({ navigation }) => {
           <Icon name="arrow-left" size={28} color="#1C3E55" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Notifications</Text>
+        {/* Tick icon → mark all read */}
         <TouchableOpacity onPress={handleMarkAllAsRead} style={{ padding: 4 }}>
           <Icon name="check-all" size={26} color="#1C3E55" />
         </TouchableOpacity>

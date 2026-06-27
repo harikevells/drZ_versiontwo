@@ -166,7 +166,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#F8F9FA',
   },
   scrollContent: {
-    paddingBottom: 10,
+    paddingBottom: 0,
   },
   profileHeader: {
     backgroundColor: 'transparent',

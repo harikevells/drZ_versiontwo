@@ -8,7 +8,8 @@ const createNotification = async (role, identifier, title, message, type = 'info
             identifier,
             title,
             message,
-            type
+            type,
+            isRead: false
         });
         await notification.save();
         return notification;
@@ -50,7 +51,7 @@ const markAsRead = async (req, res) => {
 const markAllAsRead = async (req, res) => {
     try {
         const { role, identifier } = req.params;
-        await Notification.updateMany({ role, identifier, isRead: false }, { isRead: true });
+        await Notification.updateMany({ role, identifier }, { isRead: true });
         res.status(200).json({ message: "All notifications marked as read" });
     } catch (error) {
         res.status(500).json({ message: "Failed to update notifications", error: error.message });

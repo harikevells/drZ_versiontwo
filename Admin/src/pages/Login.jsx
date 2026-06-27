@@ -16,7 +16,8 @@ const Login = () => {
   const handleLogin = async (e) => {
     e.preventDefault();
     if (email.toLowerCase() === 'admin@drz.com' && password === 'Admin@123') {
-      localStorage.setItem('token', 'static-admin-token');
+      sessionStorage.setItem('token', 'static-admin-token');
+      sessionStorage.setItem('loginTimestamp', new Date().getTime().toString());
       navigate('/dashboard');
       return;
     }
@@ -25,7 +26,8 @@ const Login = () => {
         email,
         password
       });
-      localStorage.setItem('token', response.data.token);
+      sessionStorage.setItem('token', response.data.token);
+      sessionStorage.setItem('loginTimestamp', new Date().getTime().toString());
       navigate('/dashboard');
     } catch (err) {
       setError('Invalid username or password');
@@ -45,7 +47,7 @@ const Login = () => {
       
       <div className="login-right">
         <div className="login-card">
-          <h2 className="login-title">Login to DrZ</h2>
+          <h2 className="login-title">Login to DrZ Admin</h2>
           {error && <p className="error-message">{error}</p>}
           <form onSubmit={handleLogin}>
             <div className="input-group">

@@ -122,7 +122,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#052A3F',
     flexDirection: 'row',
     alignItems: 'center',
-    paddingTop: 50,
+    paddingTop: 20,
     paddingBottom: 20,
     paddingHorizontal: 20,
   },

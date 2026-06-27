@@ -109,12 +109,12 @@ export default function Header({ title, isNotification = false }: HeaderProps) {
 const styles = StyleSheet.create({
   headerContainer: {
     backgroundColor: '#052A3F',
-    height: 100,
+    height: 70,
     width: '100%',
     // transform: [{ scaleX: 1.5 }],
     alignItems: 'center',
     justifyContent: 'flex-end',
-    paddingBottom: 20,
+    paddingBottom: 10,
     marginBottom: 20,
   },
   headerContent: {
@@ -130,8 +130,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   avatar: {
-    width: 90,
-    height: 40,
+    width: 120,
+    height: 50,
     borderRadius: 25,
     // borderWidth: 2,
     borderColor: '#FFF',

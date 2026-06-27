@@ -139,7 +139,7 @@ export default function HomeScreen() {
         {patientRequests.length === 0 ? (
           <Text style={{ textAlign: 'center', color: '#999', marginVertical: 20 }}>No pending requests.</Text>
         ) : (
-          patientRequests.map((patient: any) => (
+          patientRequests.slice(0, 3).map((patient: any) => (
             <View key={patient.id || patient._id} style={styles.requestCard}>
               <View style={styles.cardHeader}>
                 <Text style={styles.patientName}>{patient.patient_name}</Text>

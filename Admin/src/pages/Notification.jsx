@@ -27,8 +27,18 @@ const Notification = () => {
     try {
       await axios.put(`${API_BASE_URL}/notifications/${id}/read`);
       setNotifications((prev) =>
-        prev.map((notif) => (notif.id === id ? { ...notif, isRead: true } : notif))
+        prev.map((notif) => {
+          const itemId = notif.id || notif._id;
+          return itemId === id ? { ...notif, isRead: true } : notif;
+        })
       );
+      
+      const updatedNotifs = notifications.map((notif) => {
+        const itemId = notif.id || notif._id;
+        return itemId === id ? { ...notif, isRead: true } : notif;
+      });
+      const newCount = updatedNotifs.filter(n => !n.isRead).length;
+      window.dispatchEvent(new CustomEvent('notification-updated', { detail: { unreadCount: newCount } }));
     } catch (error) {
       console.error('Error marking as read:', error);
     }
@@ -36,8 +46,26 @@ const Notification = () => {
 
   const handleMarkAllAsRead = async () => {
     try {
-      await axios.put(`${API_BASE_URL}/notifications/readAll/admin/admin`);
+      const unreadNotifs = notifications.filter((notif) => {
+        const isRead = notif.isRead === true || notif.isRead === 1 || notif.isRead === 'true';
+        return !isRead;
+      });
+
+      await Promise.all(
+        unreadNotifs.map((notif) => {
+          const itemId = notif.id || notif._id;
+          return axios.put(`${API_BASE_URL}/notifications/${itemId}/read`);
+        })
+      );
+
+      try {
+        await axios.put(`${API_BASE_URL}/notifications/readAll/admin/admin`);
+      } catch (err) {
+        console.warn('Bulk readAll fallback warning:', err);
+      }
+
       setNotifications((prev) => prev.map((notif) => ({ ...notif, isRead: true })));
+      window.dispatchEvent(new CustomEvent('notification-updated', { detail: { unreadCount: 0 } }));
     } catch (error) {
       console.error('Error marking all as read:', error);
     }
@@ -66,24 +94,28 @@ const Notification = () => {
         {notifications.length === 0 ? (
           <div className="no-notifications">No notifications found.</div>
         ) : (
-          notifications.map((notif) => (
-            <div
-              key={notif.id}
-              className={`notification-card ${notif.isRead ? 'read' : 'unread'}`}
-              onClick={() => {
-                if (!notif.isRead) handleMarkAsRead(notif.id);
-              }}
-            >
-              <div className="notification-content">
-                <div className="notification-title">{notif.title}</div>
-                <div className="notification-message">{notif.message}</div>
-                <div className="notification-time">
-                  {new Date(notif.createdAt).toLocaleString()}
+          notifications.map((notif) => {
+            const itemId = notif.id || notif._id;
+            const isRead = notif.isRead === true || notif.isRead === 1 || notif.isRead === 'true';
+            return (
+              <div
+                key={itemId}
+                className={`notification-card ${isRead ? 'read' : 'unread'}`}
+                onClick={() => {
+                  if (!isRead) handleMarkAsRead(itemId);
+                }}
+              >
+                <div className="notification-content">
+                  <div className="notification-title">{notif.title}</div>
+                  <div className="notification-message">{notif.message}</div>
+                  <div className="notification-time">
+                    {new Date(notif.createdAt).toLocaleString()}
+                  </div>
                 </div>
+                {!isRead && <div className="unread-indicator"></div>}
               </div>
-              {!notif.isRead && <div className="unread-indicator"></div>}
-            </div>
-          ))
+            );
+          })
         )}
       </div>
     </div>

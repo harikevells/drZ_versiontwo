@@ -9,9 +9,37 @@ const ScheduleCreateModal = ({ isOpen, onClose, onSave, initialDate, initialSlot
   const [currentMonth, setCurrentMonth] = useState(new Date().getMonth());
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
 
+  const getLocalDateString = (d = new Date()) => {
+    const y = d.getUTCFullYear ? d.getFullYear() : new Date().getFullYear();
+    const m = (d.getMonth() + 1).toString().padStart(2, '0');
+    const day = d.getDate().toString().padStart(2, '0');
+    return `${y}-${m}-${day}`;
+  };
+
+  const isPastDate = (year, month, day) => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const targetDate = new Date(year, month, day);
+    return targetDate < today;
+  };
+
+  const getSlotStartMinutes = (slotStr) => {
+    const startPart = slotStr.split(' to ')[0];
+    const match = startPart.match(/(\d+)\.(\d+)(am|pm)/i);
+    if (!match) return 0;
+    let hrs = parseInt(match[1], 10);
+    const mins = parseInt(match[2], 10);
+    const ampm = match[3].toLowerCase();
+    
+    if (ampm === 'pm' && hrs < 12) hrs += 12;
+    if (ampm === 'am' && hrs === 12) hrs = 0;
+    
+    return hrs * 60 + mins;
+  };
+
   useEffect(() => {
     if (isOpen) {
-      const initDate = initialDate || new Date().toISOString().split('T')[0];
+      const initDate = initialDate || getLocalDateString();
       setSelectedDate(initDate);
       setSelectedSlots(initialSlots || []);
       
@@ -155,12 +183,15 @@ const ScheduleCreateModal = ({ isOpen, onClose, onSave, initialDate, initialSlot
               
               {days.map((day) => {
                 const dateStr = `${currentYear}-${(currentMonth + 1).toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
+                const isPast = isPastDate(currentYear, currentMonth, day);
                 
                 return (
                   <div 
                     key={day} 
-                    className={`day ${selectedDate === dateStr ? 'selected' : ''}`}
-                    onClick={() => setSelectedDate(dateStr)}
+                    className={`day ${isPast ? 'disabled' : ''} ${selectedDate === dateStr ? 'selected' : ''}`}
+                    onClick={() => {
+                      if (!isPast) setSelectedDate(dateStr);
+                    }}
                   >
                     {day.toString().padStart(2, '0')}
                   </div>
@@ -175,18 +206,26 @@ const ScheduleCreateModal = ({ isOpen, onClose, onSave, initialDate, initialSlot
           <div className="time-section">
             <h3 className="time-header">{getDisplayDate()}</h3>
             <div className="slots-list">
-              {fullDaySlots.map((slot, index) => {
-                const isSelected = selectedSlots.includes(slot);
-                return (
-                  <div 
-                    key={index} 
-                    className={`time-slot ${isSelected ? 'selected' : ''}`}
-                    onClick={() => toggleSlot(slot)}
-                  >
-                    {formatSlotForDisplay(slot)}
-                  </div>
-                );
-              })}
+              {fullDaySlots
+                .filter((slot) => {
+                  if (selectedDate !== getLocalDateString()) return true;
+                  const slotMinutes = getSlotStartMinutes(slot);
+                  const now = new Date();
+                  const currentMinutes = now.getHours() * 60 + now.getMinutes();
+                  return slotMinutes >= currentMinutes;
+                })
+                .map((slot, index) => {
+                  const isSelected = selectedSlots.includes(slot);
+                  return (
+                    <div 
+                      key={index} 
+                      className={`time-slot ${isSelected ? 'selected' : ''}`}
+                      onClick={() => toggleSlot(slot)}
+                    >
+                      {formatSlotForDisplay(slot)}
+                    </div>
+                  );
+                })}
             </div>
           </div>
         </div>

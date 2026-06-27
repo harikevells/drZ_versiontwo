@@ -14,9 +14,37 @@ const RescheduleModal = ({ isOpen, onClose, onSave, initialDate, allSchedules, d
   const [currentMonth, setCurrentMonth] = useState(new Date().getMonth());
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
 
+  const getLocalDateString = (d = new Date()) => {
+    const y = d.getUTCFullYear ? d.getFullYear() : new Date().getFullYear();
+    const m = (d.getMonth() + 1).toString().padStart(2, '0');
+    const day = d.getDate().toString().padStart(2, '0');
+    return `${y}-${m}-${day}`;
+  };
+
+  const isPastDate = (year, month, day) => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const targetDate = new Date(year, month, day);
+    return targetDate < today;
+  };
+
+  const getSlotStartMinutes = (slotStr) => {
+    const startPart = slotStr.split(' to ')[0];
+    const match = startPart.match(/(\d+)\.(\d+)(am|pm)/i);
+    if (!match) return 0;
+    let hrs = parseInt(match[1], 10);
+    const mins = parseInt(match[2], 10);
+    const ampm = match[3].toLowerCase();
+    
+    if (ampm === 'pm' && hrs < 12) hrs += 12;
+    if (ampm === 'am' && hrs === 12) hrs = 0;
+    
+    return hrs * 60 + mins;
+  };
+
   useEffect(() => {
     if (isOpen) {
-      const initDate = initialDate || new Date().toISOString().split('T')[0];
+      const initDate = initialDate || getLocalDateString();
       setSelectedDate(initDate);
       
       const [y, m, d] = initDate.split('-');
@@ -195,6 +223,14 @@ const RescheduleModal = ({ isOpen, onClose, onSave, initialDate, allSchedules, d
     const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
     return `${dayName} ${monthNames[m - 1]} ${d}`;
   };
+  const todayLocalStr = getLocalDateString();
+  const visibleSlots = slots.filter((slot) => {
+    if (selectedDate !== todayLocalStr) return true;
+    const slotMinutes = getSlotStartMinutes(slot);
+    const now = new Date();
+    const currentMinutes = now.getHours() * 60 + now.getMinutes();
+    return slotMinutes >= currentMinutes;
+  });
 
   return (
     <div className="modal-overlay">
@@ -223,6 +259,7 @@ const RescheduleModal = ({ isOpen, onClose, onSave, initialDate, allSchedules, d
               
               {days.map((day) => {
                 const dateStr = `${currentYear}-${(currentMonth + 1).toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
+                const isPast = isPastDate(currentYear, currentMonth, day);
                 
                 // Optional: Highlight days that actually have schedules for this doctor
                 const hasSchedule = allSchedules?.some(s => s.doctorId === doctorId && s.date === dateStr);
@@ -230,8 +267,10 @@ const RescheduleModal = ({ isOpen, onClose, onSave, initialDate, allSchedules, d
                 return (
                   <div 
                     key={day} 
-                    className={`day ${selectedDate === dateStr ? 'selected' : ''}`}
-                    onClick={() => setSelectedDate(dateStr)}
+                    className={`day ${isPast ? 'disabled' : ''} ${selectedDate === dateStr ? 'selected' : ''}`}
+                    onClick={() => {
+                      if (!isPast) setSelectedDate(dateStr);
+                    }}
                     style={{ position: 'relative' }}
                   >
                     {day.toString().padStart(2, '0')}
@@ -250,7 +289,7 @@ const RescheduleModal = ({ isOpen, onClose, onSave, initialDate, allSchedules, d
           <div className="time-section">
             <h3 className="time-header" style={{ marginBottom: '15px' }}>{getDisplayDate()} Slots</h3>
             <div className="slots-list" style={{ display: 'flex', flexDirection: 'column', gap: '10px', maxHeight: '300px', overflowY: 'auto', paddingRight: '10px' }}>
-              {slots.length > 0 ? slots.map((slot, index) => (
+              {visibleSlots.length > 0 ? visibleSlots.map((slot, index) => (
                 <div key={index} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#f9fafb', padding: '10px', borderRadius: '6px', border: '1px solid #e5e7eb' }}>
                   <span style={{ fontSize: '14px', fontWeight: '500' }}>{slot}</span>
                 </div>

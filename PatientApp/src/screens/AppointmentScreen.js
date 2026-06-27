@@ -37,7 +37,8 @@ const AppointmentScreen = ({ navigation }) => {
           // IP_ADDRESS should match the global one if possible, assuming BASE_URL is same as other screens
           const BASE_URL = API_BASE_URL;
           const mobile = user.contactNumber || user.mobile;
-          const response = await axios.get(`${BASE_URL}/api/notifications/patient/${mobile}`);
+          const timestamp = new Date().getTime();
+          const response = await axios.get(`${BASE_URL}/api/notifications/patient/${mobile}?t=${timestamp}`);
           const unread = response.data.filter(n => !n.isRead).length;
           setUnreadCount(unread);
         } catch (error) {
@@ -334,7 +335,7 @@ const styles = StyleSheet.create({
   successButtonText: { color: '#fff', fontSize: scaleFont(16), fontWeight: 'bold', textAlign: 'center', paddingHorizontal: 5 },
 
   // Footer Website Styles
-  footerWebsiteContainer: { marginTop: height * 0.12, alignItems: 'center' },
+  footerWebsiteContainer: { marginTop: height * 0.06, alignItems: 'center' },
   footerWebsiteTitle: { fontSize: scaleFont(16), color: '#333', fontWeight: 'bold', marginBottom: 5 },
   footerWebsiteLink: { fontSize: scaleFont(16), color: '#0d71b3ff', textDecorationLine: 'underline' },
   websiteRow: {

@@ -4,7 +4,14 @@ import { API_BASE_URL } from '../config';
 import { FaEdit, FaTrash, FaRegCalendarAlt, FaRegClock, FaInfoCircle } from 'react-icons/fa';
 import RescheduleModal from '../components/RescheduleModal';
 import ScheduleCreateModal from '../components/ScheduleCreateModal';
+import Pagination from '../components/Pagination';
 import './Schedule.css';
+
+const removeTamil = (text) => {
+  if (!text) return '';
+  const strText = String(text);
+  return strText.split(',').map(item => item.split('/')[0].trim()).join(', ');
+};
 
 const Schedule = () => {
   const [doctorsList, setDoctorsList] = useState([]);
@@ -27,9 +34,63 @@ const Schedule = () => {
   const [currentDoctorId, setCurrentDoctorId] = useState(null);
   const [modalInitialDate, setModalInitialDate] = useState('');
 
+  const [searchTerm, setSearchTerm] = useState('');
+  const [dateFilter, setDateFilter] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, dateFilter]);
+
+  const matchDate = (itemDate, selectedDate) => {
+    if (!selectedDate) return true;
+    if (!itemDate) return false;
+    
+    const [y, m, d] = selectedDate.split('-');
+    const selectedDDMMYYYY = `${d}/${m}/${y}`;
+    const selectedDDMMDotYYYY = `${d}/${m}.${y}`;
+    const selectedDDMMDotYYYYAlt = `${parseInt(d, 10)}/${parseInt(m, 10)}.${y}`;
+    const selectedDDMMYYYYAlt = `${parseInt(d, 10)}/${parseInt(m, 10)}/${y}`;
+    
+    const cleanItemDate = String(itemDate).trim();
+    
+    return (
+      cleanItemDate === selectedDate ||
+      cleanItemDate === selectedDDMMYYYY ||
+      cleanItemDate === selectedDDMMDotYYYY ||
+      cleanItemDate === selectedDDMMDotYYYYAlt ||
+      cleanItemDate === selectedDDMMYYYYAlt ||
+      cleanItemDate.includes(selectedDDMMYYYY) ||
+      cleanItemDate.includes(selectedDDMMDotYYYY)
+    );
+  };
+
+  const filteredSchedules = schedules.filter(schedule => {
+    if (!matchDate(schedule.date, dateFilter)) {
+      return false;
+    }
+    
+    const search = searchTerm.toLowerCase().trim();
+    if (!search) return true;
+    
+    const nameClean = String(removeTamil(schedule.doctorName)).toLowerCase();
+    const nameRaw = String(schedule.doctorName || '').toLowerCase();
+    const deptClean = String(removeTamil(schedule.department)).toLowerCase();
+    const deptRaw = String(schedule.department || '').toLowerCase();
+    
+    return nameClean.includes(search) || nameRaw.includes(search) || deptClean.includes(search) || deptRaw.includes(search);
+  });
+
+  const totalPages = Math.ceil(filteredSchedules.length / itemsPerPage);
+  const paginatedSchedules = filteredSchedules.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
   const fetchSchedulesAndDoctors = async () => {
     try {
-      const token = localStorage.getItem('token');
+      const token = sessionStorage.getItem('token');
       const config = { headers: { Authorization: `Bearer ${token}` } };
       
       const [schedulesRes, doctorsRes] = await Promise.all([
@@ -42,11 +103,6 @@ const Schedule = () => {
     } catch (err) {
       console.error(err);
     }
-  };
-
-  const removeTamil = (text) => {
-    if (!text) return text;
-    return text.split(',').map(item => item.split('/')[0].trim()).join(', ');
   };
 
   useEffect(() => {
@@ -121,7 +177,7 @@ const Schedule = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const token = localStorage.getItem('token');
+      const token = sessionStorage.getItem('token');
       const config = { headers: { Authorization: `Bearer ${token}` } };
       
       const generatedSlots = formData.time && formData.time.length > 0 ? formData.time : generateTimeSlots(formData.startTime, formData.endTime);
@@ -211,7 +267,7 @@ const Schedule = () => {
   const handleDelete = async (id) => {
     if (window.confirm('Are you sure you want to delete this schedule?')) {
       try {
-        const token = localStorage.getItem('token');
+        const token = sessionStorage.getItem('token');
         const config = { headers: { Authorization: `Bearer ${token}` } };
         
         await axios.delete(`${API_BASE_URL}/schedules/${id}`, config);
@@ -225,7 +281,7 @@ const Schedule = () => {
 
   const handleStatusUpdate = async (id, newStatus) => {
     try {
-      const token = localStorage.getItem('token');
+      const token = sessionStorage.getItem('token');
       const config = { headers: { Authorization: `Bearer ${token}` } };
       
       await axios.put(`${API_BASE_URL}/schedules/${id}`, { status: newStatus }, config);
@@ -237,7 +293,7 @@ const Schedule = () => {
 
   const handleSaveReschedule = async (scheduleId, newDate, newTimeArray) => {
     try {
-      const token = localStorage.getItem('token');
+      const token = sessionStorage.getItem('token');
       const config = { headers: { Authorization: `Bearer ${token}` } };
       
       await axios.put(`${API_BASE_URL}/schedules/${scheduleId}`, 
@@ -340,8 +396,23 @@ const Schedule = () => {
         </form>
       </div>
 
-      <div className="list-header">
+      <div className="list-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', gap: '15px', flexWrap: 'wrap' }}>
         <h2 className="list-title">List:</h2>
+        <div style={{ display: 'flex', gap: '15px', alignItems: 'center', flexWrap: 'wrap' }}>
+          <input 
+            type="date" 
+            value={dateFilter} 
+            onChange={(e) => setDateFilter(e.target.value)} 
+            style={{ padding: '8px 12px', border: '1px solid #e5e7eb', borderRadius: '6px', fontSize: '14px', outline: 'none', color: '#4b5563' }}
+          />
+          <input 
+            type="text" 
+            placeholder="Search..." 
+            value={searchTerm} 
+            onChange={(e) => setSearchTerm(e.target.value)} 
+            style={{ padding: '8px 16px', border: '1px solid #e5e7eb', borderRadius: '6px', fontSize: '14px', width: '250px', outline: 'none' }}
+          />
+        </div>
       </div>
 
       <div className="table-container">
@@ -356,7 +427,7 @@ const Schedule = () => {
             </tr>
           </thead>
           <tbody>
-            {schedules.map(schedule => {
+            {paginatedSchedules.map(schedule => {
               const cleanDept = schedule.department ? removeTamil(schedule.department) : '';
               const departments = cleanDept ? cleanDept.split(', ') : [];
               const visibleDepartments = departments.slice(0, 3);
@@ -409,7 +480,7 @@ const Schedule = () => {
               </tr>
               );
             })}
-            {schedules.length === 0 && (
+            {filteredSchedules.length === 0 && (
               <tr>
                 <td colSpan="5" style={{textAlign: 'center', padding: '20px'}}>No schedules found</td>
               </tr>
@@ -417,6 +488,14 @@ const Schedule = () => {
           </tbody>
         </table>
       </div>
+
+      <Pagination 
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={setCurrentPage}
+        totalItems={filteredSchedules.length}
+        itemsPerPage={itemsPerPage}
+      />
 
       <RescheduleModal 
         isOpen={isModalOpen} 

@@ -59,7 +59,7 @@ const updateAppointmentStatus = async (req, res) => {
         // Notify Patient
         if (appointment.login_mobile) {
             let patientMessage;
-            if (status === 'Rescheduled') {
+            if (status && status.trim().toLowerCase() === 'rescheduled') {
                 patientMessage = `Your appointment with Dr. ${appointment.doctor_name} has been Rescheduled to ${appointment.appointment_date} ${appointment.appointment_time}.`;
             } else {
                 patientMessage = `Your appointment with Dr. ${appointment.doctor_name} for ${appointment.appointment_date} has been marked as ${status}.`;

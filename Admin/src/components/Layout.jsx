@@ -4,14 +4,15 @@ import axios from 'axios';
 import { API_BASE_URL } from '../config';
 import { FaUserMd, FaCalendarCheck, FaBell, FaSignOutAlt, FaUserInjured } from 'react-icons/fa';
 import './Layout.css';
-import logoImage from '../assets/logo.png';
+import logoImage from '../assets/DoctorlogoApp1.png';
 
 const Layout = () => {
   const navigate = useNavigate();
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
 
   const handleLogout = () => {
-    localStorage.removeItem('token');
+    sessionStorage.removeItem('token');
+    sessionStorage.removeItem('loginTimestamp');
     navigate('/login');
   };
 
@@ -20,6 +21,19 @@ const Layout = () => {
 
   useEffect(() => {
     fetchUnreadCount();
+
+    const handleUpdate = (e) => {
+      if (e.detail && typeof e.detail.unreadCount === 'number') {
+        setUnreadCount(e.detail.unreadCount);
+      } else {
+        fetchUnreadCount();
+      }
+    };
+
+    window.addEventListener('notification-updated', handleUpdate);
+    return () => {
+      window.removeEventListener('notification-updated', handleUpdate);
+    };
   }, [location.pathname]); // Refresh count when navigation changes
 
   const fetchUnreadCount = async () => {
@@ -61,7 +75,7 @@ const Layout = () => {
         {/* Top Header */}
         <header className="topbar">
           <div className="topbar-welcome">
-            <h2>Welcome, Johnny.</h2>
+            <h2>Welcome,Admin</h2>
             <p>Super admin For DrZ...</p>
           </div>
           <div className="topbar-actions">
