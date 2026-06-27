@@ -1,6 +1,8 @@
 const Notification = require('../models/Notification');
+const Doctor = require('../models/Doctor');
+const Patient = require('../models/Patient');
+const admin = require('firebase-admin');
 
-// Create a new notification
 const createNotification = async (role, identifier, title, message, type = 'info') => {
     try {
         const notification = new Notification({
@@ -12,6 +14,45 @@ const createNotification = async (role, identifier, title, message, type = 'info
             isRead: false
         });
         await notification.save();
+
+        let fcmToken = null;
+        if (role === 'doctor') {
+            let doc = await Doctor.findOne({ email: identifier });
+            if (!doc) {
+                doc = await Doctor.findOne({ doctorName: identifier });
+            }
+            if (!doc) {
+                // Try case-insensitive search
+                const allDocs = await Doctor.find({});
+                doc = allDocs.find(d => 
+                    (d.doctorName && d.doctorName.toLowerCase() === identifier.toLowerCase()) || 
+                    (d.email && d.email.toLowerCase() === identifier.toLowerCase())
+                );
+            }
+            if (doc) fcmToken = doc.fcmToken;
+        } else if (role === 'patient') {
+            const pat = await Patient.findOne({ identifier: identifier });
+            if (pat) fcmToken = pat.fcmToken;
+        }
+
+        if (fcmToken) {
+            try {
+                await admin.messaging().send({
+                    token: fcmToken,
+                    notification: {
+                        title: title,
+                        body: message
+                    },
+                    data: {
+                        type: type
+                    }
+                });
+                console.log(`Push notification sent successfully to ${role} (${identifier})`);
+            } catch (fcmErr) {
+                console.error(`Failed to send push notification to ${role} (${identifier}):`, fcmErr);
+            }
+        }
+
         return notification;
     } catch (error) {
         console.error("Error creating notification:", error);

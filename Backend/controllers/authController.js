@@ -83,4 +83,28 @@ const patientLogin = async (req, res) => {
     }
 };
 
-module.exports = { login, doctorLogin, patientRegister, patientLogin };
+const updateFcmToken = async (req, res) => {
+    const { fcmToken, role } = req.body;
+    try {
+        if (!req.user || !req.user.id) {
+            return res.status(401).json({ error: 'Unauthorized' });
+        }
+        let updatedUser;
+        if (role === 'doctor') {
+            updatedUser = await Doctor.findByIdAndUpdate(req.user.id, { fcmToken }, { new: true });
+        } else if (role === 'patient') {
+            updatedUser = await Patient.findByIdAndUpdate(req.user.id, { fcmToken }, { new: true });
+        } else {
+            updatedUser = await User.findByIdAndUpdate(req.user.id, { fcmToken }, { new: true });
+        }
+        
+        if (!updatedUser) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+        res.json({ message: 'FCM token updated successfully' });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+};
+
+module.exports = { login, doctorLogin, patientRegister, patientLogin, updateFcmToken };
