@@ -1,15 +1,15 @@
 import React, { useContext } from 'react';
-import { View, Text, StyleSheet, Alert, Linking, Image } from 'react-native'; 
+import { View, Text, StyleSheet, Alert, Linking, Image } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import { AuthContext } from '../context/AuthContext'; 
-import { LanguageContext } from '../context/LanguageContext'; 
+import { AuthContext } from '../context/AuthContext';
+import { LanguageContext } from '../context/LanguageContext';
 
 // IMPORT SCREENS
-import LoginScreen from '../screens/LoginScreen'; 
-import AppointmentScreen from '../screens/AppointmentScreen'; 
+import LoginScreen from '../screens/LoginScreen';
+import AppointmentScreen from '../screens/AppointmentScreen';
 import BookAppointmentScreen from '../screens/BookAppointmentScreen';
 import NotificationPatient from '../screens/NotificationPatient';
 // import ReportScreen from '../screens/ReportScreen';
@@ -26,24 +26,24 @@ const PaymentScreen = () => {
     <View style={styles.paymentContainer}>
       <Text style={styles.paymentTitle}>Scan here to pay</Text>
       <Text style={styles.paymentSubtitle}>இங்கே ஸ்கேன் செய்து பணம் செலுத்தவும்</Text>
-      
+
       <View style={styles.qrContainer}>
         {/* NOTE: To use your real image:
            1. Put 'payment.png' inside 'src/assets/' folder.
            2. Uncomment the <Image> block below.
            3. Remove the <Icon> line.
         */}
-        
-        <Image 
-          source={require('../assets/payment.jpeg')} 
-          style={styles.qrImage} 
-          resizeMode="contain" 
-        /> 
-       
+
+        <Image
+          source={require('../assets/payment.jpeg')}
+          style={styles.qrImage}
+          resizeMode="contain"
+        />
+
 
         {/* Placeholder Icon so app doesn't crash */}
         {/* <Icon name="qrcode-scan" size={200} color="#000" /> */}
-        
+
       </View>
     </View>
   );
@@ -51,106 +51,106 @@ const PaymentScreen = () => {
 
 // --- DASHBOARD TABS ---
 function DashboardTabs() {
-  const { texts } = useContext(LanguageContext); 
+  const { texts } = useContext(LanguageContext);
 
   const openAmbulance = () => {
-      const phoneNumber = '801'; 
-      Linking.openURL(`tel:${phoneNumber}`).catch(err => 
-          Alert.alert('Error', 'Unable to open dialer')
-      );
+    const phoneNumber = '801';
+    Linking.openURL(`tel:${phoneNumber}`).catch(err =>
+      Alert.alert('Error', 'Unable to open dialer')
+    );
   };
 
   return (
-      <Tab.Navigator 
-        screenOptions={{ 
-          headerShown: false,
-          tabBarActiveTintColor: '#1C3E55',
-          tabBarInactiveTintColor: '#888',
-          tabBarShowLabel: true,
-          tabBarStyle: { 
-              height: 80, 
-              paddingBottom: 10, 
-              paddingTop: 10,
-              backgroundColor: '#fff',
-              borderTopWidth: 1,
-              borderTopColor: '#eee',
-              elevation: 15,
-              shadowColor: '#000',
-              shadowOffset: { width: 0, height: -2 },
-              shadowOpacity: 0.1,
-              shadowRadius: 3,
-          }
+    <Tab.Navigator
+      screenOptions={{
+        headerShown: false,
+        tabBarActiveTintColor: '#1C3E55',
+        tabBarInactiveTintColor: '#888',
+        tabBarShowLabel: true,
+        tabBarStyle: {
+          height: 80,
+          paddingBottom: 10,
+          paddingTop: 10,
+          backgroundColor: '#fff',
+          borderTopWidth: 1,
+          borderTopColor: '#eee',
+          elevation: 15,
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: -2 },
+          shadowOpacity: 0.1,
+          shadowRadius: 3,
+        }
+      }}
+    >
+      {/* 1. HOME TAB */}
+      <Tab.Screen
+        name="AppointmentTab"
+        component={AppointmentScreen}
+        options={{
+          tabBarLabel: ({ focused, color }) => (
+            <View style={{ alignItems: 'center', marginTop: 0 }}>
+              <Text style={{ fontSize: 12, color: color, fontWeight: focused ? 'bold' : 'normal' }}>
+                {texts?.home || 'Home'}/
+              </Text>
+              <Text style={{ fontSize: 16, color: color, marginTop: -2 }}>
+                ஹோம்
+              </Text>
+            </View>
+          ),
+          tabBarIcon: ({ color, focused }) => (
+            <Icon name={focused ? "home" : "home-outline"} color={color} size={30} />
+          ),
         }}
-      >
-        {/* 1. HOME TAB */}
-        <Tab.Screen 
-          name="AppointmentTab" 
-          component={AppointmentScreen} 
-          options={{
-            tabBarLabel: ({ focused, color }) => (
-                <View style={{alignItems:'center', marginTop: 0}}>
-                    <Text style={{fontSize: 12, color: color, fontWeight: focused ? 'bold' : 'normal'}}>
-                        {texts?.home || 'Home'}/
-                    </Text>
-                    <Text style={{fontSize: 16, color: color, marginTop: -2}}>
-                        ஹோம்
-                    </Text>
-                </View>
-            ),
-            tabBarIcon: ({ color, focused }) => (
-                <Icon name={focused ? "home" : "home-outline"} color={color} size={30} />
-            ),
-          }}
-        />
+      />
 
-        {/* 2. PAYMENT TAB */}
-        <Tab.Screen 
-          name="PaymentTab" 
-          component={PaymentScreen} 
-          options={{
-            tabBarLabel: ({ focused, color }) => (
-                <View style={{alignItems:'center', marginTop: 0}}>
-                    <Text style={{fontSize: 12, color: color, fontWeight: focused ? 'bold' : 'normal'}}>
-                        Payment/
-                    </Text>
-                    <Text style={{fontSize: 10, color: color, marginTop: -2}}>
-                        பேமெண்ட்
-                    </Text>
-                </View>
-            ),
-            tabBarIcon: ({ color, focused }) => (
-                <Icon name="qrcode-scan" color={color} size={28} />
-            ),
-          }}
-        />
+      {/* 2. PAYMENT TAB */}
+      <Tab.Screen
+        name="PaymentTab"
+        component={PaymentScreen}
+        options={{
+          tabBarLabel: ({ focused, color }) => (
+            <View style={{ alignItems: 'center', marginTop: 0 }}>
+              <Text style={{ fontSize: 12, color: color, fontWeight: focused ? 'bold' : 'normal' }}>
+                Payment/
+              </Text>
+              <Text style={{ fontSize: 10, color: color, marginTop: -2 }}>
+                பேமெண்ட்
+              </Text>
+            </View>
+          ),
+          tabBarIcon: ({ color, focused }) => (
+            <Icon name="qrcode-scan" color={color} size={28} />
+          ),
+        }}
+      />
 
-        {/* 3. AMBULANCE TAB (Opens Dialer) */}
-        <Tab.Screen 
-          name="Ambulance" 
-          component={AmbulanceComponent} 
-          listeners={{
-            tabPress: (e) => {
-              e.preventDefault(); 
-              openAmbulance();    
-            },
-          }}
-          options={{
-            tabBarLabel: ({ focused, color }) => (
-                <View style={{alignItems:'center', marginTop: 0}}>
-                    <Text style={{fontSize: 12, color: color, fontWeight: focused ? 'bold' : 'normal'}}>
-                        {texts?.ambulance || 'Ambulance'}/
-                    </Text>
-                    <Text style={{fontSize: 10, color: color, marginTop: -2}}>
-                        ஆம்புலன்ஸ்
-                    </Text>
-                </View>
-            ),
-            tabBarIcon: ({ color }) => (
-                <Icon name="ambulance" color={color} size={30} />
-            ),
-          }}
-        />
-      </Tab.Navigator>
+      {/* 3. AMBULANCE TAB (Opens Dialer) */}
+      <Tab.Screen
+        name="Ambulance"
+        component={AmbulanceComponent}
+        listeners={{
+          tabPress: (e) => {
+            e.preventDefault();
+            openAmbulance();
+          },
+        }}
+        options={{
+          tabBarLabel: ({ focused, color }) => (
+            <View style={{ alignItems: 'center', marginTop: 0 }}>
+              <Text style={{ fontSize: 12, color: color, fontWeight: focused ? 'bold' : 'normal' }}>
+                {texts?.ambulance || 'Ambulance'}/
+              </Text>
+              <Text style={{ fontSize: 10, color: color, marginTop: -2 }}>
+                ஆம்புலன்ஸ்
+              </Text>
+            </View>
+          ),
+          tabBarIcon: ({ color }) => (
+            <Icon name="ambulance" color={color} size={30} />
+          ),
+        }}
+      />
+    </Tab.Navigator>
   );
 }
 

@@ -72,7 +72,7 @@ const BookAppointmentScreen = ({ navigation }) => {
     const d = new Date(rawDate);
     const day = String(d.getDate()).padStart(2, '0');
     const month = String(d.getMonth() + 1).padStart(2, '0');
-    return `${day} / ${month} / ${d.getFullYear()}`;
+    return `${day}/${month}/${d.getFullYear()}`;
   };
 
   useEffect(() => {
@@ -561,7 +561,7 @@ const { width } = Dimensions.get('window');
 
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: '#fff' },
-  container: { padding: 24, paddingBottom: 130 },
+  container: { padding: 24, paddingBottom: 80 },
 
   // Header
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 },

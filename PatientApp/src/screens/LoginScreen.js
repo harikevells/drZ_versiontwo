@@ -228,7 +228,7 @@ const LoginScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: { flexGrow: 1, backgroundColor: '#fff', paddingHorizontal: 25, paddingTop: 50, paddingBottom: 40, alignItems: 'center' },
   poweredByContainer: { alignItems: 'center', marginTop: 5, marginBottom: 30 },
-  drzLogo: { width: 100, height: 100 },
+  drzLogo: { width: 230, height: 160 },
   loginTitleContainer: { flexDirection: 'row', alignItems: 'center', marginBottom: 20 },
   loginTitle: { fontSize: 24, fontWeight: 'bold', color: '#000' },
   form: { width: '100%' },
