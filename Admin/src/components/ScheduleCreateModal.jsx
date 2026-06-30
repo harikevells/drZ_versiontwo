@@ -83,7 +83,22 @@ const ScheduleCreateModal = ({ isOpen, onClose, onSave, initialDate, initialSlot
   const fullDaySlots = generateFullDaySlots();
 
   const handleSave = () => {
-    onSave(selectedDate, selectedSlots);
+    const sortedSlots = [...selectedSlots].sort((a, b) => {
+      const getMinutes = (slot) => {
+        if (!slot || !slot.includes(' to ')) return 0;
+        const start = slot.split(' to ')[0];
+        const match = start.match(/(\d+)[:.](\d+)\s*(am|pm)/i);
+        if (!match) return 0;
+        let hrs = parseInt(match[1], 10);
+        const mins = parseInt(match[2], 10);
+        const ampm = match[3].toLowerCase();
+        if (ampm === 'pm' && hrs < 12) hrs += 12;
+        if (ampm === 'am' && hrs === 12) hrs = 0;
+        return hrs * 60 + mins;
+      };
+      return getMinutes(a) - getMinutes(b);
+    });
+    onSave(selectedDate, sortedSlots);
   };
 
   const toggleSlot = (slot) => {
@@ -131,14 +146,10 @@ const ScheduleCreateModal = ({ isOpen, onClose, onSave, initialDate, initialSlot
 
   const { emptyPrev, days, emptyNext, monthYear } = getCalendarDays();
 
-  // Helper to format date for display
   const getDisplayDate = () => {
     if (!selectedDate) return '';
     const [y, m, d] = selectedDate.split('-');
-    const dateObj = new Date(y, m - 1, d);
-    const dayName = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"][dateObj.getDay()];
-    const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-    return `${dayName} ${monthNames[m - 1]} ${d}`;
+    return `${d}/${m}/${y}`;
   };
 
   const formatSlotForDisplay = (slot) => {

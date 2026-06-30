@@ -10,6 +10,7 @@ const { width } = Dimensions.get('window');
 // Replace with your local machine's IP address if testing on physical device,
 // or use 10.0.2.2 for Android emulator
 import { API_BASE_URL } from '../config';
+import { setupPushNotifications } from '../services/PushNotificationService';
 const API_URL = `${API_BASE_URL}/auth/doctor/login`;
 
 export default function LoginScreen() {
@@ -32,6 +33,9 @@ export default function LoginScreen() {
       // Store token and user data
       await AsyncStorage.setItem('userToken', response.data.token);
       await AsyncStorage.setItem('userData', JSON.stringify(response.data.user));
+      
+      // Register FCM Token
+      await setupPushNotifications(response.data.token, 'doctor');
       
       // Navigate directly to MainTabs
       navigation.replace('MainTabs');

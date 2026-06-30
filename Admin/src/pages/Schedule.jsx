@@ -80,6 +80,25 @@ const Schedule = () => {
     const deptRaw = String(schedule.department || '').toLowerCase();
     
     return nameClean.includes(search) || nameRaw.includes(search) || deptClean.includes(search) || deptRaw.includes(search);
+  }).sort((a, b) => {
+    const parseDateForSort = (dateStr) => {
+      if (!dateStr) return 0;
+      if (dateStr.includes('-')) {
+        const parts = dateStr.split('-');
+        if (parts.length === 3 && parts[0].length === 4) {
+          return new Date(`${parts[0]}-${parts[1]}-${parts[2]}`).getTime();
+        }
+      }
+      let cleanStr = dateStr.replace('.', '/');
+      if (cleanStr.includes('/')) {
+        const parts = cleanStr.split('/');
+        if (parts.length === 3) {
+          return new Date(`${parts[2]}-${parts[1]}-${parts[0]}`).getTime();
+        }
+      }
+      return 0;
+    };
+    return parseDateForSort(b.date) - parseDateForSort(a.date);
   });
 
   const totalPages = Math.ceil(filteredSchedules.length / itemsPerPage);
@@ -171,7 +190,7 @@ const Schedule = () => {
     if (dateString.includes('/')) return dateString;
     const [y, m, d] = dateString.split('-');
     if (!y || !m || !d) return dateString;
-    return `${d}/${m}.${y}`;
+    return `${d}/${m}/${y}`;
   };
 
   const handleSubmit = async (e) => {
@@ -307,13 +326,35 @@ const Schedule = () => {
     }
   };
 
+  const sortTimeSlots = (slotsArr) => {
+    if (!Array.isArray(slotsArr)) return slotsArr;
+    return [...slotsArr].sort((a, b) => {
+      const getMinutes = (slot) => {
+        if (!slot || !slot.includes(' to ')) return 0;
+        const start = slot.split(' to ')[0];
+        const match = start.match(/(\d+)[:.](\d+)\s*(am|pm)/i);
+        if (!match) return 0;
+        let hrs = parseInt(match[1], 10);
+        const mins = parseInt(match[2], 10);
+        const ampm = match[3].toLowerCase();
+        if (ampm === 'pm' && hrs < 12) hrs += 12;
+        if (ampm === 'am' && hrs === 12) hrs = 0;
+        return hrs * 60 + mins;
+      };
+      return getMinutes(a) - getMinutes(b);
+    });
+  };
+
   const getSummaryTimeString = (timeArray) => {
     if (!Array.isArray(timeArray) || timeArray.length === 0) return timeArray;
     if (timeArray.length === 1) return timeArray[0];
-    const firstPart = timeArray[0].split(' to ')[0];
-    const lastPart = timeArray[timeArray.length - 1].split(' to ')[1];
+    
+    const sortedTimes = sortTimeSlots(timeArray);
+    const firstPart = sortedTimes[0].split(' to ')[0];
+    const lastPart = sortedTimes[sortedTimes.length - 1].split(' to ')[1];
+    
     if (firstPart && lastPart) return `${firstPart} to ${lastPart}`;
-    return timeArray.join(', ');
+    return sortedTimes.join(', ');
   };
 
   return (

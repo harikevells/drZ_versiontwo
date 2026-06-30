@@ -189,7 +189,7 @@ const AppointmentScreen = ({ navigation }) => {
             {/* Add the row style here */}
             <TouchableOpacity onPress={handleWebsite} style={styles.websiteRow}>
               <Text style={[styles.footerWebsiteTitle, { marginBottom: 0 }]}>Website : </Text>
-              <Text style={styles.footerWebsiteLink}>https://www.kevellcorp.com/</Text>
+              <Text style={styles.footerWebsiteLink}>https://kevellcorporation.com/#/</Text>
             </TouchableOpacity>
           </View>
         </View>

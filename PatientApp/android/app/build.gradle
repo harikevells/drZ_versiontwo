@@ -80,7 +80,7 @@ android {
 
     namespace "com.drzapp"
     defaultConfig {
-        applicationId "com.kevell.drzapp"
+        applicationId "com.drz.ptss"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1

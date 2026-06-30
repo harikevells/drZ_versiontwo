@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { View, StyleSheet, Image, StatusBar } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { setupPushNotifications } from '../services/PushNotificationService';
 
 export default function SplashScreen() {
   const navigation = useNavigation<any>();
@@ -10,7 +11,9 @@ export default function SplashScreen() {
     const checkLoginAndNavigate = async () => {
       try {
         const storedData = await AsyncStorage.getItem('userData');
-        if (storedData) {
+        const token = await AsyncStorage.getItem('userToken');
+        if (storedData && token) {
+          setupPushNotifications(token, 'doctor');
           navigation.replace('MainTabs');
         } else {
           navigation.replace('Login');

@@ -36,6 +36,10 @@
   "build": {
     "appId": "com.drz.admin",
     "productName": "DrZ Admin",
+    "electronDist": "node_modules/electron/dist",
+    "directories": {
+      "output": "dist-final"
+    },
     "files": [
       "build/**/*",
       "public/electron.cjs",

@@ -21,6 +21,12 @@ export default function MainTabs() {
           elevation: 0,
           paddingTop: 10,
           paddingBottom: 10,
+          borderTopLeftRadius: 35,
+          borderTopRightRadius: 35,
+          // position: 'absolute',
+          bottom: 0,
+          left: 0,
+          right: 0,
         },
         tabBarItemStyle: {
           paddingTop: 5,

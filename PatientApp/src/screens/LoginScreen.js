@@ -9,6 +9,7 @@ import axios from 'axios';
 import { AuthContext } from '../context/AuthContext';
 
 import { API_BASE_URL } from '../config';
+import { setupPushNotifications } from '../services/PushNotificationService';
 const BASE_URL = API_BASE_URL;
 
 const LoginScreen = ({ navigation }) => {
@@ -77,6 +78,10 @@ const LoginScreen = ({ navigation }) => {
           contactNumber: identifier,
           token: response.data.token
         };
+        
+        // Register FCM Token
+        setupPushNotifications(response.data.token, 'patient');
+        
         login(userPayload);
       } else {
         Alert.alert("Error", "Authentication failed.");
