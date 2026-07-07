@@ -1,7 +1,7 @@
 import React, { useState, useContext, useEffect } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, Image, StyleSheet,
-  ScrollView, Alert, ActivityIndicator, KeyboardAvoidingView, Platform, Linking
+  ScrollView, Alert, ActivityIndicator, KeyboardAvoidingView, Platform, Linking, ImageBackground
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -113,117 +113,112 @@ const LoginScreen = ({ navigation }) => {
       behavior={Platform.OS === "ios" ? "padding" : "height"}
       style={{ flex: 1, backgroundColor: '#fff' }}
     >
-      <ScrollView contentContainerStyle={styles.container}>
+      <ScrollView contentContainerStyle={styles.container} bounces={false}>
 
-        <TouchableOpacity onPress={handleLogoClick} style={{ alignItems: 'center', width: '100%' }}>
-          <View style={styles.poweredByContainer}>
+        <TouchableOpacity onPress={handleLogoClick} style={{ width: '100%' }}>
+          <ImageBackground source={require('../assets/logobackgroundimage.png')} style={styles.drzLogoBg} resizeMode="stretch">
             <Image source={require('../assets/logo.png')} style={styles.drzLogo} resizeMode="contain" />
-          </View>
+          </ImageBackground>
         </TouchableOpacity>
 
-        <View style={styles.loginTitleContainer}>
-          <Icon name={isLogin ? "login" : "account-plus"} size={28} color="#000" style={{ marginRight: 8 }} />
-          <Text style={styles.loginTitle}>
-            {isLogin ? 'Login / உள்நுழைய' : 'Register / பதிவு செய்ய'}
-          </Text>
-        </View>
+        <View style={styles.contentContainer}>
+          <View style={styles.loginTitleContainer}>
+            <Text style={styles.loginTitle}>
+              {isLogin ? 'Login / உள்நுழைவு' : 'Register / பதிவு செய்யவும்'}
+            </Text>
+          </View>
 
-        <View style={styles.form}>
-          <Text style={styles.label}>
-            Email or Mobile / மின்னஞ்சல் அல்லது எண் <Text style={styles.star}>*</Text>
-          </Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Enter Email or Number"
-            placeholderTextColor="#888"
-            value={identifier}
-            onChangeText={setIdentifier}
-            keyboardType="email-address"
-            autoCapitalize="none"
-          />
-
-          <Text style={styles.label}>
-            Password / கடவுச்சொல் <Text style={styles.star}>*</Text>
-          </Text>
-          <View style={styles.passwordContainer}>
+          <View style={styles.form}>
+            <Text style={styles.label}>
+              Email Or Mobile / மின்னஞ்சல் அல்லது கைபேசி
+            </Text>
             <TextInput
-              style={styles.passwordInput}
-              placeholder="Enter Password"
-              placeholderTextColor="#888"
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry={securePassword}
+              style={styles.input}
+              value={identifier}
+              onChangeText={setIdentifier}
+              keyboardType="email-address"
+              autoCapitalize="none"
             />
-            <TouchableOpacity onPress={() => setSecurePassword(!securePassword)} style={styles.eyeIcon}>
-              <Icon name={securePassword ? "eye-off-outline" : "eye-outline"} size={24} color="#888" />
-            </TouchableOpacity>
-          </View>
 
-          {!isLogin && (
-            <>
-              <Text style={styles.label}>
-                Confirm Password / உறுதிப்படுத்துக <Text style={styles.star}>*</Text>
-              </Text>
-              <View style={styles.passwordContainer}>
-                <TextInput
-                  style={styles.passwordInput}
-                  placeholder="Confirm Password"
-                  placeholderTextColor="#888"
-                  value={confirmPassword}
-                  onChangeText={setConfirmPassword}
-                  secureTextEntry={secureConfirmPassword}
-                />
-                <TouchableOpacity onPress={() => setSecureConfirmPassword(!secureConfirmPassword)} style={styles.eyeIcon}>
-                  <Icon name={secureConfirmPassword ? "eye-off-outline" : "eye-outline"} size={24} color="#888" />
-                </TouchableOpacity>
-              </View>
-            </>
-          )}
-
-          <TouchableOpacity
-            style={styles.checkboxContainer}
-            onPress={() => setRememberMe(!rememberMe)}
-          >
-            <Icon
-              name={rememberMe ? "checkbox-marked" : "checkbox-blank-outline"}
-              size={24}
-              color={rememberMe ? "#1C4E63" : "#888"}
-            />
-            <Text style={styles.checkboxText}>
-              Remember Me / நினைவில் கொள்க
+            <Text style={styles.label}>
+              Password / கடவுச்சொல்
             </Text>
-          </TouchableOpacity>
+            <View style={styles.passwordContainer}>
+              <TextInput
+                style={styles.passwordInput}
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry={securePassword}
+              />
+              <TouchableOpacity onPress={() => setSecurePassword(!securePassword)} style={styles.eyeIcon}>
+                <Icon name={securePassword ? "eye-off-outline" : "eye-outline"} size={24} color="#888" />
+              </TouchableOpacity>
+            </View>
 
-          {loading ? (
-            <ActivityIndicator size="large" color="#1C4E63" style={{ marginTop: 20 }} />
-          ) : (
-            <TouchableOpacity style={styles.button} onPress={handleAuth}>
-              <Text style={styles.buttonText}>
-                {isLogin ? 'Login / உள்நுழைய' : 'Register / பதிவு செய்ய'}
-              </Text>
-            </TouchableOpacity>
-          )}
+            {!isLogin && (
+              <>
+                <Text style={styles.label}>
+                  Confirm Password / கடவுச்சொல் உறுதி
+                </Text>
+                <View style={styles.passwordContainer}>
+                  <TextInput
+                    style={styles.passwordInput}
+                    value={confirmPassword}
+                    onChangeText={setConfirmPassword}
+                    secureTextEntry={secureConfirmPassword}
+                  />
+                  <TouchableOpacity onPress={() => setSecureConfirmPassword(!secureConfirmPassword)} style={styles.eyeIcon}>
+                    <Icon name={secureConfirmPassword ? "eye-off-outline" : "eye-outline"} size={24} color="#888" />
+                  </TouchableOpacity>
+                </View>
+              </>
+            )}
 
-          <View style={styles.toggleAuthContainer}>
-            <Text style={styles.toggleAuthText}>
-              {isLogin ? "Don't have an account? / கணக்கு இல்லையா? " : "Already have an account? / ஏற்கனவே கணக்கு உள்ளதா? "}
-            </Text>
-            <TouchableOpacity onPress={() => { setIsLogin(!isLogin); setPassword(''); setConfirmPassword(''); }}>
-              <Text style={styles.toggleAuthLink}>
-                {isLogin ? "Register" : "Login"}
+            <TouchableOpacity
+              style={styles.checkboxContainer}
+              onPress={() => setRememberMe(!rememberMe)}
+            >
+              <Icon
+                name={rememberMe ? "checkbox-marked" : "checkbox-blank-outline"}
+                size={22}
+                color={rememberMe ? "#5C74FF" : "#888"}
+              />
+              <Text style={styles.checkboxText}>
+                Remember Me / என்னை நினைவில் கொள்ளவும்
               </Text>
             </TouchableOpacity>
-          </View>
 
-          <View style={{ alignItems: 'center', marginTop: 40 }}>
-            <TouchableOpacity style={styles.ambulanceButton} onPress={handleAmbulance}>
-              <Icon name="ambulance" size={32} color="#fff" />
-            </TouchableOpacity>
-            <Text style={styles.ambulanceText}>
-              Emergency / அவசர உதவி
-            </Text>
-          </View>
+            {loading ? (
+              <ActivityIndicator size="large" color="#5C74FF" style={{ marginTop: 10 }} />
+            ) : (
+              <TouchableOpacity style={styles.button} onPress={handleAuth}>
+                <Text style={styles.buttonText}>
+                  {isLogin ? 'Login / உள்நுழையவும்' : 'Register / பதிவு செய்யவும்'}
+                </Text>
+              </TouchableOpacity>
+            )}
 
+            <View style={styles.toggleAuthContainer}>
+              <Text style={styles.toggleAuthText}>
+                {isLogin ? "Don't have an account? / கணக்கு இல்லையா?" : "Already have an account? / கணக்கு உள்ளதா?"}
+              </Text>
+              <TouchableOpacity onPress={() => { setIsLogin(!isLogin); setPassword(''); setConfirmPassword(''); }} style={{ marginTop: 5 }}>
+                <Text style={styles.toggleAuthLink}>
+                  {isLogin ? "Register" : "Login"}
+                </Text>
+              </TouchableOpacity>
+            </View>
+
+            <View style={{ alignItems: 'center', marginTop: 30 }}>
+              <TouchableOpacity style={styles.ambulanceButton} onPress={handleAmbulance}>
+                <Icon name="ambulance" size={28} color="#fff" />
+              </TouchableOpacity>
+              <Text style={styles.ambulanceText}>
+                Emergency / அவசர உதவி
+              </Text>
+            </View>
+
+          </View>
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -231,26 +226,26 @@ const LoginScreen = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
-  container: { flexGrow: 1, backgroundColor: '#fff', paddingHorizontal: 25, paddingTop: 50, paddingBottom: 40, alignItems: 'center' },
-  poweredByContainer: { alignItems: 'center', marginTop: 5, marginBottom: 30 },
-  drzLogo: { width: 230, height: 160 },
-  loginTitleContainer: { flexDirection: 'row', alignItems: 'center', marginBottom: 20 },
-  loginTitle: { fontSize: 24, fontWeight: 'bold', color: '#000' },
+  container: { flexGrow: 1, backgroundColor: '#fff', paddingBottom: 20, alignItems: 'center' },
+  drzLogoBg: { width: '100%', height: 300, justifyContent: 'center', alignItems: 'center', paddingBottom: 40 },
+  drzLogo: { width: 270, height: 190, marginTop: 20 },
+  contentContainer: { width: '100%', paddingHorizontal: 25, marginTop: 10 },
+  loginTitleContainer: { alignItems: 'center', marginBottom: 25, marginTop: 10 },
+  loginTitle: { fontSize: 20, fontWeight: 'bold', color: '#000' },
   form: { width: '100%' },
-  label: { fontSize: 14, fontWeight: 'bold', color: '#444', marginBottom: 8, marginTop: 15 },
-  star: { color: 'red' },
-  input: { borderWidth: 1.5, borderColor: '#777', borderRadius: 8, padding: 14, fontSize: 16, backgroundColor: '#fff', color: '#000' },
-  passwordContainer: { flexDirection: 'row', alignItems: 'center', borderWidth: 1.5, borderColor: '#777', borderRadius: 8, backgroundColor: '#fff' },
-  passwordInput: { flex: 1, padding: 14, fontSize: 16, color: '#000' },
+  label: { fontSize: 12, fontWeight: 'bold', color: '#555', marginBottom: 8, marginTop: 15 },
+  input: { borderRadius: 8, padding: 14, fontSize: 15, backgroundColor: '#F5F5F5', color: '#000' },
+  passwordContainer: { flexDirection: 'row', alignItems: 'center', borderRadius: 8, backgroundColor: '#F5F5F5' },
+  passwordInput: { flex: 1, padding: 14, fontSize: 15, color: '#000' },
   eyeIcon: { padding: 10, paddingRight: 14 },
-  checkboxContainer: { flexDirection: 'row', alignItems: 'center', marginTop: 15, marginBottom: 10 },
-  checkboxText: { marginLeft: 8, fontSize: 13, fontWeight: 'bold', color: '#444' },
-  button: { backgroundColor: '#1C4E63', paddingVertical: 15, borderRadius: 8, alignItems: 'center', elevation: 3, marginTop: 25, paddingHorizontal: 20 },
+  checkboxContainer: { flexDirection: 'row', alignItems: 'center', marginTop: 15, marginBottom: 0 },
+  checkboxText: { marginLeft: 8, fontSize: 12, fontWeight: 'bold', color: '#555' },
+  button: { backgroundColor: '#5C74FF', paddingVertical: 14, borderRadius: 8, alignItems: 'center', marginTop: 25, paddingHorizontal: 20 },
   buttonText: { color: '#fff', fontSize: 16, fontWeight: 'bold', textAlign: 'center' },
-  toggleAuthContainer: { flexDirection: 'row', justifyContent: 'center', marginTop: 20, flexWrap: 'wrap' },
-  toggleAuthText: { fontSize: 13, color: '#444', textAlign: 'center' },
-  toggleAuthLink: { fontSize: 13, color: '#1C4E63', fontWeight: 'bold' },
-  ambulanceButton: { width: 65, height: 65, borderRadius: 32.5, backgroundColor: '#D32F2F', alignItems: 'center', justifyContent: 'center', elevation: 8, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 4, marginBottom: 5, borderWidth: 2, borderColor: '#fff' },
+  toggleAuthContainer: { flexDirection: 'column', alignItems: 'center', marginTop: 25 },
+  toggleAuthText: { fontSize: 12, color: '#666', textAlign: 'center', width:'100%' },
+  toggleAuthLink: { fontSize: 13, color: '#5C74FF', fontWeight: 'bold' },
+  ambulanceButton: { width: 55, height: 55, borderRadius: 27.5, backgroundColor: '#D32F2F', alignItems: 'center', justifyContent: 'center', elevation: 5, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.2, shadowRadius: 3, marginBottom: 5 },
   ambulanceText: { color: '#D32F2F', fontWeight: 'bold', fontSize: 12 }
 });
 

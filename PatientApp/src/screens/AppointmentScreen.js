@@ -1,4 +1,4 @@
-import React, { useContext, useState, useEffect } from 'react';
+import React, { useContext, useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { API_BASE_URL } from '../config';
 import { useIsFocused } from '@react-navigation/native';
@@ -6,6 +6,7 @@ import {
   View,
   Text,
   Image,
+  ImageBackground,
   TouchableOpacity,
   StyleSheet,
   ScrollView,
@@ -13,7 +14,8 @@ import {
   Platform,
   Modal,
   Dimensions,
-  PixelRatio
+  PixelRatio,
+  Animated
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
@@ -88,7 +90,7 @@ const AppointmentScreen = ({ navigation }) => {
   };
 
   const handleWebsite = () => {
-    const url = 'https://www.kevellcorp.com/';
+    const url = 'https://kevellcorporation.com/#/';
     Linking.openURL(url).catch(err => console.error('An error occurred', err));
   };
 
@@ -102,36 +104,38 @@ const AppointmentScreen = ({ navigation }) => {
         <View style={styles.header}>
 
           {/* User Info */}
-          <View style={styles.userInfo}>
-            <Image source={require('../assets/logo.png')} style={styles.userImage} resizeMode="contain" />
-            <View style={styles.textContainer}>
-              <Text style={styles.greeting}>Hi / வணக்கம் ,</Text>
-
-            </View>
+          <View style={styles.welcomePill}>
+            <Image source={require('../assets/logo.png')} style={styles.userImageSmall} resizeMode="contain" />
+            <Text style={styles.greetingText}>Welcome To DrZ</Text>
           </View>
 
           {/* Header Icons */}
           <View style={styles.headerIcons}>
             {/* Notification Icon */}
-            <TouchableOpacity style={styles.iconButton} onPress={() => navigation.navigate('NotificationPatient')}>
-              <Icon name="bell-outline" size={24} color="#1C3E55" />
+            <TouchableOpacity style={styles.notificationBtn} onPress={() => navigation.navigate('NotificationPatient')}>
+              <Icon name="bell-outline" size={24} color="#5F76FE" />
               {unreadCount > 0 && (
-                <View style={styles.badge}>
+                <View style={styles.badgeContainer}>
                   <Text style={styles.badgeText}>{unreadCount > 9 ? '9+' : unreadCount}</Text>
                 </View>
               )}
             </TouchableOpacity>
 
             {/* Logout Icon */}
-            <TouchableOpacity style={[styles.iconButton, { marginLeft: 10 }]} onPress={handleLogoutPress}>
-              <Icon name="logout" size={24} color="#E74C3C" />
+            <TouchableOpacity style={[styles.notificationBtn, { marginLeft: 10 }]} onPress={handleLogoutPress}>
+              <Icon name="logout" size={24} color="#5F76FE" />
             </TouchableOpacity>
           </View>
         </View>
 
         {/* --- MAIN CARD SECTION (Redesigned) --- */}
         <View style={styles.cardWrapper}>
-          <View style={styles.card}>
+          <ImageBackground
+            source={require('../assets/boxAppointmentBg.png')}
+            style={styles.card}
+            imageStyle={{ borderRadius: 10 }}
+            resizeMode="cover"
+          >
 
             {/* ✅ Victor Hospital Logo Section */}
             <TouchableOpacity onPress={handleLogoClick} style={styles.logoContainer}>
@@ -180,7 +184,7 @@ const AppointmentScreen = ({ navigation }) => {
                 </Text>
               </TouchableOpacity>
             </View>
-          </View>
+          </ImageBackground>
 
           {/* --- FOOTER WEBSITE LINK (Outside Card) --- */}
           <View style={styles.footerWebsiteContainer}>
@@ -189,12 +193,25 @@ const AppointmentScreen = ({ navigation }) => {
             {/* Add the row style here */}
             <TouchableOpacity onPress={handleWebsite} style={styles.websiteRow}>
               <Text style={[styles.footerWebsiteTitle, { marginBottom: 0 }]}>Website : </Text>
-              <Text style={styles.footerWebsiteLink}>https://kevellcorporation.com/#/</Text>
+              <Text style={styles.footerWebsiteLink}>https://kevellcorporation.com</Text>
             </TouchableOpacity>
           </View>
         </View>
-
       </ScrollView>
+
+      {/* --- CHATBOT FLOATING ACTION BUTTON --- */}
+      <TouchableOpacity
+        style={styles.chatbotFabWrapper}
+        onPress={() => navigation.navigate('Chatbot')}
+      >
+        <View style={styles.chatbotBubble}>
+          <Text style={styles.chatbotBubbleText}>Can I Assist?</Text>
+          <View style={styles.bubbleArrow} />
+        </View>
+        <View style={styles.chatbotIconBorder}>
+          <Image source={require('../assets/Aibotimage.png')} style={{ width: 54, height: 28, borderRadius: 22 }} resizeMode="contain" />
+        </View>
+      </TouchableOpacity>
 
       {/* --- LANGUAGE MODAL --- */}
       <Modal
@@ -231,11 +248,10 @@ const AppointmentScreen = ({ navigation }) => {
       >
         <View style={styles.centerModalOverlay}>
           <View style={styles.logoutModalContent}>
-            <Icon name="logout" size={40} color="#E74C3C" style={{ marginBottom: 10 }} />
+            <Icon name="logout-variant" size={45} color="#5F76FE" style={{ marginBottom: 20 }} />
 
-            <Text style={styles.modalTitle}>{texts?.logout || 'Logout / வெளியேறு'}</Text>
             <Text style={styles.modalMessage}>
-              {texts?.areYouSure || 'Are you sure you want to logout? / நீங்கள் வெளியேற விரும்புகிறீர்களா?'}
+              Are you sure you want to logout?{'\n'}நீங்கள் வெளியேற விரும்புகிறீர்களா?
             </Text>
 
             <View style={styles.modalButtonRow}>
@@ -243,14 +259,14 @@ const AppointmentScreen = ({ navigation }) => {
                 style={[styles.modalButton, styles.cancelBtn]}
                 onPress={() => setShowLogoutModal(false)}
               >
-                <Text style={styles.cancelText}>{texts?.cancel || 'Cancel / ரத்து'}</Text>
+                <Text style={styles.cancelText}>Cancel / ரத்து</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
                 style={[styles.modalButton, styles.logoutBtn]}
                 onPress={confirmLogout}
               >
-                <Text style={styles.logoutText}>{texts?.logout || 'Confirm / உறுதி'}</Text>
+                <Text style={styles.logoutText}>Confirm / உறுதி</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -274,7 +290,7 @@ const scaleFont = (size) => {
 
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: '#FFFFFF' },
-  container: { paddingHorizontal: 0, paddingBottom: 0 },
+  container: { paddingHorizontal: 0, paddingBottom: 100 },
 
   // Header
   header: {
@@ -282,33 +298,50 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: width * 0.05,
-    paddingTop: height * 0.005,
-    marginBottom: 0
+    paddingTop: height * 0.015,
+    marginBottom: 10
   },
-  userInfo: { flexDirection: 'row', alignItems: 'center' },
-  userImage: { width: width * 0.15, height: width * 0.08, marginRight: 12 },
-  textContainer: { justifyContent: 'center' },
-  greeting: { fontSize: scaleFont(20), fontWeight: 'bold', color: '#1C3E55' },
-  subGreeting: { fontSize: scaleFont(14), color: 'gray' },
+  welcomePill: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#E5E5E5', paddingHorizontal: 15, paddingVertical: 8, borderRadius: 25 },
+  userImageSmall: { width: 30, height: 30, marginRight: 10 },
+  greetingText: { fontSize: scaleFont(12), fontWeight: 'bold', color: '#000' },
   headerIcons: { flexDirection: 'row' },
-  iconButton: { backgroundColor: '#fff', padding: 8, borderRadius: 20, elevation: 2, position: 'relative' },
-  badge: { position: 'absolute', right: 2, top: 2, backgroundColor: '#E74C3C', borderRadius: 10, width: 20, height: 20, justifyContent: 'center', alignItems: 'center', elevation: 3 },
-  badgeText: { color: '#fff', fontSize: 10, fontWeight: 'bold' },
+  notificationBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: '#F5F5F5',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  badgeContainer: {
+    position: 'absolute',
+    top: 4,
+    right: 4,
+    backgroundColor: '#FF4B4B',
+    borderRadius: 10,
+    minWidth: 18,
+    height: 18,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 4,
+    borderWidth: 1.5,
+    borderColor: '#FFF',
+  },
+  badgeText: {
+    color: '#FFF',
+    fontSize: 10,
+    fontWeight: 'bold',
+  },
 
   // Card Wrapper
-  cardWrapper: { alignItems: 'center', justifyContent: 'center', marginTop: height * 0.02, paddingHorizontal: width * 0.05 },
+  cardWrapper: { alignItems: 'center', justifyContent: 'center', marginTop: height * 0.01, paddingHorizontal: width * 0.05 },
   card: {
-    backgroundColor: '#F9F9F9', // Slightly lighter background
+    backgroundColor: 'transparent',
     borderRadius: 10,
     paddingVertical: height * 0.025,
-    paddingHorizontal: width * 0.05,
+    paddingHorizontal: width * 0.005,
     alignItems: 'center',
     width: '100%',
-    elevation: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 6
   },
 
   // ✅ New Logo Section Styles (Matches Image 2)
@@ -318,26 +351,26 @@ const styles = StyleSheet.create({
   hospitalSubName: { fontSize: scaleFont(20), fontWeight: 'bold', color: '#032541', marginTop: -4, textAlign: 'center', marginBottom: height * 0.005 },
   poweredByContainer: { alignItems: 'center', marginTop: height * 0.005, marginBottom: height * 0.01 },
   poweredByText: { fontSize: scaleFont(12), color: '#555', fontWeight: 'bold', marginBottom: 2 },
-  drzLogo: { width: width * 0.55, height: height * 0.24 },
+  drzLogo: { width: width * 0.65, height: height * 0.18 },
 
   // Description
   description: { fontSize: scaleFont(14), color: '#444', textAlign: 'center', marginBottom: height * 0.01, lineHeight: 22, paddingHorizontal: 1 },
 
   // Buttons Stack
-  buttonStack: { width: '100%', gap: height * 0.02 },
+  buttonStack: { width: '100%', gap: height * 0.02, paddingHorizontal: 15 },
 
   // Buttons
-  primaryButton: { backgroundColor: '#1C3E55', width: '100%', paddingVertical: height * 0.015, borderRadius: 10, alignItems: 'center' },
-  primaryButtonText: { color: '#fff', fontSize: scaleFont(16), fontWeight: 'bold', textAlign: 'center', paddingHorizontal: 5 },
-  secondaryButton: { backgroundColor: 'transparent', borderWidth: 1.5, borderColor: '#1C3E55', width: '100%', paddingVertical: height * 0.015, borderRadius: 10, alignItems: 'center' },
-  secondaryButtonText: { color: '#1C3E55', fontSize: scaleFont(16), fontWeight: 'bold', textAlign: 'center', paddingHorizontal: 5 },
-  successButton: { backgroundColor: '#38A745', width: '100%', paddingVertical: height * 0.015, borderRadius: 10, alignItems: 'center' },
-  successButtonText: { color: '#fff', fontSize: scaleFont(16), fontWeight: 'bold', textAlign: 'center', paddingHorizontal: 5 },
+  primaryButton: { backgroundColor: '#5C74FF', width: '100%', paddingVertical: height * 0.018, borderRadius: 8, alignItems: 'center' },
+  primaryButtonText: { color: '#fff', fontSize: scaleFont(14), fontWeight: 'bold', textAlign: 'center', paddingHorizontal: 5 },
+  secondaryButton: { backgroundColor: '#fff', borderWidth: 1, borderColor: '#444', width: '100%', paddingVertical: height * 0.018, borderRadius: 8, alignItems: 'center' },
+  secondaryButtonText: { color: '#444', fontSize: scaleFont(14), fontWeight: 'bold', textAlign: 'center', paddingHorizontal: 5 },
+  successButton: { backgroundColor: '#32CD32', width: '100%', paddingVertical: height * 0.018, borderRadius: 8, alignItems: 'center' },
+  successButtonText: { color: '#fff', fontSize: scaleFont(14), fontWeight: 'bold', textAlign: 'center', paddingHorizontal: 5 },
 
   // Footer Website Styles
   footerWebsiteContainer: { marginTop: height * 0.06, alignItems: 'center' },
   footerWebsiteTitle: { fontSize: scaleFont(16), color: '#333', fontWeight: 'bold', marginBottom: 5 },
-  footerWebsiteLink: { fontSize: scaleFont(16), color: '#0d71b3ff', textDecorationLine: 'underline' },
+  footerWebsiteLink: { fontSize: scaleFont(16), color: '#0d71b3ff', textDecorationLine: 'underline',width: 250 },
   websiteRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -362,21 +395,69 @@ const styles = StyleSheet.create({
     alignItems: 'center'
   },
   logoutModalContent: {
-    width: '88%',
+    width: '90%',
     backgroundColor: '#fff',
     borderRadius: 20,
-    padding: 25,
+    padding: 20,
     alignItems: 'center',
     elevation: 10
   },
-  modalTitle: { fontSize: 20, fontWeight: 'bold', color: '#333', marginBottom: 10 },
-  modalMessage: { fontSize: 14, color: '#666', textAlign: 'center', marginBottom: 25 },
-  modalButtonRow: { flexDirection: 'row', width: '100%', gap: 10 },
-  modalButton: { flex: 1, paddingVertical: 12, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
-  cancelBtn: { backgroundColor: '#f0f0f0', borderWidth: 1, borderColor: '#ccc' },
-  logoutBtn: { backgroundColor: '#E74C3C' },
-  cancelText: { color: '#333', fontWeight: 'bold' },
-  logoutText: { color: '#fff', fontWeight: 'bold' }
+  modalMessage: { fontSize: 16, color: '#444', textAlign: 'center', marginBottom: 30, fontWeight: 'bold', lineHeight: 26, width:'100%' },
+  modalButtonRow: { flexDirection: 'row', width: '100%', gap: 12 },
+  modalButton: { flex: 1, paddingVertical: 14, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
+  cancelBtn: { backgroundColor: '#FAFAFA', borderWidth: 1, borderColor: '#ccc' },
+  logoutBtn: { backgroundColor: '#FF4B4B' },
+  cancelText: { color: '#333', fontWeight: 'bold', fontSize: 14 },
+  logoutText: { color: '#fff', fontWeight: 'bold', fontSize: 14 },
+  // Chatbot FAB Styles
+  chatbotFabWrapper: {
+    position: 'absolute',
+    bottom: 120,
+    right: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+    zIndex: 999,
+  },
+  chatbotBubble: {
+    backgroundColor: '#2999FC',
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 8,
+    marginRight: 12,
+    position: 'relative',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  chatbotBubbleText: {
+    color: '#fff',
+    fontSize: 13,
+    fontWeight: 'bold',
+  },
+  bubbleArrow: {
+    position: 'absolute',
+    right: -6,
+    width: 0,
+    height: 0,
+    backgroundColor: 'transparent',
+    borderStyle: 'solid',
+    borderLeftWidth: 6,
+    borderRightWidth: 0,
+    borderBottomWidth: 5,
+    borderTopWidth: 5,
+    borderLeftColor: '#2999FC',
+    borderTopColor: 'transparent',
+    borderBottomColor: 'transparent',
+  },
+  chatbotIconBorder: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    borderWidth: 4,
+    borderColor: '#2999FC',
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#fff',
+  }
 });
 
 export default AppointmentScreen;

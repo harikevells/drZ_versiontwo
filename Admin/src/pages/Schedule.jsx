@@ -128,6 +128,30 @@ const Schedule = () => {
     fetchSchedulesAndDoctors();
   }, []);
 
+  const isDoctorConflict = (doc) => {
+    if (!formData.date) return false;
+    
+    const slots = formData.time && formData.time.length > 0
+      ? formData.time
+      : generateTimeSlots(formData.startTime, formData.endTime);
+      
+    if (!slots || slots.length === 0) return false;
+    
+    return schedules.some(s => {
+      if (editingId && s.id === editingId) return false;
+      
+      const isSameDoc = (s.doctorId && doc.id && String(s.doctorId) === String(doc.id)) ||
+                        (s.doctorName && doc.doctorName && s.doctorName.toLowerCase().trim() === doc.doctorName.toLowerCase().trim());
+      if (!isSameDoc) return false;
+      
+      const isSameDate = matchDate(s.date, formData.date);
+      if (!isSameDate) return false;
+      
+      const sTimeArray = Array.isArray(s.time) ? s.time : [s.time];
+      return sTimeArray.some(slot => slots.includes(slot));
+    });
+  };
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     
@@ -195,6 +219,13 @@ const Schedule = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    const selectedDoc = doctorsList.find(d => d.doctorName === formData.doctorName);
+    if (selectedDoc && isDoctorConflict(selectedDoc)) {
+      alert("The selected doctor already has a schedule for the chosen date and time slots. / இந்த மருத்துவருக்கு இந்த தேதியிலும் நேரத்திலும் ஏற்கனவே பணி ஒதுக்கீடு செய்யப்பட்டுள்ளது.");
+      return;
+    }
+
     try {
       const token = sessionStorage.getItem('token');
       const config = { headers: { Authorization: `Bearer ${token}` } };
@@ -366,14 +397,44 @@ const Schedule = () => {
           <div className="form-grid">
             <div className="form-group">
               <label>Doctor Name</label>
-              <select name="doctorName" value={formData.doctorName} onChange={handleInputChange} required>
+              <select
+                name="doctorName"
+                value={formData.doctorName}
+                onChange={handleInputChange}
+                required
+                style={(() => {
+                  const selectedDoc = doctorsList.find(d => d.doctorName === formData.doctorName);
+                  return selectedDoc && isDoctorConflict(selectedDoc) ? { borderColor: '#ef4444', color: '#ef4444', fontWeight: 'bold' } : undefined;
+                })()}
+              >
                 <option value="" disabled>Select Doctor</option>
                 {doctorsList
                   .filter(doc => formData.department === '' || doc.department === formData.department)
-                  .map(doc => (
-                  <option key={doc.id} value={doc.doctorName}>{removeTamil(doc.doctorName)}</option>
-                ))}
+                  .map(doc => {
+                    const conflict = isDoctorConflict(doc);
+                    return (
+                      <option
+                        key={doc.id}
+                        value={doc.doctorName}
+                        disabled={conflict}
+                        style={conflict ? { color: '#ef4444', backgroundColor: '#fee2e2' } : undefined}
+                      >
+                        {removeTamil(doc.doctorName)}{conflict ? ' (Already Scheduled / முன்பதிவு செய்யப்பட்டுள்ளது)' : ''}
+                      </option>
+                    );
+                  })}
               </select>
+              {(() => {
+                const selectedDoc = doctorsList.find(d => d.doctorName === formData.doctorName);
+                if (selectedDoc && isDoctorConflict(selectedDoc)) {
+                  return (
+                    <span style={{ color: '#ef4444', fontSize: '12px', marginTop: '4px', display: 'block', fontWeight: '500' }}>
+                      ⚠️ This doctor already has a schedule for the selected date and time.
+                    </span>
+                  );
+                }
+                return null;
+              })()}
             </div>
 
             <div className="form-group">
@@ -556,6 +617,10 @@ const Schedule = () => {
         }}
         initialDate={formData.date}
         initialSlots={formData.time}
+        doctorId={formData.doctorId}
+        doctorName={formData.doctorName}
+        allSchedules={schedules}
+        editingId={editingId}
       />
     </div>
   );

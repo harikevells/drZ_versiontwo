@@ -9,8 +9,10 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import axios from 'axios';
 // ✅ Import the new Dropdown package
 import { Dropdown } from 'react-native-element-dropdown';
+import { Calendar } from 'react-native-calendars';
 import { AuthContext } from '../context/AuthContext';
 import { LanguageContext } from '../context/LanguageContext';
+import { useIsFocused } from '@react-navigation/native';
 
 // EmailJS credentials removed as we now use our custom backend endpoint
 
@@ -39,6 +41,27 @@ const BookAppointmentScreen = ({ navigation }) => {
   const { texts } = useContext(LanguageContext);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
 
+  const [unreadCount, setUnreadCount] = useState(0);
+  const isFocused = useIsFocused();
+
+  // Fetch unread notifications count
+  useEffect(() => {
+    if (isFocused && user) {
+      const fetchUnreadCount = async () => {
+        try {
+          const mobile = user.contactNumber || user.mobile;
+          const timestamp = new Date().getTime();
+          const response = await axios.get(`${BASE_URL}/api/notifications/patient/${mobile}?t=${timestamp}`);
+          const unread = response.data.filter(n => !n.isRead).length;
+          setUnreadCount(unread);
+        } catch (error) {
+          console.log("Error fetching notifications count", error);
+        }
+      };
+      fetchUnreadCount();
+    }
+  }, [isFocused, user]);
+
   // --- Data State ---
   const [doctorCategories, setDoctorCategories] = useState([]);
   const [loadingData, setLoadingData] = useState(true);
@@ -54,12 +77,14 @@ const BookAppointmentScreen = ({ navigation }) => {
   const [isVideoCall, setIsVideoCall] = useState(false);
   const [isFocus, setIsFocus] = useState(false); // Used for Dropdown focus state
   const [isDoctorFocus, setIsDoctorFocus] = useState(false); // Used for Doctor Dropdown focus
+  const [isDateFocus, setIsDateFocus] = useState(false); // Used for Date Dropdown focus
   const [selectedDoctor, setSelectedDoctor] = useState(null);
   const [date, setDate] = useState(new Date());
-  const [selectedTimes, setSelectedTimes] = useState([]); // Changed to array for multiple selection
-  const [mode, setMode] = useState('date');
-  const [showPicker, setShowPicker] = useState(false);
+  const [selectedTimes, setSelectedTimes] = useState([]);
   const [sendingEmail, setSendingEmail] = useState(false);
+  
+  const [showCalendar, setShowCalendar] = useState(false);
+  const [markedDates, setMarkedDates] = useState({});
 
   const [availableTimings, setAvailableTimings] = useState([]);
   const [allDoctors, setAllDoctors] = useState([]);
@@ -78,6 +103,45 @@ const BookAppointmentScreen = ({ navigation }) => {
   useEffect(() => {
     fetchSchedulesForDate(date);
   }, [date]);
+
+  useEffect(() => {
+    const fetchAllAvailableDates = async () => {
+      try {
+        const response = await axios.get(`${BASE_URL}/api/schedules`);
+        const allSchedules = response.data || [];
+        const approvedSchedules = allSchedules.filter(s => s.status === 'Approved');
+        
+        const today = new Date();
+        today.setHours(0,0,0,0);
+        
+        const marked = {};
+        
+        // Disable past 30 days and next 90 days by default
+        for (let i = -30; i < 90; i++) {
+            const d = new Date(today);
+            d.setDate(today.getDate() + i);
+            const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+            marked[dateStr] = { disabled: true, disableTouchEvent: true };
+        }
+        
+        approvedSchedules.forEach(s => {
+          if (s.date) {
+            const scheduleDate = new Date(s.date);
+            scheduleDate.setHours(0,0,0,0);
+            if (scheduleDate >= today) {
+               const dateStr = `${scheduleDate.getFullYear()}-${String(scheduleDate.getMonth() + 1).padStart(2, '0')}-${String(scheduleDate.getDate()).padStart(2, '0')}`;
+               marked[dateStr] = { disabled: false };
+            }
+          }
+        });
+        
+        setMarkedDates(marked);
+      } catch (error) {
+        console.log("Error fetching all schedules for dates", error);
+      }
+    };
+    fetchAllAvailableDates();
+  }, []);
 
   useEffect(() => {
     if (selectedDoctor) {
@@ -155,12 +219,34 @@ const BookAppointmentScreen = ({ navigation }) => {
         }
       });
 
+      const tamilTranslations = {
+        'Cardiology': 'இருதயவியல்',
+        'Neurology': 'நரம்பியல்',
+        'Orthopedics': 'எலும்பியல்',
+        'Pediatrics': 'குழந்தை மருத்துவம்',
+        'Dermatology': 'தோல் மருத்துவம்',
+        'General Surgery': 'பொது அறுவை சிகிச்சை',
+        'Psychiatry': 'மனநல மருத்துவம்',
+        'Gynecology': 'மகளிர் மருத்துவம்',
+        'Oncology': 'புற்றுநோயியல்',
+        'Ophthalmology': 'கண் மருத்துவம்',
+        'Urology': 'சிறுநீரகவியல்',
+        'ENT': 'காது மூக்கு தொண்டை',
+        'Dentistry': 'பல் மருத்துவம்',
+        'Radiology': 'கதிரியக்கவியல்',
+        'General Physician': 'பொது மருத்துவர்'
+      };
+
       const departments = Array.from(uniqueDepts);
       const formattedCategories = departments.map((cat, index) => {
+        const originalName = cat.split('/')[0].trim();
+        const tamilName = tamilTranslations[originalName];
+        const displayName = (tamilName && !cat.includes('/')) ? `${originalName} / ${tamilName}` : cat;
+
         return {
           _id: String(index + 1),
-          name: cat,
-          originalName: cat.split('/')[0].trim(),
+          name: displayName,
+          originalName: originalName,
           fullDepartment: cat
         };
       });
@@ -180,12 +266,6 @@ const BookAppointmentScreen = ({ navigation }) => {
     else { setLoadingData(false); }
   }, [user]);
 
-  const onChangeDate = (event, selectedDate) => {
-    const currentDate = selectedDate || date;
-    setShowPicker(Platform.OS === 'ios');
-    setDate(currentDate);
-  };
-  const showMode = (currentMode) => { setShowPicker(true); setMode(currentMode); };
   const formatTime = (rawDate) => {
     let hours = rawDate.getHours();
     let minutes = rawDate.getMinutes();
@@ -260,19 +340,26 @@ const BookAppointmentScreen = ({ navigation }) => {
   return (
     <SafeAreaView style={styles.safeArea}>
       <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={{ flex: 1 }}>
-        <ScrollView contentContainerStyle={styles.container} nestedScrollEnabled={true} keyboardShouldPersistTaps="handled">
-
+        {/* --- FIXED HEADER SECTION --- */}
+        <View style={{ paddingHorizontal: 24, paddingTop: 24, backgroundColor: '#fff', zIndex: 10 }}>
           {/* HEADER */}
-          <View style={styles.header}>
-            <View style={styles.userInfo}>
-              <Image source={require('../assets/logo.png')} style={styles.userImage} resizeMode="contain" />
-              <View style={styles.textContainer}>
-                <Text style={styles.greeting}>DrZ</Text>
-                <Text style={styles.subGreeting}>Book Appointment</Text>
+          <View style={[styles.headerContainer, { marginTop: 0 }]}>
+            {/* Left: Welcome Pill */}
+            <View style={styles.welcomePill}>
+              <View style={styles.logoCircle}>
+                <Image source={require('../assets/logo.png')} style={styles.logoImage} resizeMode="contain" />
               </View>
+              <Text style={styles.welcomeText}>Book Appointment</Text>
             </View>
-            <TouchableOpacity style={styles.iconButton} onPress={handleLogoutPress}>
-              <Icon name="logout" size={24} color="#E74C3C" />
+
+            {/* Right: Notification Bell */}
+            <TouchableOpacity onPress={() => navigation.navigate('NotificationPatient')} style={styles.bellButton}>
+              <Icon name="bell-outline" size={24} color="#5F76FE" />
+              {unreadCount > 0 && (
+                <View style={styles.badgeContainer}>
+                  <Text style={styles.badgeText}>{unreadCount > 9 ? '9+' : unreadCount}</Text>
+                </View>
+              )}
             </TouchableOpacity>
           </View>
 
@@ -281,6 +368,10 @@ const BookAppointmentScreen = ({ navigation }) => {
             <Icon name="arrow-left" size={22} color="#555" />
             <Text style={styles.backButtonText}>Back / பின்செல்</Text>
           </TouchableOpacity>
+        </View>
+
+        {/* --- SCROLLABLE CONTENT --- */}
+        <ScrollView contentContainerStyle={[styles.container, { paddingTop: 0 }]} nestedScrollEnabled={true} keyboardShouldPersistTaps="handled">
 
           {loadingData ? <ActivityIndicator size="large" color="#1C3E55" style={{ marginTop: 50 }} /> : (
             <View style={{ zIndex: 10 }}>
@@ -345,18 +436,50 @@ const BookAppointmentScreen = ({ navigation }) => {
                 />
               </View>
 
-              {/* 5. DATE (Moved up) */}
+              {/* 5. DATE (Calendar Modal) */}
               <View style={styles.section}>
                 <View style={styles.labelRow}>
                   <Text style={styles.label}>Select Date</Text>
                   <Text style={styles.labelTamil}>தேதியை தேர்ந்தெடுக்கவும்</Text>
                 </View>
-                <TouchableOpacity style={[styles.inputBox, { justifyContent: 'space-between', paddingHorizontal: 16 }]} onPress={() => showMode('date')}>
+
+                <TouchableOpacity style={[styles.inputBox, { justifyContent: 'space-between', paddingHorizontal: 16 }]} onPress={() => setShowCalendar(true)}>
                   <Text style={{ flex: 1, fontSize: 16, color: '#333' }}>{formatDate(date)}</Text>
                   <Icon name="calendar-month" size={24} color="#888" />
                 </TouchableOpacity>
               </View>
-              {showPicker && <DateTimePicker value={date} mode={mode} is24Hour={false} display="default" onChange={onChangeDate} />}
+
+              <Modal visible={showCalendar} transparent={true} animationType="fade" onRequestClose={() => setShowCalendar(false)}>
+                <TouchableOpacity style={styles.centerModalOverlay} activeOpacity={1} onPress={() => setShowCalendar(false)}>
+                  <View style={{ width: '90%', backgroundColor: '#fff', borderRadius: 15, padding: 10, elevation: 5 }}>
+                    <Calendar
+                      minDate={new Date().toISOString().split('T')[0]}
+                      markedDates={{
+                        ...markedDates,
+                        [`${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`]: {
+                          ...(markedDates[`${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`] || {}),
+                          selected: true,
+                          selectedColor: '#359E0E',
+                        }
+                      }}
+                      onDayPress={(day) => {
+                        const dateStr = day.dateString;
+                        if (markedDates[dateStr] && markedDates[dateStr].disabled) {
+                          return; // Date is disabled
+                        }
+                        const newDate = new Date(day.timestamp);
+                        setDate(newDate);
+                        setShowCalendar(false);
+                      }}
+                      theme={{
+                        todayTextColor: '#359E0E',
+                        arrowColor: '#359E0E',
+                        textDayFontWeight: 'bold',
+                      }}
+                    />
+                  </View>
+                </TouchableOpacity>
+              </Modal>
 
               {/* 4. DOCTOR CATEGORY */}
               <View style={styles.section}>
@@ -514,7 +637,7 @@ const BookAppointmentScreen = ({ navigation }) => {
       </KeyboardAvoidingView>
 
       {/* NAVBAR */}
-      <View style={styles.navbar}>
+      {/* <View style={styles.navbar}>
         <TouchableOpacity style={styles.navItem} onPress={() => navigation.navigate('Dashboard')}>
           <Icon name="home" size={28} color="#1C3E55" />
           <Text style={[styles.navText, { fontWeight: 'bold', color: '#1C3E55' }]}>Home</Text>
@@ -532,7 +655,7 @@ const BookAppointmentScreen = ({ navigation }) => {
           <Text style={styles.navText}>Ambulance</Text>
           <Text style={[styles.navText, { fontSize: 10 }]}> ஆம்புலன்ஸ்</Text>
         </TouchableOpacity>
-      </View>
+      </View> */}
 
       {/* Logout Modal */}
       <Modal visible={showLogoutModal} transparent={true} animationType="fade" onRequestClose={() => setShowLogoutModal(false)}>
@@ -561,16 +684,72 @@ const { width } = Dimensions.get('window');
 
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: '#fff' },
-  container: { padding: 24, paddingBottom: 80 },
+  container: { padding: 24, paddingBottom: 20 },
 
   // Header
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 },
-  userInfo: { flexDirection: 'row', alignItems: 'center' },
-  userImage: { width: width * 0.15, height: width * 0.08, marginRight: 15 },
-  textContainer: { justifyContent: 'center' },
-  greeting: { fontSize: 20, fontWeight: 'bold', color: '#1C3E55' },
-  subGreeting: { fontSize: 14, color: '#666', width: 150 },
-  iconButton: { backgroundColor: '#f5f5f5', padding: 10, borderRadius: 30 },
+  headerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 10,
+    marginTop: -10,
+  },
+  welcomePill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F5F5F5',
+    borderRadius: 30,
+    paddingVertical: 6,
+    paddingHorizontal: 8,
+    paddingRight: 16,
+  },
+  logoCircle: {
+    width: 34,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#F5F5F5',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 10,
+    overflow: 'hidden',
+  },
+  logoImage: {
+    width: 28,
+    height: 24,
+    backgroundColor: '#F5F5F5',
+  },
+  welcomeText: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  bellButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: '#F5F5F5',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  badgeContainer: {
+    position: 'absolute',
+    top: 4,
+    right: 4,
+    backgroundColor: '#FF4B4B',
+    borderRadius: 10,
+    minWidth: 18,
+    height: 18,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 4,
+    borderWidth: 1.5,
+    borderColor: '#FFF',
+  },
+  badgeText: {
+    color: '#FFF',
+    fontSize: 10,
+    fontWeight: 'bold',
+  },
 
   backButtonRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 25 },
   backButtonText: { fontSize: 16, fontWeight: '600', color: '#555', marginLeft: 8 },

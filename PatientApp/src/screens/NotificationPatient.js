@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, FlatList, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, FlatList, ActivityIndicator, Image } from 'react-native';
 import { useIsFocused } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
@@ -9,6 +9,25 @@ import { AuthContext } from '../context/AuthContext';
 // Use same IP configuration as other screens
 import { API_BASE_URL } from '../config';
 const BASE_URL = API_BASE_URL;
+
+const getTimeAgo = (dateString) => {
+  if (!dateString) return '';
+  const now = new Date();
+  const past = new Date(dateString);
+  const diffInSeconds = Math.floor((now - past) / 1000);
+
+  if (diffInSeconds < 60) return 'Just now';
+  const diffInMinutes = Math.floor(diffInSeconds / 60);
+  if (diffInMinutes < 60) return `${diffInMinutes} min${diffInMinutes > 1 ? 's' : ''} ago`;
+  const diffInHours = Math.floor(diffInMinutes / 60);
+  if (diffInHours < 24) return `${diffInHours} hr${diffInHours > 1 ? 's' : ''} ago`;
+  const diffInDays = Math.floor(diffInHours / 24);
+  if (diffInDays < 30) return `${diffInDays} day${diffInDays > 1 ? 's' : ''} ago`;
+  const diffInMonths = Math.floor(diffInDays / 30);
+  if (diffInMonths < 12) return `${diffInMonths} mon${diffInMonths > 1 ? 's' : ''} ago`;
+  const diffInYears = Math.floor(diffInMonths / 12);
+  return `${diffInYears} yr${diffInYears > 1 ? 's' : ''} ago`;
+};
 
 const NotificationPatient = ({ navigation }) => {
   const { user } = useContext(AuthContext);
@@ -88,7 +107,7 @@ const NotificationPatient = ({ navigation }) => {
           iconName,
           iconColor,
           isRead: n.isRead,
-          date: new Date(n.createdAt).toLocaleDateString()
+          date: `${String(new Date(n.createdAt).getDate()).padStart(2, '0')}/${String(new Date(n.createdAt).getMonth() + 1).padStart(2, '0')}/${new Date(n.createdAt).getFullYear()} - ${getTimeAgo(n.createdAt)}`
         };
       });
 
@@ -112,11 +131,11 @@ const NotificationPatient = ({ navigation }) => {
     >
       <View style={[styles.iconContainer, { backgroundColor: item.iconColor + '20' }]}>
         <Icon name={item.iconName} size={30} color={item.iconColor} />
+        {!item.isRead && <View style={styles.unreadDot} />}
       </View>
       <View style={styles.textContainer}>
         <View style={styles.titleRow}>
           <Text style={[styles.cardTitle, !item.isRead && styles.unreadText]}>{item.title}</Text>
-          {!item.isRead && <View style={styles.unreadDot} />}
         </View>
         <Text style={styles.cardMessage}>{item.message}</Text>
         <Text style={styles.cardDate}>{item.date}</Text>
@@ -127,15 +146,24 @@ const NotificationPatient = ({ navigation }) => {
   return (
     <SafeAreaView style={styles.container}>
       {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Icon name="arrow-left" size={28} color="#1C3E55" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Notifications</Text>
-        {/* Tick icon → mark all read */}
-        <TouchableOpacity onPress={handleMarkAllAsRead} style={{ padding: 4 }}>
-          <Icon name="check-all" size={26} color="#1C3E55" />
-        </TouchableOpacity>
+      <View style={styles.headerContainer}>
+        {/* Top Row: Welcome Pill & Bell */}
+        <View style={styles.topRow}>
+          <View style={styles.welcomePill}>
+            <View style={styles.logoCircle}>
+              <Image source={require('../assets/logo.png')} style={styles.logoImage} resizeMode="contain" />
+            </View>
+            <Text style={styles.welcomeText}>Welcome To DrZ</Text>
+          </View>
+        </View>
+
+        {/* Bottom Row: Back & Title */}
+        <View style={styles.bottomRow}>
+          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+            <Icon name="arrow-left" size={28} color="#4A4A4A" />
+          </TouchableOpacity>
+          <Text style={styles.pageTitle}>Notification / அறிவிப்பு</Text>
+        </View>
       </View>
 
       {/* Content */}
@@ -162,22 +190,78 @@ const NotificationPatient = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#FAFAFA' },
-  header: {
+  container: { flex: 1, backgroundColor: '#fff' },
+  headerContainer: {
+    backgroundColor: '#fff',
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    paddingBottom: 16,
+  },
+  topRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    padding: 16,
-    backgroundColor: '#fff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
+    marginBottom: 20,
   },
-  headerTitle: { fontSize: 20, fontWeight: 'bold', color: '#1C3E55' },
+  welcomePill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F5F5F5',
+    borderRadius: 30,
+    paddingVertical: 6,
+    paddingHorizontal: 8,
+    paddingRight: 16,
+  },
+  logoCircle: {
+    width: 32,
+    height: 32,
+    borderRadius: 46,
+    // backgroundColor: '#EAEAEA',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 10,
+    overflow: 'hidden',
+  },
+  logoImage: {
+    width: 28,
+    height: 24,
+  },
+  welcomeText: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  bellButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: '#F5F5F5',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  bellDot: {
+    position: 'absolute',
+    top: 10,
+    right: 12,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#5F76FE',
+    borderWidth: 1.5,
+    borderColor: '#F5F5F5',
+  },
+  bottomRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  backButton: {
+    marginRight: 12,
+  },
+  pageTitle: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: '#4A4A4A',
+  },
   content: { flex: 1 },
   listContainer: { padding: 16 },
   notificationCard: {
@@ -191,7 +275,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
-    alignItems: 'center'
+    alignItems: 'flex-start'
   },
   iconContainer: {
     width: 50,
@@ -206,9 +290,9 @@ const styles = StyleSheet.create({
   cardTitle: { fontSize: 18, fontWeight: 'bold', color: '#333', marginBottom: 4, flex: 1 },
   unreadText: { color: '#000', fontWeight: '900' },
   unreadCard: { backgroundColor: '#F4F9FC', borderColor: '#D0E1E8', borderWidth: 1 },
-  unreadDot: { width: 10, height: 10, borderRadius: 5, backgroundColor: '#E74C3C', marginTop: 4, marginLeft: 8 },
+  unreadDot: { position: 'absolute', top: 0, right: 0, width: 14, height: 14, borderRadius: 7, backgroundColor: '#E74C3C', borderWidth: 2, borderColor: '#FFF' },
   cardMessage: { fontSize: 14, color: '#555', lineHeight: 20 },
-  cardDate: { fontSize: 12, color: '#999', marginTop: 8, alignSelf: 'flex-end' },
+  cardDate: { fontSize: 12, color: '#999', marginTop: 8, textAlign: 'right', paddingRight: 5 },
   emptyContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   emptyText: { marginTop: 10, fontSize: 16, color: '#888' }
 });

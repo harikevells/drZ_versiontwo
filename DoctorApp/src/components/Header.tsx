@@ -80,21 +80,21 @@ export default function Header({ title, isNotification = false }: HeaderProps) {
         <View style={styles.userInfo}>
           <Image
             source={require('../assets/DoctorlogoApp1.png')}
-            style={[styles.avatar, { resizeMode: 'contain' }]}
+            style={styles.avatar}
           />
           <View style={styles.textContainer}>
             {title ? (
-              <Text style={styles.greeting}>{title}</Text>
+              <Text style={styles.doctorName}>{title}</Text>
             ) : (
               <>
-                {/* <Text style={styles.greeting}>{greeting}</Text> */}
-                {/* <Text style={styles.date}>{currentDate}</Text> */}
+                <Text style={styles.greeting}>Welcome To DrZ</Text>
+                <Text style={styles.doctorName}>Dr.{doctorName.replace('Dr. ', '').replace('Dr.', '')}</Text>
               </>
             )}
           </View>
         </View>
         <TouchableOpacity style={styles.notificationIconContainer} onPress={() => navigation.navigate('Notifications')}>
-          <Ionicons name="notifications-outline" size={32} color="#FFF" />
+          <Ionicons name="notifications-outline" size={24} color="#052A3F" />
           {unreadCount > 0 && (
             <View style={styles.badge}>
               <Text style={styles.badgeText}>{unreadCount > 99 ? '99+' : unreadCount}</Text>
@@ -108,69 +108,80 @@ export default function Header({ title, isNotification = false }: HeaderProps) {
 
 const styles = StyleSheet.create({
   headerContainer: {
-    backgroundColor: '#052A3F',
-    height: 70,
+    backgroundColor: '#F0F4FF',
+    height: 80,
     width: '100%',
-    // transform: [{ scaleX: 1.5 }],
-    alignItems: 'center',
-    justifyContent: 'flex-end',
-    paddingBottom: 10,
-    marginBottom: 20,
+    justifyContent: 'center',
+    paddingHorizontal: 20,
+    paddingTop: 10,
+    marginBottom: 5,
   },
   headerContent: {
-    // transform: [{ scaleX: 0.66 }],
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     width: '100%',
-    paddingHorizontal: 20,
   },
   userInfo: {
     flexDirection: 'row',
     alignItems: 'center',
+    backgroundColor: '#FFF',
+    padding: 8,
+    paddingHorizontal: 15,
+    borderRadius: 30,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
   },
   avatar: {
-    width: 120,
-    height: 50,
-    borderRadius: 25,
-    // borderWidth: 2,
-    borderColor: '#FFF',
-    // backgroundColor: '#FFF',
+    width: 35,
+    height: 35,
+    resizeMode: 'contain',
   },
   textContainer: {
-    marginLeft: 12,
+    marginLeft: 10,
+    marginRight: 15,
   },
   greeting: {
-    color: '#FFF',
-    fontSize: 18,
+    color: '#666',
+    fontSize: 12,
+    // marginBottom: 2,
+    width: 100,
+
+  },
+  doctorName: {
+    color: '#000',
+    fontSize: 14,
     fontWeight: 'bold',
   },
-  date: {
-    color: '#A0B3C1',
-    fontSize: 13,
-    marginTop: 4,
-  },
   notificationIconContainer: {
+    backgroundColor: '#E0E9FF',
+    width: 45,
+    height: 45,
+    borderRadius: 22.5,
+    justifyContent: 'center',
+    alignItems: 'center',
     position: 'relative',
-    padding: 5,
   },
   badge: {
     position: 'absolute',
-    top: 0,
+    top: 2,
     right: 2,
     backgroundColor: '#E74C3C',
     borderRadius: 10,
-    minWidth: 20,
-    height: 20,
+    minWidth: 18,
+    height: 18,
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 1.5,
-    borderColor: '#052A3F',
+    borderColor: '#E0E9FF',
     paddingHorizontal: 4,
   },
   badgeText: {
     color: '#FFF',
-    fontSize: 10,
+    fontSize: 9,
     fontWeight: 'bold',
   },
 });

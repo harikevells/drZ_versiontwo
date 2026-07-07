@@ -23,7 +23,7 @@ export default function HomeScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [doctorName, setDoctorName] = useState('');
   
-  const [stats, setStats] = useState({ todaysAppointments: 0, pendingAppointments: 0, totalAttended: 0 });
+  const [stats, setStats] = useState({ todaysAppointments: 0, pendingAppointments: 0, rescheduleAppointments: 0, totalAttended: 0 });
   const [patientRequests, setPatientRequests] = useState<any[]>([]);
   const [recentPatients, setRecentPatients] = useState<any[]>([]);
 
@@ -34,9 +34,19 @@ export default function HomeScreen() {
         const user = JSON.parse(storedData);
         setDoctorName(user.doctorName);
         const response = await axios.get(`${API_URL}/dashboard/${user.doctorName}`);
-        setStats(response.data.stats);
-        setPatientRequests(response.data.patientRequests);
-        setRecentPatients(response.data.recentPatients);
+        
+        const data = response.data;
+        const pendingCount = data.patientRequests.filter((req: any) => req.status.toLowerCase() === 'pending').length;
+        const rescheduledCount = data.patientRequests.filter((req: any) => req.status.toLowerCase() === 'rescheduled').length;
+
+        setStats({
+          todaysAppointments: data.stats.todaysAppointments || 0,
+          pendingAppointments: pendingCount,
+          rescheduleAppointments: rescheduledCount,
+          totalAttended: data.stats.totalAttended || 0
+        });
+        setPatientRequests(data.patientRequests);
+        setRecentPatients(data.recentPatients);
       }
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
@@ -116,15 +126,17 @@ export default function HomeScreen() {
         {/* Appointments Summary */}
         <Text style={styles.sectionTitle}>Appointments</Text>
         <View style={styles.statsContainer}>
-          <View style={styles.statCard}>
-            <Text style={styles.statNumber}>{stats.todaysAppointments < 10 ? `0${stats.todaysAppointments}` : stats.todaysAppointments}</Text>
-            <Text style={styles.statLabel}>Today's{'\n'}Appointment</Text>
-            <Ionicons name="calendar-outline" size={24} color="#2CA01C" style={styles.statIcon} />
+          <View style={styles.statCardBlue}>
+            <Text style={styles.statNumberWhite}>{stats.todaysAppointments < 10 ? `0${stats.todaysAppointments}` : stats.todaysAppointments}</Text>
+            <Text style={styles.statLabelWhite}>Today's{'\n'}Appointment</Text>
           </View>
-          <View style={styles.statCard}>
-            <Text style={styles.statNumber}>{stats.pendingAppointments < 10 ? `0${stats.pendingAppointments}` : stats.pendingAppointments}</Text>
-            <Text style={styles.statLabel}>Pending{'\n'}Appointment</Text>
-            <Ionicons name="time-outline" size={24} color="#FFA500" style={styles.statIcon} />
+          <View style={styles.statCardBlue}>
+            <Text style={styles.statNumberWhite}>{stats.pendingAppointments < 10 ? `0${stats.pendingAppointments}` : stats.pendingAppointments}</Text>
+            <Text style={styles.statLabelWhite}>Pending{'\n'}Appointment</Text>
+          </View>
+          <View style={styles.statCardBlue}>
+            <Text style={styles.statNumberWhite}>{stats.rescheduleAppointments < 10 ? `0${stats.rescheduleAppointments}` : stats.rescheduleAppointments}</Text>
+            <Text style={styles.statLabelWhite}>Reschedule{'\n'}Appointment</Text>
           </View>
         </View>
 
@@ -233,11 +245,11 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8F9FA',
+    backgroundColor: '#F0F4FF',
   },
   scrollContent: {
     paddingHorizontal: 20,
-    paddingBottom: 5,
+    paddingBottom: 30,
   },
   sectionHeader: {
     flexDirection: 'row',
@@ -261,33 +273,31 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
   },
-  statCard: {
-    backgroundColor: '#FFF',
-    borderRadius: 12,
-    paddingVertical: 25,
-    paddingHorizontal: 20,
-    width: '48%',
+  statCardBlue: {
+    backgroundColor: '#0D6EFD',
+    borderRadius: 16,
+    paddingVertical: 18,
+    paddingHorizontal: 10,
+    width: '32%',
+    elevation: 3,
     shadowColor: '#000',
-    shadowOpacity: 0.05,
-    shadowRadius: 5,
-    elevation: 2,
-    position: 'relative',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
     minHeight: 110,
+    justifyContent: 'center',
   },
-  statNumber: {
-    fontSize: 28,
+  statNumberWhite: {
+    fontSize: 22,
     fontWeight: 'bold',
-    color: '#052A3F',
+    color: '#FFF',
     marginBottom: 8,
   },
-  statLabel: {
-    fontSize: 15,
-    color: '#666',
-  },
-  statIcon: {
-    position: 'absolute',
-    top: 25,
-    right: 20,
+  statLabelWhite: {
+    fontSize: 13,
+    color: '#FFF',
+    fontWeight: 'bold',
+    lineHeight: 16,
   },
   requestCard: {
     backgroundColor: '#FFF',

@@ -2,9 +2,57 @@ import React, { useState, useEffect } from 'react';
 import { FaTimes, FaChevronLeft, FaChevronRight } from 'react-icons/fa';
 import './RescheduleModal.css'; // Reusing styles from RescheduleModal
 
-const ScheduleCreateModal = ({ isOpen, onClose, onSave, initialDate, initialSlots }) => {
+const ScheduleCreateModal = ({ isOpen, onClose, onSave, initialDate, initialSlots, doctorId, doctorName, allSchedules, editingId }) => {
   const [selectedDate, setSelectedDate] = useState('');
   const [selectedSlots, setSelectedSlots] = useState([]);
+
+  const isSlotBooked = (slot) => {
+    if (!doctorId && !doctorName) return false;
+    if (!selectedDate) return false;
+    if (!allSchedules || allSchedules.length === 0) return false;
+
+    const normalizeSlot = (str) => {
+      if (!str) return '';
+      let clean = str.toLowerCase().replace(/\s/g, '').replace(/:/g, '.');
+      clean = clean.replace(/(^|[^0-9])0([0-9]\.)/g, '$1$2');
+      return clean;
+    };
+
+    const isSameDate = (itemDate, targetDateStr) => {
+      if (!targetDateStr || !itemDate) return false;
+      
+      const [y, m, d] = targetDateStr.split('-');
+      const d1 = `${d}/${m}/${y}`;
+      const d2 = `${d}/${m}.${y}`;
+      const d3 = `${parseInt(d, 10)}/${parseInt(m, 10)}.${y}`;
+      const d4 = `${parseInt(d, 10)}/${parseInt(m, 10)}/${y}`;
+      
+      const cleanItem = String(itemDate).trim();
+      return (
+        cleanItem === targetDateStr ||
+        cleanItem === d1 ||
+        cleanItem === d2 ||
+        cleanItem === d3 ||
+        cleanItem === d4 ||
+        cleanItem.includes(d1) ||
+        cleanItem.includes(d2)
+      );
+    };
+
+    const normSlot = normalizeSlot(slot);
+
+    return allSchedules.some(s => {
+      if (editingId && s.id === editingId) return false;
+      
+      const isSameDoc = (s.doctorId && doctorId && String(s.doctorId) === String(doctorId)) ||
+                        (s.doctorName && doctorName && s.doctorName.toLowerCase().trim() === doctorName.toLowerCase().trim());
+      if (!isSameDoc) return false;
+      if (!isSameDate(s.date, selectedDate)) return false;
+      
+      const sTimeArray = Array.isArray(s.time) ? s.time : [s.time];
+      return sTimeArray.some(sSlot => normalizeSlot(sSlot) === normSlot);
+    });
+  };
   
   const [currentMonth, setCurrentMonth] = useState(new Date().getMonth());
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
@@ -227,13 +275,17 @@ const ScheduleCreateModal = ({ isOpen, onClose, onSave, initialDate, initialSlot
                 })
                 .map((slot, index) => {
                   const isSelected = selectedSlots.includes(slot);
+                  const isBooked = isSlotBooked(slot);
                   return (
                     <div 
                       key={index} 
-                      className={`time-slot ${isSelected ? 'selected' : ''}`}
-                      onClick={() => toggleSlot(slot)}
+                      className={`time-slot ${isSelected ? 'selected' : ''} ${isBooked ? 'booked disabled' : ''}`}
+                      onClick={() => {
+                        if (!isBooked) toggleSlot(slot);
+                      }}
+                      style={isBooked ? { backgroundColor: '#fee2e2', color: '#ef4444', borderColor: '#ef4444', cursor: 'not-allowed' } : undefined}
                     >
-                      {formatSlotForDisplay(slot)}
+                      {formatSlotForDisplay(slot)} {isBooked ? ' (Booked)' : ''}
                     </div>
                   );
                 })}

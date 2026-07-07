@@ -4,6 +4,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import HomeScreen from '../screens/HomeScreen';
 import AppointmentScreen from '../screens/AppointmentScreen';
+import ChatScreen from '../screens/ChatScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 
 const Tab = createBottomTabNavigator();
@@ -15,26 +16,27 @@ export default function MainTabs() {
         headerShown: false,
         tabBarShowLabel: false,
         tabBarStyle: {
-          backgroundColor: '#052A3F',
-          height: 80,
+          backgroundColor: '#0D6EFD',
+          height: 70,
           borderTopWidth: 0,
-          elevation: 0,
-          paddingTop: 10,
-          paddingBottom: 10,
-          borderTopLeftRadius: 35,
-          borderTopRightRadius: 35,
+          elevation: 5,
           // position: 'absolute',
-          bottom: 0,
-          left: 0,
-          right: 0,
+          bottom: 15,
+          marginHorizontal: 20,
+          borderRadius: 40,
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: 4 },
+          shadowOpacity: 0.15,
+          shadowRadius: 10,
         },
         tabBarItemStyle: {
-          paddingTop: 5,
-          paddingBottom: 5,
+          paddingTop: 0,
+          paddingBottom: 0,
+          justifyContent: 'center',
+          alignItems: 'center',
         },
         tabBarIconStyle: {
           flex: 1,
-          height: 65,
           width: '100%',
         },
         tabBarIcon: ({ focused }) => {
@@ -45,6 +47,8 @@ export default function MainTabs() {
             iconName = focused ? 'home' : 'home-outline';
           } else if (route.name === 'Appointment') {
             iconName = focused ? 'calendar' : 'calendar-outline';
+          } else if (route.name === 'Chat') {
+            iconName = focused ? 'chatbubble-ellipses' : 'chatbubble-ellipses-outline';
           } else if (route.name === 'Profile') {
             iconName = focused ? 'person' : 'person-outline';
           }
@@ -54,10 +58,11 @@ export default function MainTabs() {
               style={{
                 alignItems: 'center',
                 justifyContent: 'center',
-                backgroundColor: focused ? '#114563' : 'transparent',
-                borderRadius: 16,
+                backgroundColor: focused ? 'rgba(255, 255, 255, 0.2)' : 'transparent',
+                borderRadius: 20,
                 paddingVertical: 10,
-                paddingHorizontal: 15,
+                width: 80,
+                height: 55,
               }}
             >
               <Ionicons name={iconName} size={24} color="#FFF" />
@@ -71,6 +76,7 @@ export default function MainTabs() {
     >
       <Tab.Screen name="Home" component={HomeScreen} />
       <Tab.Screen name="Appointment" component={AppointmentScreen} />
+      <Tab.Screen name="Chat" component={ChatScreen} />
       <Tab.Screen name="Profile" component={ProfileScreen} />
     </Tab.Navigator>
   );

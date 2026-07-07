@@ -1,9 +1,12 @@
 import React, { useEffect } from 'react';
+import { LogBox } from 'react-native';
 import messaging from '@react-native-firebase/messaging';
 import notifee, { AndroidImportance } from '@notifee/react-native';
 import { AuthProvider } from './src/context/AuthContext'; 
 import { LanguageProvider } from './src/context/LanguageContext'; 
 import AppNavigator from './src/navigation/AppNavigator';
+
+LogBox.ignoreAllLogs();
 
 const App = () => {
   useEffect(() => {

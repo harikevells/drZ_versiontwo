@@ -6,7 +6,9 @@ const getDoctorDashboard = async (req, res) => {
         const { doctorName } = req.params;
         
         const totalAttended = await Appointment.countDocuments({ doctor_name: doctorName, status: { $in: ['Completed', 'completed'] } });
-        const pendingAppointments = await Appointment.countDocuments({ doctor_name: doctorName, status: { $in: ['Pending', 'pending', 'Rescheduled', 'rescheduled'] } });
+        const pendingAppointments = await Appointment.countDocuments({ doctor_name: doctorName, status: { $in: ['Pending', 'pending'] } });
+        const rescheduleAppointments = await Appointment.countDocuments({ doctor_name: doctorName, status: { $in: ['Rescheduled', 'rescheduled'] } });
+        
         const today = new Date();
         const dd = String(today.getDate()).padStart(2, '0');
         const mm = String(today.getMonth() + 1).padStart(2, '0');
@@ -26,7 +28,7 @@ const getDoctorDashboard = async (req, res) => {
             .limit(10);
 
         res.json({
-            stats: { todaysAppointments, pendingAppointments, totalAttended },
+            stats: { todaysAppointments, pendingAppointments, rescheduleAppointments, totalAttended },
             patientRequests,
             recentPatients
         });

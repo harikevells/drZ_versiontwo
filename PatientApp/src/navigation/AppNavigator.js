@@ -1,5 +1,6 @@
-import React, { useContext } from 'react';
-import { View, Text, StyleSheet, Alert, Linking, Image } from 'react-native';
+import React, { useContext, useState, useEffect } from 'react';
+import { View, Text, StyleSheet, Alert, Linking, Image, TouchableOpacity, ActivityIndicator } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
@@ -12,6 +13,7 @@ import LoginScreen from '../screens/LoginScreen';
 import AppointmentScreen from '../screens/AppointmentScreen';
 import BookAppointmentScreen from '../screens/BookAppointmentScreen';
 import NotificationPatient from '../screens/NotificationPatient';
+import ChatbotScreen from '../screens/ChatbotScreen';
 // import ReportScreen from '../screens/ReportScreen';
 
 const Stack = createNativeStackNavigator();
@@ -60,26 +62,69 @@ function DashboardTabs() {
     );
   };
 
+  // Custom Tab Bar Component
+  const CustomTabBar = ({ state, descriptors, navigation }) => {
+    return (
+      <View style={styles.tabBarContainer}>
+        {state.routes.map((route, index) => {
+          const { options } = descriptors[route.key];
+          const isFocused = state.index === index;
+
+          const onPress = () => {
+            const event = navigation.emit({
+              type: 'tabPress',
+              target: route.key,
+              canPreventDefault: true,
+            });
+
+            if (!isFocused && !event.defaultPrevented) {
+              navigation.navigate(route.name);
+            }
+          };
+
+          return (
+            <TouchableOpacity
+              key={index}
+              accessibilityRole="button"
+              accessibilityState={isFocused ? { selected: true } : {}}
+              accessibilityLabel={options.tabBarAccessibilityLabel}
+              testID={options.tabBarTestID}
+              onPress={onPress}
+              style={styles.tabItem}
+              activeOpacity={1}
+            >
+              {isFocused && (
+                <View style={styles.activeNotchContainer}>
+                  <View style={styles.cutoutWrapper}>
+                    <View style={styles.cutout} />
+                  </View>
+                  <View style={styles.dot} />
+                </View>
+              )}
+              
+              <View style={[styles.iconContainer, isFocused && { marginTop: 8 }]}>
+                {options.tabBarIcon && options.tabBarIcon({ 
+                  focused: isFocused, 
+                  color: isFocused ? '#fff' : 'rgba(255, 255, 255, 0.7)',
+                  size: 24
+                })}
+                {options.tabBarLabel && options.tabBarLabel({ 
+                  focused: isFocused, 
+                  color: isFocused ? '#fff' : 'rgba(255, 255, 255, 0.7)' 
+                })}
+              </View>
+            </TouchableOpacity>
+          );
+        })}
+      </View>
+    );
+  };
+
   return (
     <Tab.Navigator
+      tabBar={(props) => <CustomTabBar {...props} />}
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: '#1C3E55',
-        tabBarInactiveTintColor: '#888',
-        tabBarShowLabel: true,
-        tabBarStyle: {
-          height: 80,
-          paddingBottom: 10,
-          paddingTop: 10,
-          backgroundColor: '#fff',
-          borderTopWidth: 1,
-          borderTopColor: '#eee',
-          elevation: 15,
-          shadowColor: '#000',
-          shadowOffset: { width: 0, height: -2 },
-          shadowOpacity: 0.1,
-          shadowRadius: 3,
-        }
       }}
     >
       {/* 1. HOME TAB */}
@@ -92,13 +137,13 @@ function DashboardTabs() {
               <Text style={{ fontSize: 12, color: color, fontWeight: focused ? 'bold' : 'normal' }}>
                 {texts?.home || 'Home'}/
               </Text>
-              <Text style={{ fontSize: 16, color: color, marginTop: -2 }}>
+              <Text style={{ fontSize: 12, color: color, marginTop: -2 }}>
                 ஹோம்
               </Text>
             </View>
           ),
           tabBarIcon: ({ color, focused }) => (
-            <Icon name={focused ? "home" : "home-outline"} color={color} size={30} />
+            <Icon name={focused ? 'home' : 'home-outline'} color={color} size={28} />
           ),
         }}
       />
@@ -113,13 +158,13 @@ function DashboardTabs() {
               <Text style={{ fontSize: 12, color: color, fontWeight: focused ? 'bold' : 'normal' }}>
                 Payment/
               </Text>
-              <Text style={{ fontSize: 10, color: color, marginTop: -2 }}>
+              <Text style={{ fontSize: 12, color: color, marginTop: -2 }}>
                 பேமெண்ட்
               </Text>
             </View>
           ),
           tabBarIcon: ({ color, focused }) => (
-            <Icon name="qrcode-scan" color={color} size={28} />
+            <Icon name="credit-card-outline" color={color} size={26} />
           ),
         }}
       />
@@ -145,8 +190,8 @@ function DashboardTabs() {
               </Text>
             </View>
           ),
-          tabBarIcon: ({ color }) => (
-            <Icon name="ambulance" color={color} size={30} />
+          tabBarIcon: ({ color, focused }) => (
+            <Icon name="ambulance" color={color} size={28} />
           ),
         }}
       />
@@ -155,11 +200,46 @@ function DashboardTabs() {
 }
 
 // --- MAIN NAVIGATOR ---
+const PERSISTENCE_KEY = 'NAVIGATION_STATE_V1';
+
 const AppNavigator = () => {
-  const { user } = useContext(AuthContext);
+  const { user, isLoading: authLoading } = useContext(AuthContext);
+  const [isReady, setIsReady] = useState(false);
+  const [initialState, setInitialState] = useState();
+
+  useEffect(() => {
+    const restoreState = async () => {
+      try {
+        const savedStateString = await AsyncStorage.getItem(PERSISTENCE_KEY);
+        const state = savedStateString ? JSON.parse(savedStateString) : undefined;
+        if (state !== undefined) {
+          setInitialState(state);
+        }
+      } finally {
+        setIsReady(true);
+      }
+    };
+
+    if (!isReady) {
+      restoreState();
+    }
+  }, [isReady]);
+
+  if (!isReady || authLoading) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#fff' }}>
+        <ActivityIndicator size="large" color="#5F76FE" />
+      </View>
+    );
+  }
 
   return (
-    <NavigationContainer>
+    <NavigationContainer
+      initialState={initialState}
+      onStateChange={(state) =>
+        AsyncStorage.setItem(PERSISTENCE_KEY, JSON.stringify(state))
+      }
+    >
       <Stack.Navigator screenOptions={{ headerShown: false }}>
         {!user ? (
           <Stack.Screen name="Login" component={LoginScreen} />
@@ -168,6 +248,7 @@ const AppNavigator = () => {
             <Stack.Screen name="Dashboard" component={DashboardTabs} />
             <Stack.Screen name="BookAppointment" component={BookAppointmentScreen} />
             <Stack.Screen name="NotificationPatient" component={NotificationPatient} />
+            <Stack.Screen name="Chatbot" component={ChatbotScreen} />
           </>
         )}
       </Stack.Navigator>
@@ -215,7 +296,68 @@ const styles = StyleSheet.create({
   qrImage: {
     width: '100%',
     height: '100%',
-  }
+  },
+  // Custom Tab Bar Styles
+  tabBarContainer: {
+    position: 'absolute',
+    bottom: 20,
+    left: 20,
+    right: 20,
+    height: 80,
+    backgroundColor: '#5F76FE',
+    borderRadius: 19.5,
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    alignItems: 'center',
+    elevation: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 5 },
+    shadowOpacity: 0.3,
+    shadowRadius: 5,
+  },
+  tabItem: {
+    flex: 1,
+    height: '100%',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  activeNotchContainer: {
+    position: 'absolute',
+    top: -14,
+    alignItems: 'center',
+    width: 60,
+    height: 40,
+    zIndex: 1,
+  },
+  cutoutWrapper: {
+    position: 'absolute',
+    top: -9,
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: 40,
+    height: 40,
+    transform: [{ scaleX: 1.5 }],
+  },
+  cutout: {
+    width: 20,
+    height: 20,
+    borderRadius: 6,
+    backgroundColor: '#fff',
+    transform: [{ rotate: '45deg' }],
+  },
+  dot: {
+    position: 'absolute',
+    top: 1,
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+    backgroundColor: '#5F76FE',
+  },
+  iconContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 2,
+  },
 });
 
 export default AppNavigator;
