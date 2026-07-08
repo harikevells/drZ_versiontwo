@@ -124,7 +124,7 @@ export default function HomeScreen() {
       >
         
         {/* Appointments Summary */}
-        <Text style={styles.sectionTitle}>Appointments</Text>
+        <Text style={[styles.sectionTitle, { marginBottom: 15 }]}>Appointments</Text>
         <View style={styles.statsContainer}>
           <View style={styles.statCardBlue}>
             <Text style={styles.statNumberWhite}>{stats.todaysAppointments < 10 ? `0${stats.todaysAppointments}` : stats.todaysAppointments}</Text>
@@ -142,9 +142,9 @@ export default function HomeScreen() {
 
         {/* Patient Request */}
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Patient Request</Text>
+          <Text style={styles.sectionTitle}>Patient Requests</Text>
           <TouchableOpacity onPress={() => navigation.navigate('Appointment')}>
-            <Text style={styles.viewAll}>View All</Text>
+            <Text style={styles.viewAll}>See All</Text>
           </TouchableOpacity>
         </View>
 
@@ -155,9 +155,7 @@ export default function HomeScreen() {
             <View key={patient.id || patient._id} style={styles.requestCard}>
               <View style={styles.cardHeader}>
                 <Text style={styles.patientName}>{patient.patient_name}</Text>
-                <View style={[styles.statusBadge, { backgroundColor: getStatusColor(patient.status) }]}>
-                  <Text style={styles.statusText}>{patient.status}</Text>
-                </View>
+                <Text style={[styles.statusTextInline, { color: getStatusColor(patient.status) }]}>{patient.status}</Text>
               </View>
               <Text style={styles.dateTime}>{patient.appointment_date} {patient.appointment_time}</Text>
               <View style={styles.actionButtons}>
@@ -165,19 +163,19 @@ export default function HomeScreen() {
                   style={[styles.btn, styles.approveBtn]}
                   onPress={() => openApprove(patient)}
                 >
-                  <Text style={styles.btnText}>Approve</Text>
+                  <Text style={styles.btnTextAction}>Approve</Text>
                 </TouchableOpacity>
                 <TouchableOpacity 
                   style={[styles.btn, styles.rescheduleBtn]}
                   onPress={() => openReschedule(patient)}
                 >
-                  <Text style={styles.btnText}>Reschedule</Text>
+                  <Text style={styles.btnTextAction}>Reschedule</Text>
                 </TouchableOpacity>
                 <TouchableOpacity 
                   style={[styles.btn, styles.cancelBtn]}
                   onPress={() => openCancel(patient)}
                 >
-                  <Text style={styles.btnTextDark}>Cancel</Text>
+                  <Text style={styles.btnTextAction}>Cancel</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -185,7 +183,12 @@ export default function HomeScreen() {
         )}
 
         {/* Recent Patient History */}
-        <Text style={[styles.sectionTitle, { marginTop: 10 }]}>Recent Patient History</Text>
+        <View style={[styles.sectionHeader, { marginTop: 10 }]}>
+          <Text style={styles.sectionTitle}>Recent Patient History</Text>
+          <TouchableOpacity>
+            <Text style={styles.viewAll}>See All</Text>
+          </TouchableOpacity>
+        </View>
         {recentPatients.length === 0 ? (
            <Text style={{ textAlign: 'center', color: '#999', marginVertical: 20 }}>No recent history.</Text>
         ) : (
@@ -195,15 +198,20 @@ export default function HomeScreen() {
             data={recentPatients}
             keyExtractor={(item: any) => item.id || item._id}
             renderItem={({ item }: { item: any }) => (
-              <View style={styles.recentPatientCard}>
-                <View style={styles.cardBase}>
+              <View style={styles.historyCard}>
+                <View style={styles.historyImageContainer}>
                   <Image 
                     source={item.patient_gender === 'Female' ? require('../assets/femalepatient.png') : require('../assets/malepatient.png')} 
-                    style={styles.patientImage}
+                    style={styles.historyPatientImage}
                   />
-                  <View style={styles.recentNameBadge}>
-                    <Text style={styles.recentName}>{item.patient_name}</Text>
-                  </View>
+                </View>
+                <Text style={styles.historyPatientName} numberOfLines={1}>{item.patient_name}</Text>
+                <Text style={styles.historySubText} numberOfLines={1}>{item.treatment_category || 'General Checkup'}</Text>
+                <View style={styles.historyDatePill}>
+                  <Ionicons name="calendar-outline" size={12} color="#0084FF" />
+                  <Text style={styles.historyDateText}>
+                    {item.appointment_date ? item.appointment_date : '28 Mar 2026'}
+                  </Text>
                 </View>
               </View>
             )}
@@ -245,7 +253,7 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F0F4FF',
+    backgroundColor: '#f5f7feff',
   },
   scrollContent: {
     paddingHorizontal: 20,
@@ -259,14 +267,13 @@ const styles = StyleSheet.create({
     marginBottom: 15,
   },
   sectionTitle: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: 'bold',
     color: '#333',
-    marginBottom: 15,
   },
   viewAll: {
-    fontSize: 12,
-    color: '#052A3F',
+    fontSize: 14,
+    color: '#4A4A4A',
     fontWeight: 'bold',
   },
   statsContainer: {
@@ -301,9 +308,11 @@ const styles = StyleSheet.create({
   },
   requestCard: {
     backgroundColor: '#FFF',
-    borderRadius: 12,
-    padding: 15,
-    marginBottom: 15,
+    borderRadius: 24,
+    padding: 20,
+    marginBottom: 20,
+    borderLeftWidth: 4,
+    borderLeftColor: '#005C8A',
     shadowColor: '#000',
     shadowOpacity: 0.05,
     shadowRadius: 5,
@@ -316,102 +325,105 @@ const styles = StyleSheet.create({
     marginBottom: 5,
   },
   patientName: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: 'bold',
     color: '#333',
   },
-  statusBadge: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 12,
-  },
-  statusText: {
-    color: '#FFF',
-    fontSize: 10,
-    fontWeight: 'bold',
+  statusTextInline: {
+    fontSize: 13,
+    fontWeight: '600',
   },
   dateTime: {
-    fontSize: 14,
-    color: '#666',
+    fontSize: 13,
+    color: '#555',
     marginBottom: 15,
     marginTop: 5,
+    fontWeight: '500',
   },
   actionButtons: {
     flexDirection: 'row',
     justifyContent: 'space-between',
   },
   btn: {
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: 6,
+    paddingVertical: 10,
+    paddingHorizontal: 8,
+    borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
     flex: 1,
-    marginHorizontal: 3,
+    marginHorizontal: 4,
   },
   approveBtn: {
-    backgroundColor: '#2CA01C',
+    backgroundColor: '#2DC045',
   },
   rescheduleBtn: {
-    backgroundColor: '#0084FF',
+    backgroundColor: '#FFB84D',
   },
   cancelBtn: {
-    backgroundColor: '#E0E0E0',
+    backgroundColor: '#C9C9C9',
   },
-  btnText: {
-    color: '#FFF',
-    fontSize: 14,
-    fontWeight: 'bold',
-    width:100,
-    textAlign:'center'
-  },
-  btnTextDark: {
-    color: '#666',
-    fontSize: 14,
-    fontWeight: 'bold',
+  btnTextAction: {
+    color: '#333',
+    fontSize: 13,
+    fontWeight: '700',
+    textAlign: 'center',
   },
   recentList: {
-    paddingTop: 85,
+    paddingTop: 10,
     paddingBottom: 5,
     paddingLeft: 5,
   },
-  recentPatientCard: {
-    alignItems: 'center',
-    marginRight: 20,
-    width: 140,
-  },
-  cardBase: {
-    width: 140,
-    height: 70,
-    borderWidth: 1,
-    borderColor: '#E0E0E0',
-    borderRadius: 8,
+  historyCard: {
     backgroundColor: '#FFF',
-    justifyContent: 'flex-end',
+    borderRadius: 16,
+    padding: 15,
+    marginRight: 15,
+    width: 140,
     alignItems: 'center',
-    position: 'relative',
-    overflow: 'visible',
+    borderWidth: 1,
+    borderColor: '#E8E8E8',
   },
-  patientImage: {
-    width: 120,
-    height: 140,
-    resizeMode: 'contain',
-    position: 'absolute',
-    bottom: 25,
-    zIndex: 1,
-  },
-  recentNameBadge: {
-    backgroundColor: '#E83F5B',
-    width: '100%',
-    paddingVertical: 6,
-    borderRadius: 6,
-    alignItems: 'center',
+  historyImageContainer: {
+    width: 80,
+    height: 80,
+    borderRadius: 35,
+    backgroundColor: '#EBF4FF',
+    marginBottom: 4,
     justifyContent: 'center',
-    zIndex: 2,
+    alignItems: 'center',
+    overflow: 'hidden',
   },
-  recentName: {
-    color: '#FFF',
+  historyPatientImage: {
+    width: 70,
+    height: 70,
+    resizeMode: 'contain',
+  },
+  historyPatientName: {
     fontSize: 14,
     fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 4,
+    textAlign: 'center',
+  },
+  historySubText: {
+    fontSize: 12,
+    color: '#888',
+    marginBottom: 12,
+    textAlign: 'center',
+    fontWeight: '500',
+  },
+  historyDatePill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#EBF4FF',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 20,
+  },
+  historyDateText: {
+    fontSize: 11,
+    color: '#0084FF',
+    fontWeight: '600',
+    marginLeft: 4,
   },
 });

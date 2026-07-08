@@ -21,6 +21,7 @@ export default function RescheduleModal({ visible, onClose, patientId, doctorNam
   const [availableTimings, setAvailableTimings] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [showCalendar, setShowCalendar] = useState(false);
+  const [allSchedules, setAllSchedules] = useState<any[]>([]);
 
   useEffect(() => {
     if (visible) {
@@ -34,10 +35,25 @@ export default function RescheduleModal({ visible, onClose, patientId, doctorNam
       setBookedTimings([]);
       setAvailableTimings([]);
       setShowCalendar(false);
+      
+      if (doctorName) {
+        fetchAllSchedules();
+      }
     } else {
       setDate('');
     }
-  }, [visible]);
+  }, [visible, doctorName]);
+
+  const fetchAllSchedules = async () => {
+    try {
+      const res = await axios.get(`${API_BASE_URL}/schedules?doctorName=${encodeURIComponent(doctorName)}`);
+      if (res.data && Array.isArray(res.data)) {
+        setAllSchedules(res.data);
+      }
+    } catch (e) {
+      console.log('Error fetching all schedules', e);
+    }
+  };
 
   useEffect(() => {
     if (date.length === 10 && doctorName) {
@@ -61,29 +77,55 @@ export default function RescheduleModal({ visible, onClose, patientId, doctorNam
 
       const scheduleRes = await axios.get(`${API_BASE_URL}/schedules?doctorName=${encodeURIComponent(doctorName)}&date=${encodeURIComponent(scheduleDate)}`);
       if (scheduleRes.data && scheduleRes.data.length > 0) {
-        const schedule = scheduleRes.data.find((s: any) => s.status === 'Approved') || scheduleRes.data[0];
-        let normalizedAvailable = schedule.time.map((t: string) => t.split(' to ')[0].trim().toLowerCase());
+        const approvedSchedules = scheduleRes.data.filter((s: any) => s.status === 'Approved');
+        const schedulesToProcess = approvedSchedules.length > 0 ? approvedSchedules : scheduleRes.data;
         
-        // Filter out past times if the selected date is today
         const today = new Date();
         const dd = String(today.getDate()).padStart(2, '0');
         const mm = String(today.getMonth() + 1).padStart(2, '0');
         const yyyy = today.getFullYear();
-        if (date === `${dd}/${mm}/${yyyy}`) {
-          const currentFloat = today.getHours() + today.getMinutes() / 60;
-          normalizedAvailable = normalizedAvailable.filter((t: string) => {
-            const startStr = t.toLowerCase();
-            const isPM = startStr.includes('pm');
-            const clean = startStr.replace('am', '').replace('pm', '').trim();
-            const timeParts = clean.includes('.') ? clean.split('.') : clean.split(':');
-            let hours = parseInt(timeParts[0], 10) || 0;
-            const mins = parseInt(timeParts[1], 10) || 0;
-            if (isPM && hours !== 12) hours += 12;
-            if (!isPM && hours === 12) hours = 0;
-            const slotFloat = hours + mins / 60;
-            return slotFloat >= currentFloat; // Only keep future slots
-          });
-        }
+        const currentFloat = today.getHours() + today.getMinutes() / 60;
+        
+        let allValidSlots: string[] = [];
+        
+        schedulesToProcess.forEach((schedule: any) => {
+          let validSlots = schedule.time || [];
+
+          if (date === `${dd}/${mm}/${yyyy}`) {
+            validSlots = validSlots.filter((fullStr: string) => {
+              const lowerStr = fullStr.toLowerCase();
+              let parts = lowerStr.split(' to ');
+              if (parts.length === 1) parts = lowerStr.split('-');
+              
+              const compareStr = parts.length > 1 ? parts[1].trim() : parts[0].trim();
+              
+              const isPM = compareStr.includes('pm');
+              const clean = compareStr.replace('am', '').replace('pm', '').trim();
+              const timeParts = clean.includes('.') ? clean.split('.') : clean.split(':');
+              let hours = parseInt(timeParts[0], 10) || 0;
+              const mins = parseInt(timeParts[1], 10) || 0;
+              if (isPM && hours !== 12) hours += 12;
+              if (!isPM && hours === 12) hours = 0;
+              let slotFloat = hours + mins / 60;
+              
+              if (parts.length === 1) {
+                slotFloat += 1.0;
+              }
+              
+              return slotFloat >= currentFloat;
+            });
+          }
+          
+          allValidSlots = [...allValidSlots, ...validSlots];
+        });
+        
+        let normalizedAvailable = allValidSlots.map((t: string) => {
+          let parts = t.toLowerCase().split(' to ');
+          if (parts.length === 1) parts = t.toLowerCase().split('-');
+          return parts[0].trim();
+        });
+        
+        normalizedAvailable = Array.from(new Set(normalizedAvailable));
         
         setAvailableTimings(normalizedAvailable);
       } else {
@@ -124,8 +166,67 @@ export default function RescheduleModal({ visible, onClose, patientId, doctorNam
     // Convert YYYY-MM-DD to DD/MM/YYYY
     const parts = day.dateString.split('-');
     const formattedDate = `${parts[2]}/${parts[1]}/${parts[0]}`;
-    setDate(formattedDate);
+    
+    if (formattedDate === date) {
+      // User tapped the same date, force a refetch to show newly created schedules
+      fetchDateData();
+      fetchAllSchedules();
+    } else {
+      setDate(formattedDate);
+    }
+    
     setShowCalendar(false);
+  };
+
+  const getMarkedDates = () => {
+    const marks: any = {};
+    const today = new Date();
+    
+    // Mark next 90 days as disabled by default (grey)
+    for (let i = 0; i < 90; i++) {
+      const d = new Date(today);
+      d.setDate(today.getDate() + i);
+      const dateString = d.toISOString().split('T')[0];
+      marks[dateString] = { disabled: true, disableTouchEvent: true };
+    }
+    
+    // Highlight available schedule dates in black
+    allSchedules.forEach(schedule => {
+      if (schedule.status === 'Approved' && schedule.time && schedule.time.length > 0) {
+        let dateKey = schedule.date;
+        if (dateKey && dateKey.includes('/')) {
+          const parts = dateKey.split('/');
+          dateKey = `${parts[2]}-${parts[1]}-${parts[0]}`;
+        }
+        if (dateKey) {
+          marks[dateKey] = {
+            disabled: false,
+            disableTouchEvent: false,
+            customStyles: {
+              container: { backgroundColor: '#FFF', borderRadius: 6 },
+              text: { color: '#000', fontWeight: 'bold' }
+            }
+          };
+        }
+      }
+    });
+
+    // Highlight the currently selected date
+    if (date) {
+      const parts = date.split('/');
+      const selectedKey = `${parts[2]}-${parts[1]}-${parts[0]}`;
+      if (marks[selectedKey]) {
+        marks[selectedKey] = {
+           ...marks[selectedKey],
+           customStyles: {
+              container: { backgroundColor: '#052A3F', borderRadius: 6 },
+              text: { color: '#FFF', fontWeight: 'bold' }
+           }
+        };
+      }
+    }
+
+    return marks;
   };
 
   return (
@@ -149,12 +250,13 @@ export default function RescheduleModal({ visible, onClose, patientId, doctorNam
           {showCalendar && (
             <View style={styles.calendarContainer}>
               <Calendar
+                markingType={'custom'}
+                markedDates={getMarkedDates()}
                 onDayPress={onDayPress}
                 minDate={new Date().toISOString().split('T')[0]}
                 theme={{
-                  selectedDayBackgroundColor: '#052A3F',
-                  todayTextColor: '#2CA01C',
                   arrowColor: '#052A3F',
+                  textDisabledColor: '#B0B0B0',
                 }}
               />
             </View>

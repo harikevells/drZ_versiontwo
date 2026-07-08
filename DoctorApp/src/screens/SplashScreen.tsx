@@ -33,7 +33,12 @@ export default function SplashScreen() {
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="#052A3F" />
+      <StatusBar barStyle="dark-content" backgroundColor="transparent" translucent={true} />
+      <Image 
+        source={require('../assets/Splashscreenbackgroundimage.png')} 
+        style={styles.bgImage} 
+        resizeMode="cover" 
+      />
       <Image
         source={require('../assets/DoctorlogoApp.png')}
         style={styles.logo}
@@ -46,9 +51,17 @@ export default function SplashScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#052A3F',
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  bgImage: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    width: '100%',
+    height: '100%',
   },
   logo: {
     width: 280,

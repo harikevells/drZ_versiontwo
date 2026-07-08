@@ -53,8 +53,9 @@ export default function LoginScreen() {
       style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
-      {/* Top Blue Curved Header */}
-      <View style={styles.header}>
+      <Image source={require('../assets/loginbackgroundimage.png')} style={styles.backgroundImage} resizeMode="cover" />
+
+      <View style={styles.contentContainer}>
         <View style={styles.logoContainer}>
           <Image 
             source={require('../assets/DoctorlogoApp.png')} 
@@ -62,49 +63,50 @@ export default function LoginScreen() {
             resizeMode="contain"
           />
         </View>
-      </View>
 
-      {/* Login Form */}
-      <View style={styles.formContainer}>
-        <View style={styles.inputGroup}>
-          <Text style={styles.label}>User Name:</Text>
-          <TextInput
-            style={styles.input}
-            value={email}
-            onChangeText={setEmail}
-            keyboardType="email-address"
-            autoCapitalize="none"
-          />
-        </View>
+        <Text style={styles.welcomeText}>Welcome To DrZ</Text>
 
-        <View style={styles.inputGroup}>
-          <Text style={styles.label}>Password:</Text>
-          <View style={styles.passwordContainer}>
+        <View style={styles.formContainer}>
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>User Name</Text>
             <TextInput
-              style={styles.passwordInput}
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry={!showPassword}
+              style={styles.input}
+              value={email}
+              onChangeText={setEmail}
+              keyboardType="email-address"
               autoCapitalize="none"
             />
-            <TouchableOpacity 
-              style={styles.eyeIcon} 
-              onPress={() => setShowPassword(!showPassword)}
-            >
-              <Ionicons name={showPassword ? 'eye-off' : 'eye'} size={24} color="#666" />
-            </TouchableOpacity>
           </View>
-        </View>
 
-        <TouchableOpacity 
-          style={styles.loginButton} 
-          onPress={handleLogin}
-          disabled={loading}
-        >
-          <Text style={styles.loginButtonText}>
-            {loading ? 'Logging in...' : 'Login'}
-          </Text>
-        </TouchableOpacity>
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Password</Text>
+            <View style={styles.passwordContainer}>
+              <TextInput
+                style={styles.passwordInput}
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry={!showPassword}
+                autoCapitalize="none"
+              />
+              <TouchableOpacity 
+                style={styles.eyeIcon} 
+                onPress={() => setShowPassword(!showPassword)}
+              >
+                <Ionicons name={showPassword ? 'eye-off' : 'eye'} size={24} color="#666" />
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          <TouchableOpacity 
+            style={styles.loginButton} 
+            onPress={handleLogin}
+            disabled={loading}
+          >
+            <Text style={styles.loginButtonText}>
+              {loading ? 'Logging in...' : 'Login'}
+            </Text>
+          </TouchableOpacity>
+        </View>
       </View>
     </KeyboardAvoidingView>
   );
@@ -115,64 +117,69 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#fff',
   },
-  header: {
-    backgroundColor: '#052A3F', // Dark blue from mockup
-    height: '50%',
+  backgroundImage: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
     width: '100%',
-    borderBottomLeftRadius: width * 0.5,
-    borderBottomRightRadius: width * 0.5,
-    transform: [{ scaleX: 1.5 }], // Trick to make the curve gentler and wider
-    alignItems: 'center',
+    height: '100%',
+  },
+  contentContainer: {
+    flex: 1,
+    paddingHorizontal: 30,
     justifyContent: 'center',
-    overflow: 'hidden',
+    paddingBottom: 20,
   },
   logoContainer: {
-    transform: [{ scaleX: 0.66 }], // Counteract the parent scaling so the logo isn't stretched
     alignItems: 'center',
-    justifyContent: 'center',
+    marginBottom: 40,
+    marginTop: 30,
   },
   logo: {
-    width: 260,
-    height: 200,
+    width: 270,
+    height: 170,
+  },
+  welcomeText: {
+    fontSize: 22,
+    fontWeight: '900',
+    color: '#000',
+    marginBottom: 30,
   },
   formContainer: {
-    flex: 1,
-    paddingHorizontal: 40,
-    paddingTop: 60,
+    width: '100%',
   },
   inputGroup: {
-    marginBottom: 25,
+    marginBottom: 20,
   },
   label: {
-    fontSize: 14,
+    fontSize: 13,
+    fontWeight: 'bold',
     color: '#333',
-    marginBottom: 8,
+    marginBottom: 10,
     marginLeft: 5,
   },
   input: {
-    height: 50,
-    borderWidth: 1,
-    borderColor: '#E0E0E0',
-    borderRadius: 8,
+    height: 55,
+    borderRadius: 12,
     paddingHorizontal: 15,
-    backgroundColor: '#fff',
-    fontSize: 16,
+    backgroundColor: '#F7F7F7',
+    fontSize: 15,
     color: '#000',
   },
   passwordContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    height: 50,
-    borderWidth: 1,
-    borderColor: '#E0E0E0',
-    borderRadius: 8,
-    backgroundColor: '#fff',
+    height: 55,
+    borderRadius: 12,
+    backgroundColor: '#F7F7F7',
   },
   passwordInput: {
     flex: 1,
-    height: 50,
+    height: 55,
     paddingHorizontal: 15,
-    fontSize: 16,
+    fontSize: 15,
     color: '#000',
   },
   eyeIcon: {
@@ -181,14 +188,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   loginButton: {
-    backgroundColor: '#2CA01C', // Green from mockup
-    borderRadius: 8,
-    height: 50,
+    backgroundColor: '#6B7AFF',
+    borderRadius: 30,
+    height: 55,
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: 30,
     alignSelf: 'center',
-    width: 150,
+    width: 200,
   },
   loginButtonText: {
     color: '#fff',

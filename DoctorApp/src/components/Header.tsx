@@ -11,9 +11,10 @@ const { width } = Dimensions.get('window');
 interface HeaderProps {
   title?: string;
   isNotification?: boolean;
+  variant?: 'default' | 'appointment';
 }
 
-export default function Header({ title, isNotification = false }: HeaderProps) {
+export default function Header({ title, isNotification = false, variant = 'default' }: HeaderProps) {
   const navigation = useNavigation<any>();
   const isFocused = useIsFocused();
   const [doctorName, setDoctorName] = useState('Doctor');
@@ -75,9 +76,9 @@ export default function Header({ title, isNotification = false }: HeaderProps) {
   };
 
   return (
-    <View style={styles.headerContainer}>
+    <View style={[styles.headerContainer, variant === 'appointment' && styles.appointmentHeaderContainer]}>
       <View style={styles.headerContent}>
-        <View style={styles.userInfo}>
+        <View style={[styles.userInfo, variant === 'appointment' && styles.appointmentUserInfo]}>
           <Image
             source={require('../assets/DoctorlogoApp1.png')}
             style={styles.avatar}
@@ -93,14 +94,16 @@ export default function Header({ title, isNotification = false }: HeaderProps) {
             )}
           </View>
         </View>
-        <TouchableOpacity style={styles.notificationIconContainer} onPress={() => navigation.navigate('Notifications')}>
-          <Ionicons name="notifications-outline" size={24} color="#052A3F" />
-          {unreadCount > 0 && (
-            <View style={styles.badge}>
-              <Text style={styles.badgeText}>{unreadCount > 99 ? '99+' : unreadCount}</Text>
-            </View>
-          )}
-        </TouchableOpacity>
+        {!isNotification && (
+          <TouchableOpacity style={[styles.notificationIconContainer, variant === 'appointment' && styles.appointmentNotificationIcon]} onPress={() => navigation.navigate('Notifications')}>
+            <Ionicons name="notifications-outline" size={24} color={variant === 'appointment' ? "#0D6EFD" : "#052A3F"} />
+            {unreadCount > 0 && (
+              <View style={styles.badge}>
+                <Text style={styles.badgeText}>{unreadCount > 99 ? '99+' : unreadCount}</Text>
+              </View>
+            )}
+          </TouchableOpacity>
+        )}
       </View>
     </View>
   );
@@ -108,7 +111,7 @@ export default function Header({ title, isNotification = false }: HeaderProps) {
 
 const styles = StyleSheet.create({
   headerContainer: {
-    backgroundColor: '#F0F4FF',
+    backgroundColor: '#f5f7feff',
     height: 80,
     width: '100%',
     justifyContent: 'center',
@@ -183,5 +186,28 @@ const styles = StyleSheet.create({
     color: '#FFF',
     fontSize: 9,
     fontWeight: 'bold',
+  },
+  appointmentHeaderContainer: {
+    backgroundColor: '#0D6EFD',
+    paddingTop: 20,
+    paddingBottom: 25,
+    marginBottom: -20, 
+    height: 200,
+    borderBottomLeftRadius: 60,
+    borderBottomRightRadius: 60,
+    justifyContent: 'flex-start',
+  },
+  appointmentUserInfo: {
+    borderRadius: 50,
+    backgroundColor: '#FFF',
+    padding: 5,
+    paddingRight: 20,
+    shadowOpacity: 0,
+    elevation: 0,
+  },
+  appointmentNotificationIcon: {
+    backgroundColor: '#FFF',
+    shadowOpacity: 0,
+    elevation: 0,
   },
 });
