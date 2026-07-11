@@ -145,8 +145,43 @@ const exportDoctorAppointments = async (req, res) => {
 
         let csvContent = "Booking ID,Patient Name,Age,Gender,Phone,Category,Appointment Date,Appointment Time,Status,Created At\n";
 
+        const formatTimeSlot = (timeStr) => {
+            if (!timeStr) return '';
+            const str = String(timeStr).trim();
+            if (str.toLowerCase().includes('to') || str.includes('-')) return str;
+
+            const match = str.match(/(\d+)[:.](\d+)\s*(am|pm)/i);
+            if (!match) return str;
+
+            let hrs = parseInt(match[1], 10);
+            const mins = parseInt(match[2], 10);
+            const ampm = match[3].toLowerCase();
+
+            let hrs24 = hrs;
+            if (ampm === 'pm' && hrs24 < 12) hrs24 += 12;
+            if (ampm === 'am' && hrs24 === 12) hrs24 = 0;
+
+            let eMins = mins;
+            let eHrs = hrs24 + 1;
+            if (eHrs >= 24) { eHrs -= 24; }
+
+            const eAmpm = eHrs >= 12 ? 'pm' : 'am';
+            let dHrs = eHrs % 12;
+            if (dHrs === 0) dHrs = 12;
+
+            const eMinsStr = eMins < 10 ? '0' + eMins : eMins;
+            return `${str} to ${dHrs}.${eMinsStr}${eAmpm}`;
+        };
+
         filteredAppointments.forEach(app => {
-            csvContent += `"${app.booking_id || ''}","${app.patient_name || ''}","${app.age || ''}","${app.gender || ''}","${app.whatsapp_number || app.login_mobile || ''}","${app.treatment_category || ''}","${app.appointment_date || ''}","${app.appointment_time || ''}","${app.status || ''}","${app.createdAt ? new Date(app.createdAt).toLocaleString() : ''}"\n`;
+            const bookingId = app.booking_id || app._id || app.id || '';
+            const pAge = app.patient_age || app.age || '';
+            const pGender = app.patient_gender || app.gender || '';
+            const pPhone = app.whatsapp_number || app.login_mobile || '';
+            const pTime = formatTimeSlot(app.appointment_time || '');
+            const pDate = app.appointment_date || '';
+            
+            csvContent += `"${bookingId}","${app.patient_name || ''}","${pAge}","${pGender}","${pPhone}","${app.treatment_category || ''}","${pDate}","${pTime}","${app.status || ''}","${app.createdAt ? new Date(app.createdAt).toLocaleString() : ''}"\n`;
         });
 
         res.setHeader('Content-Type', 'text/csv');
