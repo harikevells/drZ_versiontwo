@@ -43,6 +43,12 @@ const createNotification = async (role, identifier, title, message, type = 'info
                         title: title,
                         body: message
                     },
+                    android: {
+                        priority: 'high',
+                        notification: {
+                            sound: 'default'
+                        }
+                    },
                     data: {
                         type: type
                     }

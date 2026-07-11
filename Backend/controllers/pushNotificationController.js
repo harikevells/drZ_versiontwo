@@ -113,12 +113,18 @@ const broadcastToPatients = async (title, body) => {
                     title: title,
                     body: body
                 },
+                android: {
+                    priority: 'high',
+                    notification: {
+                        sound: 'default'
+                    }
+                },
                 data: {
                     type: 'push_notification'
                 }
             };
 
-            const response = await admin.messaging().sendMulticast(message);
+            const response = await admin.messaging().sendEachForMulticast(message);
             console.log(`Broadcast chunk sent. Success: ${response.successCount}, Failure: ${response.failureCount}`);
         }
     } catch (error) {
