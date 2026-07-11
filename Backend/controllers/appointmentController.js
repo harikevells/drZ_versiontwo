@@ -109,4 +109,52 @@ const getBookedTimingsByDate = async (req, res) => {
     }
 };
 
-module.exports = { getDoctorDashboard, updateAppointmentStatus, getAllDoctorAppointments, getBookedTimingsByDate };
+const exportDoctorAppointments = async (req, res) => {
+    try {
+        const { doctorName } = req.params;
+        const { from, to } = req.query;
+
+        const appointments = await Appointment.find({ doctor_name: doctorName }).sort({ createdAt: -1 });
+
+        let filteredAppointments = appointments;
+        
+        const parseDateStr = (dateStr) => {
+            if (!dateStr) return null;
+            const parts = dateStr.split('/');
+            if (parts.length === 3) {
+              return new Date(parseInt(parts[2]), parseInt(parts[1]) - 1, parseInt(parts[0]));
+            }
+            const d = new Date(dateStr);
+            if (!isNaN(d.getTime())) return d;
+            return null;
+        };
+
+        if (from || to) {
+            const start = parseDateStr(from);
+            const end = parseDateStr(to);
+
+            filteredAppointments = appointments.filter(app => {
+                const appDate = parseDateStr(app.appointment_date);
+                if (appDate) {
+                    if (start && appDate < start) return false;
+                    if (end && appDate > end) return false;
+                }
+                return true;
+            });
+        }
+
+        let csvContent = "Booking ID,Patient Name,Age,Gender,Phone,Category,Appointment Date,Appointment Time,Status,Created At\n";
+
+        filteredAppointments.forEach(app => {
+            csvContent += `"${app.booking_id || ''}","${app.patient_name || ''}","${app.age || ''}","${app.gender || ''}","${app.whatsapp_number || app.login_mobile || ''}","${app.treatment_category || ''}","${app.appointment_date || ''}","${app.appointment_time || ''}","${app.status || ''}","${app.createdAt ? new Date(app.createdAt).toLocaleString() : ''}"\n`;
+        });
+
+        res.setHeader('Content-Type', 'text/csv');
+        res.setHeader('Content-Disposition', `attachment; filename="appointments_${doctorName}.csv"`);
+        res.send(csvContent);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+};
+
+module.exports = { getDoctorDashboard, updateAppointmentStatus, getAllDoctorAppointments, getBookedTimingsByDate, exportDoctorAppointments };
