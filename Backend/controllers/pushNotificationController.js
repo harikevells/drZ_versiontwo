@@ -5,7 +5,7 @@ const admin = require('firebase-admin');
 // Create a new push notification
 const createPushNotification = async (req, res) => {
     try {
-        const { title, description, fromDate, toDate, image, activeStatus, role } = req.body;
+        const { title, description, fromDate, toDate, image, activeStatus, role, doctorName } = req.body;
 
         const pushNotification = new PushNotification({
             title,
@@ -14,7 +14,8 @@ const createPushNotification = async (req, res) => {
             toDate,
             image,
             activeStatus: activeStatus || false,
-            role: role || 'admin'
+            role: role || 'admin',
+            doctorName: doctorName || ''
         });
 
         await pushNotification.save();
