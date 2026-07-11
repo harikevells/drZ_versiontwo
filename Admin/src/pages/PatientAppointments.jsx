@@ -10,6 +10,34 @@ const removeTamil = (text) => {
   return strText.split(',').map(item => item.split('/')[0].trim()).join(', ');
 };
 
+const formatTimeSlot = (timeStr) => {
+  if (!timeStr) return '';
+  const str = String(timeStr).trim();
+  if (str.toLowerCase().includes('to') || str.includes('-')) return str;
+  
+  const match = str.match(/(\d+)[:.](\d+)\s*(am|pm)/i);
+  if (!match) return str;
+  
+  let hrs = parseInt(match[1], 10);
+  const mins = parseInt(match[2], 10);
+  const ampm = match[3].toLowerCase();
+  
+  let hrs24 = hrs;
+  if (ampm === 'pm' && hrs24 < 12) hrs24 += 12;
+  if (ampm === 'am' && hrs24 === 12) hrs24 = 0;
+  
+  let eMins = mins;
+  let eHrs = hrs24 + 1;
+  if (eHrs >= 24) { eHrs -= 24; }
+  
+  const eAmpm = eHrs >= 12 ? 'pm' : 'am';
+  let dHrs = eHrs % 12;
+  if (dHrs === 0) dHrs = 12;
+  
+  const eMinsStr = eMins < 10 ? '0' + eMins : eMins;
+  return `${str} to ${dHrs}.${eMinsStr}${eAmpm}`;
+};
+
 const PatientAppointments = () => {
   const [appointments, setAppointments] = useState([]);
   const [doctors, setDoctors] = useState([]);
@@ -162,7 +190,7 @@ const PatientAppointments = () => {
                     <td>{appt.patient_name}</td>
                     <td>{removeTamil(appt.doctor_name)}</td>
                     <td>{appt.appointment_date ? appt.appointment_date.replace(/\s+/g, '') : ''}</td>
-                    <td>{appt.appointment_time}</td>
+                    <td>{formatTimeSlot(appt.appointment_time)}</td>
                     <td>
                       <span className={`status-badge ${(appt.status || 'Pending').toLowerCase()}`}>
                         {appt.status || 'Pending'}
@@ -277,7 +305,7 @@ const PatientAppointments = () => {
                 </div>
                 <div className="detail-row">
                   <span className="detail-label">Time:</span>
-                  <span className="detail-value">{selectedAppointment.appointment_time}</span>
+                  <span className="detail-value">{formatTimeSlot(selectedAppointment.appointment_time)}</span>
                 </div>
                 <div className="detail-row">
                   <span className="detail-label">Video Call:</span>

@@ -102,6 +102,7 @@ const NotificationPatient = ({ navigation }) => {
 
         return {
           id: n.id || n._id || Math.random().toString(),
+          booking_id: n.booking_id || n.appointment_id || n.appointmentId,
           title: n.title,
           message: n.message,
           iconName,
@@ -126,6 +127,10 @@ const NotificationPatient = ({ navigation }) => {
         if (!item.isRead) {
           handleMarkSingleRead(item.id);
         }
+        navigation.navigate('Dashboard', { 
+          screen: 'PatientAppointments', 
+          params: { blinkBookingId: item.booking_id, blinkMessage: item.message } 
+        });
       }}
       style={[styles.notificationCard, !item.isRead && styles.unreadCard]}
     >

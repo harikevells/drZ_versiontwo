@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useContext } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, FlatList,
   StyleSheet, KeyboardAvoidingView, Platform, ActivityIndicator,
-  Alert, PermissionsAndroid, NativeModules
+  Alert, PermissionsAndroid, NativeModules, Modal
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
@@ -420,7 +420,7 @@ const CalendarView = ({ availableDates, onSelect }) => {
   };
 
   return (
-    <View style={styles.calendarCard}>
+    <View style={[styles.calendarCard, { width: '100%', alignSelf: 'center' }]}>
       <View style={styles.calendarHeader}>
         <TouchableOpacity onPress={handlePrevMonth} style={styles.calNavBtn}>
           <Icon name="chevron-left" size={24} color="#1C3E55" />
@@ -476,6 +476,83 @@ const CalendarView = ({ availableDates, onSelect }) => {
 
 const ChatbotScreen = ({ navigation }) => {
   const { user } = useContext(AuthContext);
+
+  // Live Date Time State
+  const [currentDateTime, setCurrentDateTime] = useState(new Date());
+
+  useEffect(() => {
+    const timer = setInterval(() => setCurrentDateTime(new Date()), 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const handleResetChatbot = () => {
+    Alert.alert(
+      "Reset Chat",
+      "Are you sure you want to restart the booking process?",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Restart", onPress: () => {
+            isLoadedRef.current = false;
+            setTimeout(async () => {
+              try {
+                await AsyncStorage.multiRemove([
+                  ('@drz_chatbot_messages_' + (user?.contactNumber || user?.mobile || user?.id || 'guest')),
+                  ('@drz_chatbot_step_' + (user?.contactNumber || user?.mobile || user?.id || 'guest')),
+                  ('@drz_chatbot_patient_data_' + (user?.contactNumber || user?.mobile || user?.id || 'guest')),
+                  ('@drz_chatbot_options_' + (user?.contactNumber || user?.mobile || user?.id || 'guest'))
+                ]);
+              } catch (e) { }
+              setPatientData({
+                name: '',
+                age: '',
+                gender: '',
+                whatsapp: '',
+                selectedDateId: '',
+                selectedDateFormatted: '',
+                categoryOriginalName: '',
+                categoryFullDept: '',
+                doctorId: '',
+                doctorName: '',
+                time: ''
+              });
+              setHasCompletedInitialFlow(false);
+              setCurrentOptions([]);
+              setMessages([]);
+              setCurrentStep('GREETING');
+
+              setTimeout(() => {
+                isLoadedRef.current = true;
+                addBotMessage("Hi,\nI am Your DrZ AI Assistant. How Can I Help You Today?\n\nவணக்கம்.\nநான் உங்கள் DrZ AI உதவியாளர். உங்களுக்கு எப்படி உதவலாம்?");
+                setTimeout(() => {
+                  const greetOptions = [{ id: 'start_booking', label: 'Book an appointment / சந்திப்பை முன்பதிவு செய்யவும்' }];
+                  setCurrentOptions(greetOptions);
+                  addBotOptions(greetOptions);
+                }, 500);
+              }, 500);
+            }, 300);
+          }
+        }
+      ]
+    );
+  };
+
+  const formatDateTime = (date) => {
+    const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const day = days[date.getDay()];
+    const dd = String(date.getDate()).padStart(2, '0');
+    const mm = months[date.getMonth()];
+    const yyyy = date.getFullYear();
+    let hours = date.getHours();
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    const seconds = String(date.getSeconds()).padStart(2, '0');
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+    hours = hours % 12;
+    hours = hours ? hours : 12;
+    const strTime = `${hours}:${minutes}:${seconds} ${ampm}`;
+    return `${day}, ${dd} ${mm} ${yyyy} | ${strTime}`;
+  };
 
   // Basic states
   const [messages, setMessages] = useState([]);
@@ -726,10 +803,10 @@ const ChatbotScreen = ({ navigation }) => {
     const loadStateAndInit = async () => {
       await fetchInitialData();
       try {
-        const savedMessages = await AsyncStorage.getItem('@drz_chatbot_messages');
-        const savedStep = await AsyncStorage.getItem('@drz_chatbot_step');
-        const savedPatientData = await AsyncStorage.getItem('@drz_chatbot_patient_data');
-        const savedOptions = await AsyncStorage.getItem('@drz_chatbot_options');
+        const savedMessages = await AsyncStorage.getItem(('@drz_chatbot_messages_' + (user?.contactNumber || user?.mobile || user?.id || 'guest')));
+        const savedStep = await AsyncStorage.getItem(('@drz_chatbot_step_' + (user?.contactNumber || user?.mobile || user?.id || 'guest')));
+        const savedPatientData = await AsyncStorage.getItem(('@drz_chatbot_patient_data_' + (user?.contactNumber || user?.mobile || user?.id || 'guest')));
+        const savedOptions = await AsyncStorage.getItem(('@drz_chatbot_options_' + (user?.contactNumber || user?.mobile || user?.id || 'guest')));
 
         if (savedMessages && savedStep) {
           setMessages(JSON.parse(savedMessages));
@@ -769,11 +846,11 @@ const ChatbotScreen = ({ navigation }) => {
     const saveState = async () => {
       try {
         if (messages.length > 0) {
-          await AsyncStorage.setItem('@drz_chatbot_messages', JSON.stringify(messages));
+          await AsyncStorage.setItem(('@drz_chatbot_messages_' + (user?.contactNumber || user?.mobile || user?.id || 'guest')), JSON.stringify(messages));
         }
-        await AsyncStorage.setItem('@drz_chatbot_step', currentStep);
-        await AsyncStorage.setItem('@drz_chatbot_patient_data', JSON.stringify(patientData));
-        await AsyncStorage.setItem('@drz_chatbot_options', JSON.stringify(currentOptions));
+        await AsyncStorage.setItem(('@drz_chatbot_step_' + (user?.contactNumber || user?.mobile || user?.id || 'guest')), currentStep);
+        await AsyncStorage.setItem(('@drz_chatbot_patient_data_' + (user?.contactNumber || user?.mobile || user?.id || 'guest')), JSON.stringify(patientData));
+        await AsyncStorage.setItem(('@drz_chatbot_options_' + (user?.contactNumber || user?.mobile || user?.id || 'guest')), JSON.stringify(currentOptions));
       } catch (err) {
         console.error("Error saving chatbot state:", err);
       }
@@ -954,16 +1031,17 @@ const ChatbotScreen = ({ navigation }) => {
     addBotOptions(confirmOptions);
   };
 
-  const handleEditField = async (field) => {
+  const handleEditField = async (field, overrideData = null) => {
+    const currentData = overrideData || patientData;
     const isConfirmationActive = hasCompletedInitialFlow;
 
     if (field === 'name') {
-      setInputText(patientData.name || '');
+      setInputText(currentData.name || '');
       addBotMessage(isConfirmationActive ? "Please enter the new Patient Name:\n\nபுதிய நோயாளியின் பெயரை உள்ளிடவும்:" : "Please enter the Patient Name:\n\nநோயாளியின் பெயரை உள்ளிடவும்:");
       setCurrentOptions([]);
       setCurrentStep(isConfirmationActive ? 'EDITING_NAME' : 'ASK_NAME');
     } else if (field === 'age') {
-      setInputText(patientData.age || '');
+      setInputText(currentData.age || '');
       addBotMessage(isConfirmationActive ? "Please enter the new Age:\n\nபுதிய வயதை உள்ளிடவும்:" : "How old is the patient?\n\nநோயாளியின் வயது என்ன?");
       setCurrentOptions([]);
       setCurrentStep(isConfirmationActive ? 'EDITING_AGE' : 'ASK_AGE');
@@ -981,12 +1059,13 @@ const ChatbotScreen = ({ navigation }) => {
       addBotOptions(genderOptions);
       setCurrentStep(isConfirmationActive ? 'EDITING_GENDER' : 'ASK_GENDER');
     } else if (field === 'whatsapp') {
-      setInputText(patientData.whatsapp || '');
+      setInputText(currentData.whatsapp || '');
       addBotMessage(isConfirmationActive ? "Please enter the new WhatsApp number (or 'Skip'):\n\nபுதிய வாட்ஸ்அப் எண்ணை உள்ளிடவும் (அல்லது 'Skip'):" : "Enter WhatsApp number (Optional, type 'Skip' to skip).\n\nவாட்ஸ்அப் எண் (தேவைப்பட்டால் மட்டும், தவிர்க்க 'Skip' என டைப் செய்யவும்):");
       setCurrentOptions([]);
       setCurrentStep(isConfirmationActive ? 'EDITING_WHATSAPP' : 'ASK_WHATSAPP');
     } else if (field === 'date') {
       setInputText('');
+      fetchInitialData();
       setMessages(prev => [...prev, {
         id: getUniqueId(),
         text: isConfirmationActive ? "Please Select the new Date\n\nபுதிய தேதியைத் தேர்ந்தெடுக்கவும்." : "Please Select Date\n\nதேதியை தேர்ந்தெடுக்கவும்.",
@@ -999,7 +1078,7 @@ const ChatbotScreen = ({ navigation }) => {
       setCurrentStep(isConfirmationActive ? 'EDITING_DATE' : 'ASK_DATE');
     } else if (field === 'category') {
       setInputText('');
-      const schedulesForDate = approvedSchedules.filter(s => s.date === patientData.selectedDateId);
+      const schedulesForDate = approvedSchedules.filter(s => s.date === currentData.selectedDateId);
       const depts = new Set();
       schedulesForDate.forEach(s => {
         if (s.department) {
@@ -1047,10 +1126,10 @@ const ChatbotScreen = ({ navigation }) => {
       setCurrentStep(isConfirmationActive ? 'EDITING_CATEGORY' : 'ASK_CATEGORY');
     } else if (field === 'doctor') {
       setInputText('');
-      const schedulesForDate = approvedSchedules.filter(s => s.date === patientData.selectedDateId);
+      const schedulesForDate = approvedSchedules.filter(s => s.date === currentData.selectedDateId);
       const schedulesForCat = schedulesForDate.filter(s => {
-        if (!s.department) return patientData.categoryOriginalName === 'Others';
-        return s.department.split(',').map(d => d.trim()).includes(patientData.categoryFullDept);
+        if (!s.department) return currentData.categoryOriginalName === 'Others';
+        return s.department.split(',').map(d => d.trim()).includes(currentData.categoryFullDept);
       });
       const activeDocs = allDoctors.filter(doc =>
         schedulesForCat.some(s => s.doctorId === doc._id || s.doctorId === doc.id || s.doctorName === doc.doctorName)
@@ -1073,24 +1152,35 @@ const ChatbotScreen = ({ navigation }) => {
       setInputText('');
       addBotMessage("Checking available slots... / நேரங்கள் சரிபார்க்கப்படுகின்றன...");
       try {
-        const schedulesForDate = approvedSchedules.filter(s => s.date === patientData.selectedDateId);
+        const schedulesForDate = approvedSchedules.filter(s => s.date === currentData.selectedDateId);
         const schedulesForDoctor = schedulesForDate.filter(s =>
-          s.doctorId === patientData.doctorId || s.doctorName === patientData.doctorName
+          s.doctorId === currentData.doctorId || s.doctorName === currentData.doctorName
         );
         const allTimings = schedulesForDoctor.flatMap(s => s.time || []);
         const uniqueTimings = [...new Set(allTimings)];
-        const response = await axios.get(`${API_BASE_URL}/api/emails/booked-timings?appointment_date=${patientData.selectedDateFormatted}`);
+        const response = await axios.get(`${API_BASE_URL}/api/emails/booked-timings?appointment_date=${encodeURIComponent(currentData.selectedDateFormatted)}&_t=${Date.now()}`);
         const appointments = response.data || [];
         const bookedMap = {};
         appointments.forEach(app => {
-          if (!bookedMap[app.doctor_name]) bookedMap[app.doctor_name] = [];
-          bookedMap[app.doctor_name].push(app.appointment_time);
+          if (!['Pending', 'Approved', 'Rescheduled'].includes(app.status)) return;
+          const docName = (app.doctor_name || '').trim();
+          if (!bookedMap[docName]) bookedMap[docName] = [];
+          bookedMap[docName].push((app.appointment_time || '').trim());
         });
-        const bookedTimings = bookedMap[patientData.doctorName] || [];
-        let availableTimings = uniqueTimings.filter(t => !bookedTimings.includes(t));
+        const targetDocName = (currentData.doctorName || '').trim();
+        const bookedTimings = bookedMap[targetDocName] || [];
+        let availableTimings = uniqueTimings.filter(t => {
+          const tTrim = t.trim();
+          if (bookedTimings.includes(tTrim)) return false;
+          const startMins = parseTimeStringToMinutes(tTrim.split(/to|\-/)[0].trim());
+          return !bookedTimings.some(booked => {
+            const bookedMins = parseTimeStringToMinutes(booked);
+            return bookedMins !== -1 && startMins !== -1 && bookedMins === startMins;
+          });
+        });
         const today = new Date();
         const todayString = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
-        if (patientData.selectedDateId === todayString) {
+        if (currentData.selectedDateId === todayString) {
           const currentMinutes = today.getHours() * 60 + today.getMinutes();
           availableTimings = availableTimings.filter(t => {
             const startStr = t.split('to')[0].split('-')[0].trim();
@@ -1158,6 +1248,7 @@ const ChatbotScreen = ({ navigation }) => {
   };
 
   const processStep = async (input, optionData = null) => {
+    const currentData = patientData;
     let nextStep = currentStep;
 
     switch (currentStep) {
@@ -1179,7 +1270,7 @@ const ChatbotScreen = ({ navigation }) => {
         } else {
           setPatientData(prev => ({ ...prev, name: input }));
           addBotMessage(`Thanks! How old is the patient?\n\nநோயாளியின் வயது என்ன?`);
-          setInputText(patientData.age || '');
+          setInputText(currentData.age || '');
           nextStep = 'ASK_AGE';
         }
         break;
@@ -1221,7 +1312,7 @@ const ChatbotScreen = ({ navigation }) => {
         } else {
           setPatientData(prev => ({ ...prev, gender: selectedGender }));
           addBotMessage("Enter WhatsApp number (Optional, type 'Skip' to skip).\n\nவாட்ஸ்அப் எண் (தேவைப்பட்டால் மட்டும், தவிர்க்க 'Skip' என டைப் செய்யவும்).");
-          setInputText(patientData.whatsapp || '');
+          setInputText(currentData.whatsapp || '');
           nextStep = 'ASK_WHATSAPP';
           setCurrentOptions([]);
         }
@@ -1345,7 +1436,7 @@ const ChatbotScreen = ({ navigation }) => {
           nextStep = 'ASK_CATEGORY';
         } else {
           // Filter approved schedules on this date for this category
-          const schedulesForDate = approvedSchedules.filter(s => s.date === patientData.selectedDateId);
+          const schedulesForDate = approvedSchedules.filter(s => s.date === currentData.selectedDateId);
           const schedulesForCategory = schedulesForDate.filter(s => {
             if (!s.department) return selectedCategory.originalName === 'Others';
             return s.department.split(',').map(d => d.trim()).includes(selectedCategory.id);
@@ -1400,7 +1491,7 @@ const ChatbotScreen = ({ navigation }) => {
           // Fetch timings for this doctor on this date
           addBotMessage("Checking available slots... / நேரங்கள் சரிபார்க்கப்படுகின்றன...");
           try {
-            const schedulesForDate = approvedSchedules.filter(s => s.date === patientData.selectedDateId);
+            const schedulesForDate = approvedSchedules.filter(s => s.date === currentData.selectedDateId);
             const schedulesForDoctor = schedulesForDate.filter(s =>
               s.doctorId === selectedDoc.id || s.doctorName === selectedDoc.name
             );
@@ -1409,23 +1500,34 @@ const ChatbotScreen = ({ navigation }) => {
             const uniqueTimings = [...new Set(allTimings)];
 
             // Get booked timings
-            const response = await axios.get(`${API_BASE_URL}/api/emails/booked-timings?appointment_date=${patientData.selectedDateFormatted}`);
+            const response = await axios.get(`${API_BASE_URL}/api/emails/booked-timings?appointment_date=${encodeURIComponent(currentData.selectedDateFormatted)}&_t=${Date.now()}`);
             const appointments = response.data || [];
 
             const bookedMap = {};
             appointments.forEach(app => {
-              if (!bookedMap[app.doctor_name]) bookedMap[app.doctor_name] = [];
-              bookedMap[app.doctor_name].push(app.appointment_time);
+              if (!['Pending', 'Approved', 'Rescheduled'].includes(app.status)) return;
+              const docName = (app.doctor_name || '').trim();
+              if (!bookedMap[docName]) bookedMap[docName] = [];
+              bookedMap[docName].push((app.appointment_time || '').trim());
             });
-            const bookedTimings = bookedMap[selectedDoc.name] || [];
+            const targetDocName = (selectedDoc.name || '').trim();
+            const bookedTimings = bookedMap[targetDocName] || [];
 
             // Exclude booked timings
-            let availableTimings = uniqueTimings.filter(t => !bookedTimings.includes(t));
+            let availableTimings = uniqueTimings.filter(t => {
+              const tTrim = t.trim();
+              if (bookedTimings.includes(tTrim)) return false;
+              const startMins = parseTimeStringToMinutes(tTrim.split(/to|\-/)[0].trim());
+              return !bookedTimings.some(booked => {
+                const bookedMins = parseTimeStringToMinutes(booked);
+                return bookedMins !== -1 && startMins !== -1 && bookedMins === startMins;
+              });
+            });
 
             // Exclude past timings if the selected date is today
             const today = new Date();
             const todayString = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
-            if (patientData.selectedDateId === todayString) {
+            if (currentData.selectedDateId === todayString) {
               const currentMinutes = today.getHours() * 60 + today.getMinutes();
               availableTimings = availableTimings.filter(t => {
                 const startStr = t.split('to')[0].split('-')[0].trim();
@@ -1437,10 +1539,10 @@ const ChatbotScreen = ({ navigation }) => {
             if (availableTimings.length === 0) {
               // Reshow doctors
               // Re-filter doctors for reshowing
-              const sForDate = approvedSchedules.filter(s => s.date === patientData.selectedDateId);
+              const sForDate = approvedSchedules.filter(s => s.date === currentData.selectedDateId);
               const sForCat = sForDate.filter(s => {
-                if (!s.department) return patientData.categoryOriginalName === 'Others';
-                return s.department.split(',').map(d => d.trim()).includes(patientData.categoryFullDept);
+                if (!s.department) return currentData.categoryOriginalName === 'Others';
+                return s.department.split(',').map(d => d.trim()).includes(currentData.categoryFullDept);
               });
               const activeDocs = allDoctors.filter(doc =>
                 sForCat.some(s => s.doctorId === doc._id || s.doctorId === doc.id || s.doctorName === doc.doctorName)
@@ -1567,10 +1669,10 @@ const ChatbotScreen = ({ navigation }) => {
                 isLoadedRef.current = false;
                 try {
                   await AsyncStorage.multiRemove([
-                    '@drz_chatbot_messages',
-                    '@drz_chatbot_step',
-                    '@drz_chatbot_patient_data',
-                    '@drz_chatbot_options'
+                    ('@drz_chatbot_messages_' + (user?.contactNumber || user?.mobile || user?.id || 'guest')),
+                    ('@drz_chatbot_step_' + (user?.contactNumber || user?.mobile || user?.id || 'guest')),
+                    ('@drz_chatbot_patient_data_' + (user?.contactNumber || user?.mobile || user?.id || 'guest')),
+                    ('@drz_chatbot_options_' + (user?.contactNumber || user?.mobile || user?.id || 'guest'))
                   ]);
                 } catch (e) {
                   console.error("Error clearing saved chat state:", e);
@@ -1669,10 +1771,10 @@ const ChatbotScreen = ({ navigation }) => {
             isLoadedRef.current = false;
             setTimeout(async () => {
               try {
-                await AsyncStorage.removeItem('@drz_chatbot_messages');
-                await AsyncStorage.removeItem('@drz_chatbot_step');
-                await AsyncStorage.removeItem('@drz_chatbot_patient_data');
-                await AsyncStorage.removeItem('@drz_chatbot_options');
+                await AsyncStorage.removeItem(('@drz_chatbot_messages_' + (user?.contactNumber || user?.mobile || user?.id || 'guest')));
+                await AsyncStorage.removeItem(('@drz_chatbot_step_' + (user?.contactNumber || user?.mobile || user?.id || 'guest')));
+                await AsyncStorage.removeItem(('@drz_chatbot_patient_data_' + (user?.contactNumber || user?.mobile || user?.id || 'guest')));
+                await AsyncStorage.removeItem(('@drz_chatbot_options_' + (user?.contactNumber || user?.mobile || user?.id || 'guest')));
               } catch (e) {
                 console.log(e);
               }
@@ -1741,7 +1843,7 @@ const ChatbotScreen = ({ navigation }) => {
             setCurrentOptions(availableDates);
             nextStep = 'ASK_DATE';
           } else if (selectedOption.id === 'edit_category') {
-            const schedulesForDate = approvedSchedules.filter(s => s.date === patientData.selectedDateId);
+            const schedulesForDate = approvedSchedules.filter(s => s.date === currentData.selectedDateId);
             const depts = new Set();
             schedulesForDate.forEach(s => {
               if (s.department) {
@@ -1788,10 +1890,10 @@ const ChatbotScreen = ({ navigation }) => {
             addBotOptions(deptOptions);
             nextStep = 'ASK_CATEGORY';
           } else if (selectedOption.id === 'edit_doctor') {
-            const schedulesForDate = approvedSchedules.filter(s => s.date === patientData.selectedDateId);
+            const schedulesForDate = approvedSchedules.filter(s => s.date === currentData.selectedDateId);
             const schedulesForCat = schedulesForDate.filter(s => {
-              if (!s.department) return patientData.categoryOriginalName === 'Others';
-              return s.department.split(',').map(d => d.trim()).includes(patientData.categoryFullDept);
+              if (!s.department) return currentData.categoryOriginalName === 'Others';
+              return s.department.split(',').map(d => d.trim()).includes(currentData.categoryFullDept);
             });
             const activeDocs = allDoctors.filter(doc =>
               schedulesForCat.some(s => s.doctorId === doc._id || s.doctorId === doc.id || s.doctorName === doc.doctorName)
@@ -1813,24 +1915,35 @@ const ChatbotScreen = ({ navigation }) => {
           } else if (selectedOption.id === 'edit_time') {
             addBotMessage("Checking available slots... / நேரங்கள் சரிபார்க்கப்படுகின்றன...");
             try {
-              const schedulesForDate = approvedSchedules.filter(s => s.date === patientData.selectedDateId);
+              const schedulesForDate = approvedSchedules.filter(s => s.date === currentData.selectedDateId);
               const schedulesForDoctor = schedulesForDate.filter(s =>
-                s.doctorId === patientData.doctorId || s.doctorName === patientData.doctorName
+                s.doctorId === currentData.doctorId || s.doctorName === currentData.doctorName
               );
               const allTimings = schedulesForDoctor.flatMap(s => s.time || []);
               const uniqueTimings = [...new Set(allTimings)];
-              const response = await axios.get(`${API_BASE_URL}/api/emails/booked-timings?appointment_date=${patientData.selectedDateFormatted}`);
+              const response = await axios.get(`${API_BASE_URL}/api/emails/booked-timings?appointment_date=${encodeURIComponent(currentData.selectedDateFormatted)}&_t=${Date.now()}`);
               const appointments = response.data || [];
               const bookedMap = {};
               appointments.forEach(app => {
-                if (!bookedMap[app.doctor_name]) bookedMap[app.doctor_name] = [];
-                bookedMap[app.doctor_name].push(app.appointment_time);
+                if (!['Pending', 'Approved', 'Rescheduled'].includes(app.status)) return;
+                const docName = (app.doctor_name || '').trim();
+                if (!bookedMap[docName]) bookedMap[docName] = [];
+                bookedMap[docName].push((app.appointment_time || '').trim());
               });
-              const bookedTimings = bookedMap[patientData.doctorName] || [];
-              let availableTimings = uniqueTimings.filter(t => !bookedTimings.includes(t));
+              const targetDocName = (currentData.doctorName || '').trim();
+              const bookedTimings = bookedMap[targetDocName] || [];
+              let availableTimings = uniqueTimings.filter(t => {
+                const tTrim = t.trim();
+                if (bookedTimings.includes(tTrim)) return false;
+                const startMins = parseTimeStringToMinutes(tTrim.split(/to|\-/)[0].trim());
+                return !bookedTimings.some(booked => {
+                  const bookedMins = parseTimeStringToMinutes(booked);
+                  return bookedMins !== -1 && startMins !== -1 && bookedMins === startMins;
+                });
+              });
               const today = new Date();
               const todayString = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
-              if (patientData.selectedDateId === todayString) {
+              if (currentData.selectedDateId === todayString) {
                 const currentMinutes = today.getHours() * 60 + today.getMinutes();
                 availableTimings = availableTimings.filter(t => {
                   const startStr = t.split('to')[0].split('-')[0].trim();
@@ -1930,8 +2043,8 @@ const ChatbotScreen = ({ navigation }) => {
             time: ''
           };
           setPatientData(updated);
-          showUpdatedConfirmationSummary(updated);
-          nextStep = 'ASK_CONFIRMATION';
+          handleEditField('category', updated);
+          return;
         }
         break;
 
@@ -1953,8 +2066,8 @@ const ChatbotScreen = ({ navigation }) => {
             time: ''
           };
           setPatientData(updated);
-          showUpdatedConfirmationSummary(updated);
-          nextStep = 'ASK_CONFIRMATION';
+          handleEditField('doctor', updated);
+          return;
         }
         break;
 
@@ -1977,8 +2090,8 @@ const ChatbotScreen = ({ navigation }) => {
             time: ''
           };
           setPatientData(updated);
-          showUpdatedConfirmationSummary(updated);
-          nextStep = 'ASK_CONFIRMATION';
+          handleEditField('time', updated);
+          return;
         }
         break;
 
@@ -2073,13 +2186,13 @@ const ChatbotScreen = ({ navigation }) => {
       if (isListening) {
         try {
           await Voice.cancel();
-        } catch (err) {}
+        } catch (err) { }
         setIsListening(false);
       } else {
         setInputText('');
         try {
           await Voice.destroy();
-        } catch (err) {}
+        } catch (err) { }
         await Voice.start('en-IN');
       }
     } catch (e) {
@@ -2088,6 +2201,8 @@ const ChatbotScreen = ({ navigation }) => {
   };
 
   const renderMessage = ({ item }) => {
+    const lastInteractiveMsg = [...messages].reverse().find(m => m.type === 'options' || m.type === 'calendar');
+    const isLatestOptions = lastInteractiveMsg ? item.id === lastInteractiveMsg.id : true;
     if (item.type === 'options') {
       const isTimeBlock = item.options.some(opt => /\d{1,2}[\.:]\d{2}/.test(String(opt.label)));
       const showHelperText = item.options.length > 1;
@@ -2145,7 +2260,7 @@ const ChatbotScreen = ({ navigation }) => {
         <View style={[
           styles.messageBubble,
           styles.botBubble,
-          { width: '92%', flexDirection: 'column', alignItems: 'stretch' }
+          { width: '100%', flexDirection: 'column', alignItems: 'stretch' }
         ]}>
           <View style={{ flexDirection: 'row', alignItems: 'flex-start' }}>
             <Icon name="robot-outline" size={20} color="#1C3E55" style={styles.botIcon} />
@@ -2290,13 +2405,23 @@ const ChatbotScreen = ({ navigation }) => {
     <SafeAreaView style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={{ padding: 5 }}>
-          <Icon name="arrow-left" size={24} color="#1C3E55" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Chat Bot / AI உதவியாளர்</Text>
-        <TouchableOpacity onPress={() => navigation.navigate('Dashboard')} style={{ padding: 5 }}>
-          <Icon name="exit-to-app" size={24} color="#E74C3C" />
-        </TouchableOpacity>
+        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          <TouchableOpacity onPress={() => navigation.goBack()} style={{ padding: 5, marginRight: 10 }}>
+            <Icon name="arrow-left" size={24} color="#1C3E55" />
+          </TouchableOpacity>
+          <View>
+            <Text style={styles.headerTitle}>Chat Bot / AI உதவியாளர்</Text>
+            <Text style={{ fontSize: 10, color: '#666', marginTop: 2 }}>{formatDateTime(currentDateTime)}</Text>
+          </View>
+        </View>
+        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          <TouchableOpacity onPress={handleResetChatbot} style={{ padding: 5, marginRight: 10 }}>
+            <Icon name="refresh" size={24} color="#1C3E55" />
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => navigation.navigate('Dashboard')} style={{ padding: 5 }}>
+            <Icon name="exit-to-app" size={24} color="#E74C3C" />
+          </TouchableOpacity>
+        </View>
       </View>
 
       {/* Chat List */}
@@ -2307,6 +2432,7 @@ const ChatbotScreen = ({ navigation }) => {
         renderItem={renderMessage}
         contentContainerStyle={styles.chatList}
         onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })}
+        onLayout={() => flatListRef.current?.scrollToEnd({ animated: true })}
       />
 
       {isTyping && (
@@ -2585,3 +2711,30 @@ const styles = StyleSheet.create({
 });
 
 export default ChatbotScreen;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

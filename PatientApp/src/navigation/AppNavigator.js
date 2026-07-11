@@ -14,6 +14,7 @@ import AppointmentScreen from '../screens/AppointmentScreen';
 import BookAppointmentScreen from '../screens/BookAppointmentScreen';
 import NotificationPatient from '../screens/NotificationPatient';
 import ChatbotScreen from '../screens/ChatbotScreen';
+import PatientAppointmentsScreen from '../screens/PatientAppointmentsScreen';
 // import ReportScreen from '../screens/ReportScreen';
 
 const Stack = createNativeStackNavigator();
@@ -101,16 +102,16 @@ function DashboardTabs() {
                   <View style={styles.dot} />
                 </View>
               )}
-              
+
               <View style={[styles.iconContainer, isFocused && { marginTop: 8 }]}>
-                {options.tabBarIcon && options.tabBarIcon({ 
-                  focused: isFocused, 
+                {options.tabBarIcon && options.tabBarIcon({
+                  focused: isFocused,
                   color: isFocused ? '#fff' : 'rgba(255, 255, 255, 0.7)',
                   size: 24
                 })}
-                {options.tabBarLabel && options.tabBarLabel({ 
-                  focused: isFocused, 
-                  color: isFocused ? '#fff' : 'rgba(255, 255, 255, 0.7)' 
+                {options.tabBarLabel && options.tabBarLabel({
+                  focused: isFocused,
+                  color: isFocused ? '#fff' : 'rgba(255, 255, 255, 0.7)'
                 })}
               </View>
             </TouchableOpacity>
@@ -148,7 +149,28 @@ function DashboardTabs() {
         }}
       />
 
-      {/* 2. PAYMENT TAB */}
+      {/* 2. APPOINTMENTS TAB */}
+      <Tab.Screen
+        name="PatientAppointments"
+        component={PatientAppointmentsScreen}
+        options={{
+          tabBarLabel: ({ focused, color }) => (
+            <View style={{ alignItems: 'center', marginTop: 0 }}>
+              <Text style={{ fontSize: 12, color: color, fontWeight: focused ? 'bold' : 'normal' }}>
+                Appointments/
+              </Text>
+              <Text style={{ fontSize: 10, color: color, marginTop: -2 }}>
+                முன்பதிவுகள்
+              </Text>
+            </View>
+          ),
+          tabBarIcon: ({ color, focused }) => (
+            <Icon name={focused ? 'calendar-check' : 'calendar-clock'} color={color} size={28} />
+          ),
+        }}
+      />
+
+      {/* 3. PAYMENT TAB */}
       <Tab.Screen
         name="PaymentTab"
         component={PaymentScreen}

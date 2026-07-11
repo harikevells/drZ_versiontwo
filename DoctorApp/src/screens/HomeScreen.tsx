@@ -12,6 +12,34 @@ import CancelModal from '../components/CancelModal';
 import { API_BASE_URL } from '../config';
 const API_URL = `${API_BASE_URL}/appointments`;
 
+const formatTimeSlot = (timeStr: string) => {
+  if (!timeStr) return '';
+  const str = String(timeStr).trim();
+  if (str.toLowerCase().includes('to') || str.includes('-')) return str;
+  
+  const match = str.match(/(\d+)[:.](\d+)\s*(am|pm)/i);
+  if (!match) return str;
+  
+  let hrs = parseInt(match[1], 10);
+  const mins = parseInt(match[2], 10);
+  const ampm = match[3].toLowerCase();
+  
+  let hrs24 = hrs;
+  if (ampm === 'pm' && hrs24 < 12) hrs24 += 12;
+  if (ampm === 'am' && hrs24 === 12) hrs24 = 0;
+  
+  let eMins = mins;
+  let eHrs = hrs24 + 1;
+  if (eHrs >= 24) { eHrs -= 24; }
+  
+  const eAmpm = eHrs >= 12 ? 'pm' : 'am';
+  let dHrs = eHrs % 12;
+  if (dHrs === 0) dHrs = 12;
+  
+  const eMinsStr = eMins < 10 ? '0' + eMins : eMins;
+  return `${str} to ${dHrs}.${eMinsStr}${eAmpm}`;
+};
+
 export default function HomeScreen() {
   const navigation = useNavigation<any>();
   const isFocused = useIsFocused();
@@ -126,18 +154,18 @@ export default function HomeScreen() {
         {/* Appointments Summary */}
         <Text style={[styles.sectionTitle, { marginBottom: 15 }]}>Appointments</Text>
         <View style={styles.statsContainer}>
-          <View style={styles.statCardBlue}>
+          <TouchableOpacity style={styles.statCardBlue} onPress={() => navigation.navigate('Appointment', { activeTab: 'Pending' })}>
             <Text style={styles.statNumberWhite}>{stats.todaysAppointments < 10 ? `0${stats.todaysAppointments}` : stats.todaysAppointments}</Text>
             <Text style={styles.statLabelWhite}>Today's{'\n'}Appointment</Text>
-          </View>
-          <View style={styles.statCardBlue}>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.statCardBlue} onPress={() => navigation.navigate('Appointment', { activeTab: 'Pending' })}>
             <Text style={styles.statNumberWhite}>{stats.pendingAppointments < 10 ? `0${stats.pendingAppointments}` : stats.pendingAppointments}</Text>
             <Text style={styles.statLabelWhite}>Pending{'\n'}Appointment</Text>
-          </View>
-          <View style={styles.statCardBlue}>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.statCardBlue} onPress={() => navigation.navigate('Appointment', { activeTab: 'Pending' })}>
             <Text style={styles.statNumberWhite}>{stats.rescheduleAppointments < 10 ? `0${stats.rescheduleAppointments}` : stats.rescheduleAppointments}</Text>
             <Text style={styles.statLabelWhite}>Reschedule{'\n'}Appointment</Text>
-          </View>
+          </TouchableOpacity>
         </View>
 
         {/* Patient Request */}
@@ -157,7 +185,7 @@ export default function HomeScreen() {
                 <Text style={styles.patientName}>{patient.patient_name}</Text>
                 <Text style={[styles.statusTextInline, { color: getStatusColor(patient.status) }]}>{patient.status}</Text>
               </View>
-              <Text style={styles.dateTime}>{patient.appointment_date} {patient.appointment_time}</Text>
+              <Text style={styles.dateTime}>{patient.appointment_date} {formatTimeSlot(patient.appointment_time)}</Text>
               <View style={styles.actionButtons}>
                 <TouchableOpacity 
                   style={[styles.btn, styles.approveBtn]}
@@ -185,9 +213,6 @@ export default function HomeScreen() {
         {/* Recent Patient History */}
         <View style={[styles.sectionHeader, { marginTop: 10 }]}>
           <Text style={styles.sectionTitle}>Recent Patient History</Text>
-          <TouchableOpacity>
-            <Text style={styles.viewAll}>See All</Text>
-          </TouchableOpacity>
         </View>
         {recentPatients.length === 0 ? (
            <Text style={{ textAlign: 'center', color: '#999', marginVertical: 20 }}>No recent history.</Text>
@@ -309,10 +334,8 @@ const styles = StyleSheet.create({
   requestCard: {
     backgroundColor: '#FFF',
     borderRadius: 24,
-    padding: 20,
-    marginBottom: 20,
-    borderLeftWidth: 4,
-    borderLeftColor: '#005C8A',
+    padding: 15,
+    marginBottom: 15,
     shadowColor: '#000',
     shadowOpacity: 0.05,
     shadowRadius: 5,
@@ -360,7 +383,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFB84D',
   },
   cancelBtn: {
-    backgroundColor: '#C9C9C9',
+    backgroundColor: '#F47171',
   },
   btnTextAction: {
     color: '#333',

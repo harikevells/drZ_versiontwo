@@ -50,7 +50,7 @@ export default function NotificationsScreen() {
   const handleMarkAsRead = async (id: string) => {
     try {
       await axios.put(`${API_URL}/${id}/read`);
-      setNotifications((prev) => 
+      setNotifications((prev) =>
         prev.map((notif: any) => (notif._id === id || notif.id === id ? { ...notif, isRead: true } : notif))
       );
     } catch (error) {
@@ -86,7 +86,7 @@ export default function NotificationsScreen() {
     const diffHrs = Math.floor(diffMins / 60);
     const diffDays = Math.floor(diffHrs / 24);
     const diffMonths = Math.floor(diffDays / 30);
-    
+
     if (diffMins < 60) return `${diffMins <= 0 ? 1 : diffMins} Min Ago`;
     if (diffHrs < 24) return `${diffHrs} Hr${diffHrs > 1 ? 's' : ''} Ago`;
     if (diffDays < 30) return `${diffDays} Day${diffDays > 1 ? 's' : ''} Ago`;
@@ -96,7 +96,7 @@ export default function NotificationsScreen() {
   const handleMarkAllAsRead = async () => {
     const unreadNotifications = notifications.filter((n: any) => !n.isRead);
     if (unreadNotifications.length === 0) return;
-    
+
     setNotifications((prev) => prev.map((n: any) => ({ ...n, isRead: true })));
     try {
       await Promise.all(unreadNotifications.map((n: any) => axios.put(`${API_URL}/${n.id || n._id}/read`)));
@@ -114,44 +114,59 @@ export default function NotificationsScreen() {
           <Ionicons name="arrow-back" size={24} color="#FFF" />
           <Text style={styles.headerTitle}>Notifications</Text>
         </TouchableOpacity>
-        
+
         <TouchableOpacity style={styles.headerBtn} onPress={handleMarkAllAsRead}>
           <Ionicons name="checkmark-done" size={28} color="#FFF" />
         </TouchableOpacity>
       </View>
 
       <View style={styles.whiteBackground}>
-      {loading ? (
-        <ActivityIndicator size="large" color="#0084FF" style={{ marginTop: 50 }} />
-      ) : (
-        <ScrollView 
-          showsVerticalScrollIndicator={false} 
-          contentContainerStyle={styles.scrollContent}
-          refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-          }
-        >
+        {loading ? (
+          <ActivityIndicator size="large" color="#0084FF" style={{ marginTop: 50 }} />
+        ) : (
+          <ScrollView
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={styles.scrollContent}
+            refreshControl={
+              <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+            }
+          >
 
-          {notifications.length === 0 ? (
-            <Text style={{ textAlign: 'center', color: '#999', marginTop: 50 }}>No notifications found.</Text>
-          ) : (
-            notifications.map((item: any) => (
-              <TouchableOpacity 
-                key={item.id || item._id} 
-                style={[styles.notificationItem, !item.isRead && styles.unreadNotificationItem]}
-                onPress={() => { if (!item.isRead) handleMarkAsRead(item.id || item._id); }}
-              >
-                <Text style={[styles.title, !item.isRead && styles.unreadTitle]}>{formatMessageDate(item.title)}</Text>
-                <Text style={styles.description}>{formatMessageDate(item.message)}</Text>
-                <View style={styles.itemFooter}>
-                  <Text style={styles.footerText}>{formatDateLeft(item.createdAt)}</Text>
-                  <Text style={styles.footerTextRight}>{formatTimeAgo(item.createdAt)}</Text>
-                </View>
-                {!item.isRead && <View style={styles.redDot} />}
-              </TouchableOpacity>
-            ))
-          )}
-        </ScrollView>
+            {notifications.length === 0 ? (
+              <Text style={{ textAlign: 'center', color: '#999', marginTop: 50 }}>No notifications found.</Text>
+            ) : (
+              notifications.map((item: any) => (
+                <TouchableOpacity
+                  key={item.id || item._id}
+                  style={[styles.notificationItem, !item.isRead && styles.unreadNotificationItem]}
+                  onPress={() => {
+                    if (!item.isRead) handleMarkAsRead(item.id || item._id);
+                    
+                    const title = (item.title || '').toLowerCase();
+                    if (!title.includes('schedule')) {
+                      navigation.navigate('MainTabs', {
+                        screen: 'Appointment',
+                        params: {
+                          activeTab: 'Pending',
+                          highlightBookingId: item.booking_id || item.appointment_id || item.appointmentId,
+                          highlightMessage: item.message,
+                          _timestamp: Date.now()
+                        }
+                      });
+                    }
+                  }}
+                >
+                  <Text style={[styles.title, !item.isRead && styles.unreadTitle]}>{formatMessageDate(item.title)}</Text>
+                  <Text style={styles.description}>{formatMessageDate(item.message)}</Text>
+                  <View style={styles.itemFooter}>
+                    <Text style={styles.footerText}>{formatDateLeft(item.createdAt)}</Text>
+                    <Text style={styles.footerTextRight}>{formatTimeAgo(item.createdAt)}</Text>
+                  </View>
+                  {!item.isRead && <View style={styles.redDot} />}
+                </TouchableOpacity>
+              ))
+            )}
+          </ScrollView>
         )}
       </View>
     </View>

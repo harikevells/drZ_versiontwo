@@ -20,6 +20,55 @@ import { useIsFocused } from '@react-navigation/native';
 import { API_BASE_URL } from '../config';
 const BASE_URL = API_BASE_URL;
 
+const parseTimeStringToMinutes = (timeStr) => {
+  try {
+    let clean = timeStr.toLowerCase().replace(/\s+/g, ' ').trim();
+    let isPM = clean.includes('pm');
+    let isAM = clean.includes('am');
+    clean = clean.replace('am', '').replace('pm', '').trim();
+
+    let hours = -1;
+    let minutes = 0;
+
+    if (clean.includes(':') || clean.includes('.')) {
+      let parts = clean.split(/[:.]/);
+      hours = parseInt(parts[0], 10);
+      minutes = parts[1] ? parseInt(parts[1], 10) : 0;
+    } else {
+      const spaceParts = clean.split(/\s+/);
+      if (spaceParts.length >= 2) {
+        hours = parseInt(spaceParts[0], 10);
+        minutes = parseInt(spaceParts[1], 10);
+      } else {
+        const digitsOnly = clean.replace(/\D/g, '');
+        if (digitsOnly.length === 3) {
+          hours = parseInt(digitsOnly.substring(0, 1), 10);
+          minutes = parseInt(digitsOnly.substring(1, 3), 10);
+        } else if (digitsOnly.length === 4) {
+          hours = parseInt(digitsOnly.substring(0, 2), 10);
+          minutes = parseInt(digitsOnly.substring(2, 4), 10);
+        } else if (digitsOnly.length === 1 || digitsOnly.length === 2) {
+          hours = parseInt(digitsOnly, 10);
+          minutes = 0;
+        }
+      }
+    }
+
+    if (isNaN(hours) || hours < 0 || hours > 23 || isNaN(minutes) || minutes < 0 || minutes > 59) {
+      return -1;
+    }
+
+    if (isPM && hours < 12) {
+      hours += 12;
+    } else if (isAM && hours === 12) {
+      hours = 0;
+    }
+    return hours * 60 + minutes;
+  } catch (err) {
+    return -1;
+  }
+};
+
 // --- Helper Components ---
 
 const GenderSelector = ({ selected, onSelect }) => (
@@ -155,7 +204,21 @@ const BookAppointmentScreen = ({ navigation }) => {
         // Merge all timings from all schedules for this doctor on this date
         const allTimings = schedulesForDoctor.flatMap(s => s.time || []);
         // Remove duplicates just in case
-        const uniqueTimings = [...new Set(allTimings)];
+        let uniqueTimings = [...new Set(allTimings)];
+        
+        // Exclude past timings if the selected date is today
+        const today = new Date();
+        const d = new Date(date);
+        const isToday = d.getFullYear() === today.getFullYear() && d.getMonth() === today.getMonth() && d.getDate() === today.getDate();
+        if (isToday) {
+           const currentMinutes = today.getHours() * 60 + today.getMinutes();
+           uniqueTimings = uniqueTimings.filter(t => {
+              const startStr = t.split(/to|\-/)[0].trim();
+              const startMins = parseTimeStringToMinutes(startStr);
+              return startMins > currentMinutes;
+           });
+        }
+        
         setAvailableTimings(uniqueTimings);
       } else {
         setAvailableTimings([]);
@@ -177,7 +240,7 @@ const BookAppointmentScreen = ({ navigation }) => {
 
       const [schedulesRes, appointmentsRes, doctorsRes] = await Promise.all([
         axios.get(`${BASE_URL}/api/schedules?date=${formattedDateForSchedules}`),
-        axios.get(`${BASE_URL}/api/emails/booked-timings?appointment_date=${formattedDateForAppointments}`),
+        axios.get(`${BASE_URL}/api/emails/booked-timings?appointment_date=${encodeURIComponent(formattedDateForAppointments)}&_t=${Date.now()}`),
         axios.get(`${BASE_URL}/api/doctors`)
       ]);
 
@@ -197,8 +260,10 @@ const BookAppointmentScreen = ({ navigation }) => {
       const appointments = appointmentsRes.data || [];
       const bookedMap = {};
       appointments.forEach(app => {
-        if (!bookedMap[app.doctor_name]) bookedMap[app.doctor_name] = [];
-        bookedMap[app.doctor_name].push(app.appointment_time);
+        if (!['Pending', 'Approved', 'Rescheduled'].includes(app.status)) return;
+        const docName = (app.doctor_name || '').trim();
+        if (!bookedMap[docName]) bookedMap[docName] = [];
+        bookedMap[docName].push((app.appointment_time || '').trim());
       });
       setBookedByDoctor(bookedMap);
 
@@ -586,7 +651,15 @@ const BookAppointmentScreen = ({ navigation }) => {
                     <View style={styles.timingsGrid}>
                       {availableTimings.map((time, index) => {
                         const bookedTimingsForCurrentDoctor = selectedDoctor ? (bookedByDoctor[selectedDoctor.name] || []) : [];
-                        const isBooked = bookedTimingsForCurrentDoctor.includes(time);
+                        const timeTrim = time.trim();
+                        let isBooked = bookedTimingsForCurrentDoctor.includes(timeTrim);
+                        if (!isBooked) {
+                           const startMins = parseTimeStringToMinutes(timeTrim.split(/to|\-/)[0].trim());
+                           isBooked = bookedTimingsForCurrentDoctor.some(booked => {
+                             const bookedMins = parseTimeStringToMinutes(booked);
+                             return bookedMins !== -1 && startMins !== -1 && bookedMins === startMins;
+                           });
+                        }
                         const isSelected = selectedTimes.includes(time);
                         return (
                           <TouchableOpacity
@@ -781,7 +854,7 @@ const styles = StyleSheet.create({
   // Gender Buttons
   genderContainer: { flexDirection: 'row', justifyContent: 'space-between', height: 56 },
   genderBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', borderRadius: 12, borderWidth: 1, borderColor: '#E0E0E0', backgroundColor: '#FAFAFA' },
-  genderBtnActive: { backgroundColor: '#1C3E55', borderColor: '#1C3E55' },
+  genderBtnActive: { backgroundColor: '#5F76FE', borderColor: '#1C3E55' },
   genderText: { marginLeft: 8, fontSize: 14, fontWeight: '600', color: '#555' },
   genderTextActive: { color: '#fff' },
 
