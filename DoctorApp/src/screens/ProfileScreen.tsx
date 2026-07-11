@@ -43,6 +43,7 @@ export default function ProfileScreen() {
       const result = await launchImageLibrary({
         mediaType: 'photo',
         quality: 0.8,
+        includeBase64: true,
       });
 
       if (result.assets && result.assets.length > 0) {
@@ -59,6 +60,47 @@ export default function ProfileScreen() {
 
   const handleLogout = () => {
     setLogoutModalVisible(true);
+  };
+
+  const handleSaveMedicalCamp = async () => {
+    if (!campTitle || !campDescription || !campFromDate || !campToDate) {
+      Alert.alert("Error", "Please fill all required fields.");
+      return;
+    }
+    
+    let base64Image = '';
+    if (campImage) {
+      // For simplicity in React Native, we can use the URI if it's already a base64, or send it directly.
+      // But react-native-image-picker returns base64 if includeBase64 is true. 
+      // Assuming it's already handled or we can pass just the URI for now (the backend takes a string).
+      base64Image = campImage.base64 ? `data:${campImage.type};base64,${campImage.base64}` : campImage.uri;
+    }
+
+    try {
+      const payload = {
+        title: campTitle,
+        description: campDescription,
+        fromDate: campFromDate,
+        toDate: campToDate,
+        activeStatus: campActiveStatus,
+        image: base64Image,
+        role: 'doctor',
+        doctorName: userData?.doctorName || ''
+      };
+
+      await axios.post(`${API_BASE_URL}/push-notifications`, payload);
+      Alert.alert("Success", "Medical Camp notification created.");
+      setMedicalCampModalVisible(false);
+      setCampTitle('');
+      setCampDescription('');
+      setCampFromDate('');
+      setCampToDate('');
+      setCampActiveStatus(false);
+      setCampImage(null);
+    } catch (error) {
+      console.error("Error saving medical camp:", error);
+      Alert.alert("Error", "Failed to save medical camp notification.");
+    }
   };
 
   const confirmLogout = async () => {
@@ -287,7 +329,7 @@ export default function ProfileScreen() {
                 )}
               </TouchableOpacity>
 
-              <TouchableOpacity style={[styles.modalBtn, styles.confirmBtn, { marginTop: 30, height: 50, marginHorizontal: 0 }]} onPress={() => setMedicalCampModalVisible(false)}>
+              <TouchableOpacity style={[styles.modalBtn, styles.confirmBtn, { marginTop: 30, height: 50, marginHorizontal: 0 }]} onPress={handleSaveMedicalCamp}>
                 <Text style={styles.confirmBtnText}>Save</Text>
               </TouchableOpacity>
             </ScrollView>

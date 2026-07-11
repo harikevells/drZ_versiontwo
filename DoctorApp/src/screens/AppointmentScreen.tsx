@@ -282,6 +282,28 @@ export default function AppointmentScreen({ route }: any) {
     setAppliedToDate('');
   };
 
+  const handleDownload = () => {
+    if (!doctorName) {
+      Alert.alert('Error', 'Doctor name not found.');
+      return;
+    }
+    let url = `${API_URL}/export/${encodeURIComponent(doctorName)}`;
+    const params = [];
+    if (appliedFromDate) params.push(`from=${encodeURIComponent(appliedFromDate)}`);
+    if (appliedToDate) params.push(`to=${encodeURIComponent(appliedToDate)}`);
+    
+    if (params.length > 0) {
+      url += `?${params.join('&')}`;
+    }
+    
+    import('react-native').then(({ Linking }) => {
+      Linking.openURL(url).catch(err => {
+        console.error("Couldn't open download URL", err);
+        Alert.alert('Error', 'Failed to start download.');
+      });
+    });
+  };
+
   const onDayPress = (day: any) => {
     const [year, month, dayPart] = day.dateString.split('-');
     const formatted = `${dayPart}/${month}/${year}`;
@@ -386,7 +408,7 @@ export default function AppointmentScreen({ route }: any) {
               <Text style={styles.okButtonText}>OK</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.downloadButton}>
+            <TouchableOpacity style={styles.downloadButton} onPress={handleDownload}>
               <Ionicons name="download-outline" size={20} color="#FFF" />
             </TouchableOpacity>
           </View>

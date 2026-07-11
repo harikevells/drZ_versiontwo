@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useContext } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, FlatList, ActivityIndicator, Image } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, FlatList, ActivityIndicator, Image, Modal, ScrollView } from 'react-native';
 import { useIsFocused } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import axios from 'axios';
 import { AuthContext } from '../context/AuthContext';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Use same IP configuration as other screens
 import { API_BASE_URL } from '../config';
@@ -33,6 +34,7 @@ const NotificationPatient = ({ navigation }) => {
   const { user } = useContext(AuthContext);
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [selectedPushNotification, setSelectedPushNotification] = useState(null);
 
   const isFocused = useIsFocused();
 
@@ -44,10 +46,18 @@ const NotificationPatient = ({ navigation }) => {
 
   // Tick icon click → mark ALL as read (count = 0)
   const handleMarkAllAsRead = async () => {
-    if (!user || (!user.contactNumber && !user.mobile)) return;
     try {
       const mobile = user.contactNumber || user.mobile;
       await axios.put(`${BASE_URL}/api/notifications/readAll/patient/${mobile}`);
+      
+      const pushIds = notifications.filter(n => n.isPushNotification).map(n => n.id);
+      if (pushIds.length > 0) {
+        const readPushIdsStr = await AsyncStorage.getItem('readPushNotificationIds');
+        const readPushIds = readPushIdsStr ? JSON.parse(readPushIdsStr) : [];
+        const newReadPushIds = [...new Set([...readPushIds, ...pushIds])];
+        await AsyncStorage.setItem('readPushNotificationIds', JSON.stringify(newReadPushIds));
+      }
+
       setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
     } catch (error) {
       console.log('Error marking all as read', error);
@@ -55,9 +65,19 @@ const NotificationPatient = ({ navigation }) => {
   };
 
   // Notification box/card click → mark SINGLE notification as read (count -1)
-  const handleMarkSingleRead = async (notifId) => {
+  const handleMarkSingleRead = async (notifId, isPushNotification = false) => {
     try {
-      await axios.put(`${BASE_URL}/api/notifications/${notifId}/read`);
+      if (isPushNotification) {
+        const readPushIdsStr = await AsyncStorage.getItem('readPushNotificationIds');
+        const readPushIds = readPushIdsStr ? JSON.parse(readPushIdsStr) : [];
+        if (!readPushIds.includes(notifId)) {
+          readPushIds.push(notifId);
+          await AsyncStorage.setItem('readPushNotificationIds', JSON.stringify(readPushIds));
+        }
+      } else {
+        await axios.put(`${BASE_URL}/api/notifications/${notifId}/read`);
+      }
+      
       setNotifications(prev =>
         prev.map(n => (n.id === notifId ? { ...n, isRead: true } : n))
       );
@@ -108,11 +128,44 @@ const NotificationPatient = ({ navigation }) => {
           iconName,
           iconColor,
           isRead: n.isRead,
-          date: `${String(new Date(n.createdAt).getDate()).padStart(2, '0')}/${String(new Date(n.createdAt).getMonth() + 1).padStart(2, '0')}/${new Date(n.createdAt).getFullYear()} - ${getTimeAgo(n.createdAt)}`
+          isPushNotification: false,
+          date: `${String(new Date(n.createdAt).getDate()).padStart(2, '0')}/${String(new Date(n.createdAt).getMonth() + 1).padStart(2, '0')}/${new Date(n.createdAt).getFullYear()} - ${getTimeAgo(n.createdAt)}`,
+          createdAt: new Date(n.createdAt).getTime()
         };
       });
 
-      setNotifications(formattedNotifications);
+      // Fetch global push notifications
+      let pushNotifications = [];
+      try {
+        const readPushIdsStr = await AsyncStorage.getItem('readPushNotificationIds');
+        const readPushIds = readPushIdsStr ? JSON.parse(readPushIdsStr) : [];
+        
+        const pushRes = await axios.get(`${BASE_URL}/api/push-notifications/active`);
+        pushNotifications = pushRes.data.map(pn => ({
+          id: pn._id || pn.id || Math.random().toString(),
+          title: pn.title,
+          message: pn.description,
+          iconName: 'bullhorn-outline',
+          iconColor: '#6B7AFF',
+          isRead: readPushIds.includes(pn._id || pn.id),
+          isPushNotification: true,
+          fromDate: pn.fromDate,
+          toDate: pn.toDate,
+          image: pn.image,
+          role: pn.role,
+          doctorName: pn.doctorName,
+          createdDateOnly: `${String(new Date(pn.createdAt).getDate()).padStart(2, '0')}/${String(new Date(pn.createdAt).getMonth() + 1).padStart(2, '0')}/${new Date(pn.createdAt).getFullYear()}`,
+          date: `${String(new Date(pn.createdAt).getDate()).padStart(2, '0')}/${String(new Date(pn.createdAt).getMonth() + 1).padStart(2, '0')}/${new Date(pn.createdAt).getFullYear()} - ${getTimeAgo(pn.createdAt)}`,
+          createdAt: new Date(pn.createdAt).getTime()
+        }));
+      } catch (e) {
+        console.log("Error fetching push notifications", e);
+      }
+
+      // Merge and sort
+      const combined = [...formattedNotifications, ...pushNotifications].sort((a, b) => b.createdAt - a.createdAt);
+
+      setNotifications(combined);
     } catch (error) {
       console.error('Error fetching notifications:', error);
     } finally {
@@ -125,12 +178,16 @@ const NotificationPatient = ({ navigation }) => {
       activeOpacity={item.isRead ? 1 : 0.7}
       onPress={() => {
         if (!item.isRead) {
-          handleMarkSingleRead(item.id);
+          handleMarkSingleRead(item.id, item.isPushNotification);
         }
-        navigation.navigate('Dashboard', { 
-          screen: 'PatientAppointments', 
-          params: { blinkBookingId: item.booking_id, blinkMessage: item.message } 
-        });
+        if (item.isPushNotification) {
+          setSelectedPushNotification(item);
+        } else {
+          navigation.navigate('Dashboard', { 
+            screen: 'PatientAppointments', 
+            params: { blinkBookingId: item.booking_id, blinkMessage: item.message } 
+          });
+        }
       }}
       style={[styles.notificationCard, !item.isRead && styles.unreadCard]}
     >
@@ -142,7 +199,19 @@ const NotificationPatient = ({ navigation }) => {
         <View style={styles.titleRow}>
           <Text style={[styles.cardTitle, !item.isRead && styles.unreadText]}>{item.title}</Text>
         </View>
-        <Text style={styles.cardMessage}>{item.message}</Text>
+        <Text style={styles.cardMessage} numberOfLines={5}>
+            {item.message}
+            {item.isPushNotification && item.fromDate && item.toDate && (
+                <Text style={{ fontWeight: '900', color: '#6B7AFF' }}>
+                    {`\n ${item.fromDate} to ${item.toDate}`}
+                </Text>
+            )}
+            {item.isPushNotification && (
+                <Text style={{ fontWeight: '500', color: '#888', fontSize: 12 }}>
+                    {`\nCreated by: ${item.role === 'doctor' ? (item.doctorName ? 'Dr. ' + item.doctorName : 'Doctor') : 'Admin'}`}
+                </Text>
+            )}
+        </Text>
         <Text style={styles.cardDate}>{item.date}</Text>
       </View>
     </TouchableOpacity>
@@ -190,6 +259,46 @@ const NotificationPatient = ({ navigation }) => {
           </View>
         )}
       </View>
+
+      {/* Push Notification Detail Modal */}
+      <Modal
+        visible={!!selectedPushNotification}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setSelectedPushNotification(null)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <TouchableOpacity 
+              style={styles.closeButton} 
+              onPress={() => setSelectedPushNotification(null)}
+            >
+              <Icon name="close-circle" size={28} color="#666" />
+            </TouchableOpacity>
+
+            <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.modalScroll}>
+              <Text style={styles.modalTitle}>{selectedPushNotification?.title}</Text>
+              
+              <View style={styles.modalDateContainer}>
+                <Icon name="calendar" size={16} color="#6B7AFF" />
+                <Text style={styles.modalDateText}>
+                  {selectedPushNotification?.fromDate} - {selectedPushNotification?.toDate}
+                </Text>
+              </View>
+
+              <Text style={styles.modalDescription}>{selectedPushNotification?.message}</Text>
+
+              {selectedPushNotification?.image ? (
+                <Image 
+                  source={{ uri: selectedPushNotification.image }} 
+                  style={styles.modalImage} 
+                  resizeMode="cover" 
+                />
+              ) : null}
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 };
@@ -299,7 +408,61 @@ const styles = StyleSheet.create({
   cardMessage: { fontSize: 14, color: '#555', lineHeight: 20 },
   cardDate: { fontSize: 12, color: '#999', marginTop: 8, textAlign: 'right', paddingRight: 5 },
   emptyContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  emptyText: { marginTop: 10, fontSize: 16, color: '#888' }
+  emptyText: { marginTop: 10, fontSize: 16, color: '#888' },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20
+  },
+  modalContent: {
+    backgroundColor: '#FFF',
+    width: '100%',
+    maxHeight: '80%',
+    borderRadius: 16,
+    padding: 20,
+    elevation: 5
+  },
+  closeButton: {
+    alignSelf: 'flex-end',
+    marginBottom: 10
+  },
+  modalScroll: {
+    paddingBottom: 20
+  },
+  modalTitle: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 15
+  },
+  modalDateContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F0F4FF',
+    padding: 10,
+    borderRadius: 8,
+    marginBottom: 20
+  },
+  modalDateText: {
+    marginLeft: 8,
+    color: '#6B7AFF',
+    fontWeight: '600',
+    fontSize: 14
+  },
+  modalDescription: {
+    fontSize: 16,
+    color: '#555',
+    lineHeight: 24,
+    marginBottom: 20
+  },
+  modalImage: {
+    width: '100%',
+    height: 200,
+    borderRadius: 12,
+    marginTop: 10
+  }
 });
 
 export default NotificationPatient;

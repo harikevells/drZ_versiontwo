@@ -101,8 +101,18 @@ const BookAppointmentScreen = ({ navigation }) => {
           const mobile = user.contactNumber || user.mobile;
           const timestamp = new Date().getTime();
           const response = await axios.get(`${BASE_URL}/api/notifications/patient/${mobile}?t=${timestamp}`);
-          const unread = response.data.filter(n => !n.isRead).length;
-          setUnreadCount(unread);
+          const normalUnread = response.data.filter(n => !n.isRead).length;
+          
+          const pushRes = await axios.get(`${BASE_URL}/api/push-notifications/active`);
+          const AsyncStorage = require('@react-native-async-storage/async-storage').default;
+          const readPushIdsStr = await AsyncStorage.getItem('readPushNotificationIds');
+          const readPushIds = readPushIdsStr ? JSON.parse(readPushIdsStr) : [];
+          
+          const pushUnread = (pushRes.data || []).filter(pn => {
+            return !readPushIds.includes(pn._id || pn.id);
+          }).length;
+          
+          setUnreadCount(normalUnread + pushUnread);
         } catch (error) {
           console.log("Error fetching notifications count", error);
         }
@@ -131,7 +141,7 @@ const BookAppointmentScreen = ({ navigation }) => {
   const [date, setDate] = useState(new Date());
   const [selectedTimes, setSelectedTimes] = useState([]);
   const [sendingEmail, setSendingEmail] = useState(false);
-  
+
   const [showCalendar, setShowCalendar] = useState(false);
   const [markedDates, setMarkedDates] = useState({});
 
@@ -159,31 +169,31 @@ const BookAppointmentScreen = ({ navigation }) => {
         const response = await axios.get(`${BASE_URL}/api/schedules`);
         const allSchedules = response.data || [];
         const approvedSchedules = allSchedules.filter(s => s.status === 'Approved');
-        
+
         const today = new Date();
-        today.setHours(0,0,0,0);
-        
+        today.setHours(0, 0, 0, 0);
+
         const marked = {};
-        
+
         // Disable past 30 days and next 90 days by default
         for (let i = -30; i < 90; i++) {
-            const d = new Date(today);
-            d.setDate(today.getDate() + i);
-            const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-            marked[dateStr] = { disabled: true, disableTouchEvent: true };
+          const d = new Date(today);
+          d.setDate(today.getDate() + i);
+          const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+          marked[dateStr] = { disabled: true, disableTouchEvent: true };
         }
-        
+
         approvedSchedules.forEach(s => {
           if (s.date) {
             const scheduleDate = new Date(s.date);
-            scheduleDate.setHours(0,0,0,0);
+            scheduleDate.setHours(0, 0, 0, 0);
             if (scheduleDate >= today) {
-               const dateStr = `${scheduleDate.getFullYear()}-${String(scheduleDate.getMonth() + 1).padStart(2, '0')}-${String(scheduleDate.getDate()).padStart(2, '0')}`;
-               marked[dateStr] = { disabled: false };
+              const dateStr = `${scheduleDate.getFullYear()}-${String(scheduleDate.getMonth() + 1).padStart(2, '0')}-${String(scheduleDate.getDate()).padStart(2, '0')}`;
+              marked[dateStr] = { disabled: false };
             }
           }
         });
-        
+
         setMarkedDates(marked);
       } catch (error) {
         console.log("Error fetching all schedules for dates", error);
@@ -205,20 +215,20 @@ const BookAppointmentScreen = ({ navigation }) => {
         const allTimings = schedulesForDoctor.flatMap(s => s.time || []);
         // Remove duplicates just in case
         let uniqueTimings = [...new Set(allTimings)];
-        
+
         // Exclude past timings if the selected date is today
         const today = new Date();
         const d = new Date(date);
         const isToday = d.getFullYear() === today.getFullYear() && d.getMonth() === today.getMonth() && d.getDate() === today.getDate();
         if (isToday) {
-           const currentMinutes = today.getHours() * 60 + today.getMinutes();
-           uniqueTimings = uniqueTimings.filter(t => {
-              const startStr = t.split(/to|\-/)[0].trim();
-              const startMins = parseTimeStringToMinutes(startStr);
-              return startMins > currentMinutes;
-           });
+          const currentMinutes = today.getHours() * 60 + today.getMinutes();
+          uniqueTimings = uniqueTimings.filter(t => {
+            const startStr = t.split(/to|\-/)[0].trim();
+            const startMins = parseTimeStringToMinutes(startStr);
+            return startMins > currentMinutes;
+          });
         }
-        
+
         setAvailableTimings(uniqueTimings);
       } else {
         setAvailableTimings([]);
@@ -654,11 +664,11 @@ const BookAppointmentScreen = ({ navigation }) => {
                         const timeTrim = time.trim();
                         let isBooked = bookedTimingsForCurrentDoctor.includes(timeTrim);
                         if (!isBooked) {
-                           const startMins = parseTimeStringToMinutes(timeTrim.split(/to|\-/)[0].trim());
-                           isBooked = bookedTimingsForCurrentDoctor.some(booked => {
-                             const bookedMins = parseTimeStringToMinutes(booked);
-                             return bookedMins !== -1 && startMins !== -1 && bookedMins === startMins;
-                           });
+                          const startMins = parseTimeStringToMinutes(timeTrim.split(/to|\-/)[0].trim());
+                          isBooked = bookedTimingsForCurrentDoctor.some(booked => {
+                            const bookedMins = parseTimeStringToMinutes(booked);
+                            return bookedMins !== -1 && startMins !== -1 && bookedMins === startMins;
+                          });
                         }
                         const isSelected = selectedTimes.includes(time);
                         return (
@@ -854,7 +864,7 @@ const styles = StyleSheet.create({
   // Gender Buttons
   genderContainer: { flexDirection: 'row', justifyContent: 'space-between', height: 56 },
   genderBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', borderRadius: 12, borderWidth: 1, borderColor: '#E0E0E0', backgroundColor: '#FAFAFA' },
-  genderBtnActive: { backgroundColor: '#5F76FE', borderColor: '#1C3E55' },
+  genderBtnActive: { backgroundColor: '#5F76FE' },
   genderText: { marginLeft: 8, fontSize: 14, fontWeight: '600', color: '#555' },
   genderTextActive: { color: '#fff' },
 

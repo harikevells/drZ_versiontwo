@@ -41,8 +41,18 @@ const AppointmentScreen = ({ navigation }) => {
           const mobile = user.contactNumber || user.mobile;
           const timestamp = new Date().getTime();
           const response = await axios.get(`${BASE_URL}/api/notifications/patient/${mobile}?t=${timestamp}`);
-          const unread = response.data.filter(n => !n.isRead).length;
-          setUnreadCount(unread);
+          const normalUnread = response.data.filter(n => !n.isRead).length;
+
+          const pushRes = await axios.get(`${BASE_URL}/api/push-notifications/active`);
+          const AsyncStorage = require('@react-native-async-storage/async-storage').default;
+          const readPushIdsStr = await AsyncStorage.getItem('readPushNotificationIds');
+          const readPushIds = readPushIdsStr ? JSON.parse(readPushIdsStr) : [];
+          
+          const pushUnread = (pushRes.data || []).filter(pn => {
+            return !readPushIds.includes(pn._id || pn.id);
+          }).length;
+          
+          setUnreadCount(normalUnread + pushUnread);
         } catch (error) {
           console.log("Error fetching notifications count", error);
         }
@@ -370,7 +380,7 @@ const styles = StyleSheet.create({
   // Footer Website Styles
   footerWebsiteContainer: { marginTop: height * 0.06, alignItems: 'center' },
   footerWebsiteTitle: { fontSize: scaleFont(16), color: '#333', fontWeight: 'bold', marginBottom: 5 },
-  footerWebsiteLink: { fontSize: scaleFont(16), color: '#0d71b3ff', textDecorationLine: 'underline',width: 250 },
+  footerWebsiteLink: { fontSize: scaleFont(16), color: '#0d71b3ff', textDecorationLine: 'underline', width: 250 },
   websiteRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -402,7 +412,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     elevation: 10
   },
-  modalMessage: { fontSize: 16, color: '#444', textAlign: 'center', marginBottom: 30, fontWeight: 'bold', lineHeight: 26, width:'100%' },
+  modalMessage: { fontSize: 16, color: '#444', textAlign: 'center', marginBottom: 30, fontWeight: 'bold', lineHeight: 26, width: '100%' },
   modalButtonRow: { flexDirection: 'row', width: '100%', gap: 12 },
   modalButton: { flex: 1, paddingVertical: 14, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
   cancelBtn: { backgroundColor: '#FAFAFA', borderWidth: 1, borderColor: '#ccc' },

@@ -27,11 +27,27 @@ const HomeScreen = ({ navigation }) => {
     try {
       const mobile = user.contactNumber || user.mobile;
       const timestamp = new Date().getTime();
+      
+      // Fetch normal notifications
       const response = await axios.get(
         `${API_BASE_URL}/api/notifications/patient/${mobile}?t=${timestamp}`
       );
-      const unread = (response.data || []).filter(n => !n.isRead).length;
-      setUnreadCount(unread);
+      const normalUnread = (response.data || []).filter(n => !n.isRead).length;
+
+      // Fetch push notifications
+      const pushRes = await axios.get(
+        `${API_BASE_URL}/api/push-notifications/active`
+      );
+      
+      const AsyncStorage = require('@react-native-async-storage/async-storage').default;
+      const readPushIdsStr = await AsyncStorage.getItem('readPushNotificationIds');
+      const readPushIds = readPushIdsStr ? JSON.parse(readPushIdsStr) : [];
+      
+      const pushUnread = (pushRes.data || []).filter(pn => {
+        return !readPushIds.includes(pn._id || pn.id);
+      }).length;
+
+      setUnreadCount(normalUnread + pushUnread);
     } catch (error) {
       console.log('Error fetching notification count', error);
     }
