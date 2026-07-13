@@ -1,6 +1,8 @@
 const PushNotification = require('../models/PushNotification');
 const Patient = require('../models/Patient');
+const Doctor = require('../models/Doctor');
 const admin = require('firebase-admin');
+const { createNotification } = require('./notificationController');
 
 // Create a new push notification
 const createPushNotification = async (req, res) => {
@@ -23,6 +25,38 @@ const createPushNotification = async (req, res) => {
         // If active, broadcast to all patients
         if (activeStatus) {
             await broadcastToPatients(title, description);
+        }
+
+        // Notify Admin if created by a Doctor
+        if (role === 'doctor') {
+            await createNotification(
+                'admin',
+                'admin',
+                'New Medical Camp Created',
+                `Dr. ${doctorName || 'Doctor'} has created a new Medical Camp Notification: ${title}`,
+                'medical_camp'
+            );
+        }
+
+        // Notify all OTHER doctors
+        try {
+            const doctors = await Doctor.find({});
+            for (const doc of doctors) {
+                if (role === 'doctor' && (doc.doctorName === doctorName || doc.email === doctorName)) continue;
+                
+                const identifier = doc.email || doc.doctorName;
+                if (!identifier) continue;
+
+                await createNotification(
+                    'doctor',
+                    identifier,
+                    'New Medical Camp',
+                    `${role === 'admin' ? 'Admin' : 'Dr. ' + doctorName} has created a new Medical Camp: ${title}`,
+                    'medical_camp'
+                );
+            }
+        } catch (docErr) {
+            console.error("Error notifying doctors:", docErr);
         }
 
         res.status(201).json({ message: "Push notification created successfully", data: pushNotification });
