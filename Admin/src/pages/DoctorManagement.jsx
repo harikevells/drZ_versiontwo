@@ -144,6 +144,14 @@ const DoctorManagement = () => {
       activeStatus: doctor.activeStatus === 1 || doctor.activeStatus === true || doctor.activeStatus === 'true'
     });
     setEditingId(doctor.id);
+    
+    // Scroll to top
+    const wrapper = document.querySelector('.content-wrapper');
+    if (wrapper) {
+      wrapper.scrollTo({ top: 0, behavior: 'smooth' });
+    } else {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
   };
 
   const handleDelete = async (id) => {
@@ -245,6 +253,28 @@ const DoctorManagement = () => {
           
           <div className="form-actions-center">
             <button type="submit" className="submit-btn">{editingId ? 'Update' : 'Submit'}</button>
+            {editingId && (
+              <button 
+                type="button" 
+                className="submit-btn" 
+                style={{marginLeft: '10px', backgroundColor: '#e5e7eb', color: 'black'}} 
+                onClick={() => {
+                  setEditingId(null);
+                  setFormData({
+                    doctorName: '',
+                    gender: 'Male',
+                    department: '',
+                    experience: '',
+                    email: '',
+                    mobile: '',
+                    password: '',
+                    activeStatus: true
+                  });
+                }}
+              >
+                Cancel
+              </button>
+            )}
           </div>
         </form>
       </div>

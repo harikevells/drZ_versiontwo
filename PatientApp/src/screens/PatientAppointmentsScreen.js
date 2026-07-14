@@ -177,40 +177,93 @@ const PatientAppointmentsScreen = ({ navigation, route }) => {
     }
   };
 
-  const DetailRow = ({ label, value, isBold = false, icon }) => (
-    <View style={styles.detailRow}>
-      <View style={styles.labelContainer}>
-        {icon && <Icon name={icon} size={16} color="#5F76FE" style={{ marginRight: 6 }} />}
-        <Text style={styles.detailLabel}>{label} : </Text>
-      </View>
-      <Text style={[styles.detailValue, isBold && { fontWeight: 'bold', color: '#1C3E55' }]}>
-        {value || "N/A"}
-      </Text>
-    </View>
-  );
-
   const renderAppointment = ({ item, index }) => {
     const isBlinking = blinkingAppointments.includes(index);
+    
+    // Status styles
+    let statusBg = '#FFF8E1'; // Pending
+    let statusColor = '#F59E0B';
+    let statusIcon = 'clock-outline';
+    
+    const statusStr = item.status || 'Pending';
+    if (statusStr === 'Approved') {
+      statusBg = '#E8F5E9';
+      statusColor = '#16A34A';
+      statusIcon = 'check-circle';
+    } else if (statusStr === 'Rescheduled') {
+      statusBg = '#E3F2FD';
+      statusColor = '#2563EB';
+      statusIcon = 'calendar-clock';
+    } else if (statusStr === 'Cancelled') {
+      statusBg = '#FEE2E2';
+      statusColor = '#DC2626';
+      statusIcon = 'close-circle';
+    } else if (statusStr === 'Completed') {
+      statusBg = '#F3E8FF';
+      statusColor = '#7C3AED';
+      statusIcon = 'check-all';
+    }
+    
     return (
       <TouchableOpacity activeOpacity={1} onPress={() => handleStopBlink(index)}>
         <Animated.View style={[styles.card, isBlinking && { borderColor: '#5F76FE', borderWidth: 2 }]}>
-          <View style={styles.cardHeader}>
-            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-              <Icon name="doctor" size={20} color="#fff" style={{ marginRight: 6 }} />
-              <Text style={styles.cardTitle}>{item.doctor_name || item.doctor || 'Doctor'}</Text>
+          
+          <View style={styles.cardTop}>
+            <View style={styles.doctorInfo}>
+              <Image source={require('../assets/doctorlogo.png')} style={styles.doctorImg} />
+              <View>
+                <Text style={styles.doctorName}>{item.doctor_name || item.doctor || 'Doctor'}</Text>
+                <Text style={styles.doctorSpec}>Consultant</Text>
+              </View>
             </View>
-            <View style={[styles.statusBadge, { backgroundColor: item.status === 'Cancelled' ? '#FF4B4B' : item.status === 'Completed' ? '#32CD32' : '#FF9800' }]}>
-              <Text style={styles.statusText}>{item.status || "Pending"}</Text>
+            <View style={[styles.statusPill, { backgroundColor: statusBg }]}>
+              <Icon name={statusIcon} size={14} color={statusColor} />
+              <Text style={[styles.statusText, { color: statusColor }]}>{item.status || "Pending"}</Text>
             </View>
           </View>
 
-          <View style={styles.cardBody}>
-            <DetailRow icon="account" label="Patient/நோயாளி" value={item.patient_name || "N/A"} />
-            <DetailRow icon="calendar" label="Date/தேதி" value={item.appointment_date || item.appointmentDate} />
-            <DetailRow icon="clock-outline" label="Time/நேரம்" value={formatTimeSlot(item.appointment_time || item.appointmentTime)} />
-            <DetailRow icon="hospital-building" label="Category/பிரிவு" value={item.treatment_category || 'N/A'} />
-            <DetailRow icon="video" label="Video Call/வீடியோ" value={item.video_call || 'No'} />
+          <View style={[styles.dateTimeBox, { backgroundColor: statusBg }]}>
+            <View style={styles.dateSection}>
+              <View style={styles.iconBox}>
+                <Icon name="calendar-month-outline" size={20} color={statusColor} />
+              </View>
+              <View>
+                <Text style={styles.dtValue}>{item.appointment_date || item.appointmentDate}</Text>
+                <Text style={styles.dtLabel}>Date</Text>
+              </View>
+            </View>
+            <View style={styles.divider} />
+            <View style={styles.timeSection}>
+              <View style={styles.iconBox}>
+                <Icon name="clock-outline" size={20} color={statusColor} />
+              </View>
+              <View>
+                <Text style={styles.dtValue}>{formatTimeSlot(item.appointment_time || item.appointmentTime)}</Text>
+                <Text style={styles.dtLabel}>Time</Text>
+              </View>
+            </View>
           </View>
+
+          <View style={{borderTopWidth: 1, borderTopColor: '#f0f0f0', paddingTop: 15}}>
+            <View style={styles.infoRow}>
+              <View style={[styles.infoIconBox, { backgroundColor: '#6C5CE7' }]}>
+                <Icon name="view-grid-outline" size={16} color="#fff" />
+              </View>
+              <Text style={styles.infoLabel}>Category</Text>
+              <Text style={styles.infoColon}>:</Text>
+              <Text style={styles.infoValue}>{item.treatment_category || 'N/A'}</Text>
+            </View>
+
+            <View style={[styles.infoRow, { marginBottom: 0 }]}>
+              <View style={[styles.infoIconBox, { backgroundColor: '#FF7675' }]}>
+                <Icon name="video-outline" size={16} color="#fff" />
+              </View>
+              <Text style={styles.infoLabel}>Video Call</Text>
+              <Text style={styles.infoColon}>:</Text>
+              <Text style={styles.infoValue}>{item.video_call || 'No'}</Text>
+            </View>
+          </View>
+          
         </Animated.View>
       </TouchableOpacity>
     );
@@ -274,85 +327,43 @@ const styles = StyleSheet.create({
   greeting: { fontSize: 16, fontWeight: 'bold', color: '#000' },
   subGreeting: { fontSize: 13, color: '#5F76FE', fontWeight: 'bold', marginTop: 2 },
 
-  container: { flex: 1, padding: 25, paddingBottom: 70 },
+  container: { flex: 1, paddingHorizontal: 20, paddingTop: 10, paddingBottom: 70 },
 
   card: {
     backgroundColor: '#fff',
-    borderRadius: 12,
+    borderRadius: 20,
     marginBottom: 15,
-    overflow: 'hidden',
+    padding: 20,
     elevation: 3,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
     borderWidth: 1,
-    borderColor: '#eee'
+    borderColor: '#f0f0f0'
   },
-  cardHeader: {
-    backgroundColor: '#5F76FE',
-    padding: 12,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center'
-  },
-  cardTitle: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  statusBadge: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 12,
-  },
-  statusText: {
-    color: '#fff',
-    fontSize: 11,
-    fontWeight: 'bold',
-  },
-  cardBody: {
-    padding: 15,
-  },
-  detailRow: {
-    flexDirection: 'row',
-    marginBottom: 10,
-    alignItems: 'flex-start'
-  },
-  labelContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    width: '45%'
-  },
-  detailLabel: {
-    fontSize: 13,
-    fontWeight: 'bold',
-    color: '#666'
-  },
-  detailValue: {
-    fontSize: 14,
-    color: '#333',
-    flex: 1,
-    fontWeight: '500'
-  },
-  extraSection: {
-    marginTop: 10,
-    paddingTop: 10,
-    borderTopWidth: 1,
-    borderTopColor: '#f0f0f0'
-  },
-  extraTitle: {
-    fontSize: 13,
-    fontWeight: 'bold',
-    color: '#1C3E55',
-    marginBottom: 5
-  },
-  extraText: {
-    fontSize: 13,
-    color: '#555',
-    marginBottom: 2,
-    paddingLeft: 5
-  },
+  cardTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 },
+  doctorInfo: { flexDirection: 'row', alignItems: 'center' },
+  doctorImg: { width: 45, height: 45, borderRadius: 22.5, backgroundColor: '#E3E9FF', marginRight: 15 },
+  doctorName: { fontSize: 16, fontWeight: 'bold', color: '#1C3E55' },
+  doctorSpec: { fontSize: 13, color: '#888', marginTop: 2 },
+  statusPill: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20 },
+  statusText: { fontSize: 12, fontWeight: 'bold', marginLeft: 4 },
+
+  dateTimeBox: { flexDirection: 'row', borderRadius: 12, padding: 15, marginBottom: 14, alignItems: 'center' },
+  dateSection: { flex: 0.85, flexDirection: 'row', alignItems: 'center' },
+  divider: { width: 1, height: 35, backgroundColor: '#E0E0E0', marginHorizontal: 8 },
+  timeSection: { flex: 1.10, flexDirection: 'row', alignItems: 'center' },
+  iconBox: { width: 32, height: 32, borderRadius: 16, backgroundColor: '#fff', justifyContent: 'center', alignItems: 'center', marginRight: 10, elevation: 1, shadowColor: '#000', shadowOffset: {width: 0, height: 1}, shadowOpacity: 0.05, shadowRadius: 2 },
+  dtValue: { fontSize: 13, fontWeight: 'bold', color: '#1C3E55' },
+  dtLabel: { fontSize: 11, color: '#888', marginTop: 2 },
+
+  infoRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 10 },
+  infoIconBox: { width: 28, height: 28, borderRadius: 8, justifyContent: 'center', alignItems: 'center', marginRight: 15 },
+  infoLabel: { fontSize: 13, color: '#555', width: 80 },
+  infoColon: { fontSize: 13, color: '#555', marginRight: 15 },
+  infoValue: { fontSize: 13, color: '#1C3E55', flex: 1, fontWeight: '600' },
+  
   emptyContainer: {
     alignItems: 'center',
     justifyContent: 'center',

@@ -5,6 +5,7 @@ import { API_BASE_URL } from '../config';
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { format, parse } from 'date-fns';
+import Pagination from '../components/Pagination';
 
 const CustomDateInput = React.forwardRef(({ value, onClick, placeholder }, ref) => (
     <div className="custom-date-input-wrapper" onClick={onClick}>
@@ -37,12 +38,21 @@ const MedicalCamp = () => {
     const [notifications, setNotifications] = useState([]);
     const [editingId, setEditingId] = useState(null);
     const [loading, setLoading] = useState(false);
+    const [searchTerm, setSearchTerm] = useState('');
+    
+    // Pagination state
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 5;
 
     const fileInputRef = useRef(null);
 
     useEffect(() => {
         fetchNotifications();
     }, []);
+
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [searchTerm]);
 
     const fetchNotifications = async () => {
         try {
@@ -171,6 +181,14 @@ const MedicalCamp = () => {
         setActiveStatus(item.activeStatus);
         setImage(item.image);
         setFileName(item.image ? "image_uploaded" : "");
+        
+        // Scroll to top of the content container
+        const wrapper = document.querySelector('.content-wrapper');
+        if (wrapper) {
+            wrapper.scrollTo({ top: 0, behavior: 'smooth' });
+        } else {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
     };
 
     const handleDelete = async (id) => {
@@ -185,17 +203,42 @@ const MedicalCamp = () => {
         }
     };
 
+    // Filter Logic
+    const filteredNotifications = notifications.filter(item => {
+        const search = searchTerm.toLowerCase().trim();
+        if (!search) return true;
+
+        const itemTitle = String(item.title || '').toLowerCase();
+        const itemDesc = String(item.description || '').toLowerCase();
+        const itemStatus = item.activeStatus ? 'active' : 'inactive';
+        const dateRange = `${item.fromDate || ''} - ${item.toDate || ''}`.toLowerCase();
+
+        return (
+            itemTitle.includes(search) ||
+            itemDesc.includes(search) ||
+            itemStatus.includes(search) ||
+            dateRange.includes(search)
+        );
+    });
+
+    // Pagination Logic
+    const totalPages = Math.ceil(filteredNotifications.length / itemsPerPage);
+    const currentNotifications = filteredNotifications.slice(
+        (currentPage - 1) * itemsPerPage,
+        currentPage * itemsPerPage
+    );
+
     return (
         <div className="medical-camp-container">
             <div className="header-container">
                 <h1 className="page-title">Push Notification</h1>
-                <div className="icon-box">
+                {/* <div className="icon-box">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <rect x="2" y="4" width="20" height="16" rx="4" fill="#6B7AFF" />
                         <circle cx="12" cy="12" r="3" fill="#FFF" />
                         <path d="M6 8H8M18 8H16" stroke="#FFF" strokeWidth="2" strokeLinecap="round" />
                     </svg>
-                </div>
+                </div> */}
             </div>
 
             <form className="form-container" onSubmit={handleSubmit}>
@@ -285,7 +328,7 @@ const MedicalCamp = () => {
 
                 <div className="submit-container">
                     <button type="submit" className="submit-btn" disabled={loading}>
-                        {loading ? 'Submitting...' : 'Submit'}
+                        {loading ? (editingId ? 'Updating...' : 'Submitting...') : (editingId ? 'Update' : 'Submit')}
                     </button>
                     {editingId && (
                         <button type="button" className="cancel-btn" onClick={resetForm}>
@@ -295,11 +338,17 @@ const MedicalCamp = () => {
                 </div>
             </form>
 
-            <div className="list-header-container">
+            <div className="list-header-container" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px', gap: '15px', flexWrap: 'wrap' }}>
                 <h2 className="list-title">List</h2>
-                <button className="add-btn" onClick={resetForm}>
-                    <span className="plus-icon">+</span> Add
-                </button>
+                <div style={{ display: 'flex', gap: '15px', alignItems: 'center', flexWrap: 'wrap' }}>
+                    <input 
+                        type="text" 
+                        placeholder="Search..." 
+                        value={searchTerm} 
+                        onChange={(e) => setSearchTerm(e.target.value)} 
+                        style={{ padding: '8px 16px', border: '1px solid #e5e7eb', borderRadius: '6px', fontSize: '14px', width: '250px', outline: 'none' }}
+                    />
+                </div>
             </div>
 
             <div className="table-container">
@@ -314,7 +363,7 @@ const MedicalCamp = () => {
                         </tr>
                     </thead>
                     <tbody>
-                        {notifications.length > 0 ? notifications.map((item) => (
+                        {currentNotifications.length > 0 ? currentNotifications.map((item) => (
                             <tr key={item._id || item.id}>
                                 <td>{item.title}</td>
                                 <td>{item.description}</td>
@@ -349,6 +398,18 @@ const MedicalCamp = () => {
                     </tbody>
                 </table>
             </div>
+            
+            {filteredNotifications.length > itemsPerPage && (
+                <div style={{ marginTop: '20px' }}>
+                    <Pagination 
+                        currentPage={currentPage}
+                        totalPages={totalPages}
+                        onPageChange={setCurrentPage}
+                        totalItems={filteredNotifications.length}
+                        itemsPerPage={itemsPerPage}
+                    />
+                </div>
+            )}
         </div>
     );
 };

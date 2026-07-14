@@ -158,7 +158,7 @@ const parseSpokenDate = (spokenText) => {
   // Replace ordinal suffixes and normalize spacing/casing
   let clean = spokenText.toLowerCase()
     .replace(/\b(\d+)(st|nd|rd|th)\b/g, '$1')
-    .replace(/[^a-z0-9/\-\s]/g, '')
+    .replace(/[^a-z0-9/\-\s\u0B80-\u0BFF]/g, '')
     .trim();
 
   // Handle case with no separators, e.g. "03072026" or "3072026"
@@ -182,18 +182,18 @@ const parseSpokenDate = (spokenText) => {
 
   // Check for month names
   const months = [
-    { names: ['january', 'jan', 'jan.'], value: 1 },
-    { names: ['february', 'feb', 'feb.'], value: 2 },
-    { names: ['march', 'mar', 'mar.'], value: 3 },
-    { names: ['april', 'apr', 'apr.'], value: 4 },
-    { names: ['may'], value: 5 },
-    { names: ['june', 'jun', 'jun.'], value: 6 },
-    { names: ['july', 'jul', 'jul.'], value: 7 },
-    { names: ['august', 'aug', 'aug.'], value: 8 },
-    { names: ['september', 'sept', 'sep', 'sep.'], value: 9 },
-    { names: ['october', 'oct', 'oct.'], value: 10 },
-    { names: ['november', 'nov', 'nov.'], value: 11 },
-    { names: ['december', 'dec', 'dec.'], value: 12 }
+    { names: ['january', 'jan', 'jan.', 'ஜனவரி'], value: 1 },
+    { names: ['february', 'feb', 'feb.', 'பிப்ரவரி'], value: 2 },
+    { names: ['march', 'mar', 'mar.', 'மார்ச்'], value: 3 },
+    { names: ['april', 'apr', 'apr.', 'ஏப்ரல்'], value: 4 },
+    { names: ['may', 'மே'], value: 5 },
+    { names: ['june', 'jun', 'jun.', 'ஜூன்'], value: 6 },
+    { names: ['july', 'jul', 'jul.', 'ஜூலை'], value: 7 },
+    { names: ['august', 'aug', 'aug.', 'ஆகஸ்ட்'], value: 8 },
+    { names: ['september', 'sept', 'sep', 'sep.', 'செப்டம்பர்'], value: 9 },
+    { names: ['october', 'oct', 'oct.', 'அக்டோபர்'], value: 10 },
+    { names: ['november', 'nov', 'nov.', 'நவம்பர்'], value: 11 },
+    { names: ['december', 'dec', 'dec.', 'டிசம்பர்'], value: 12 }
   ];
 
   let detectedMonth = null;
@@ -286,11 +286,42 @@ const matchCategoryOption = (spokenText, options) => {
   if (!spokenText || !options || !Array.isArray(options)) return null;
   const cleanSpoken = spokenText.toLowerCase().replace(/[^a-z0-9\u0B80-\u0BFF]/g, '');
 
+  const categoryPhonetic = {
+    'general': ['ஜெனரல்'],
+    'general medicine': ['ஜெனரல் மெடிசின்', 'ஜெனரல் மெடிசன்'],
+    'cardiology': ['கார்டியாலஜி'],
+    'pediatrics': ['பீடியாட்ரிக்ஸ்', 'பிடியாட்ரிக்ஸ்'],
+    'neurology': ['நியூராலஜி'],
+    'dermatology': ['டெர்மடாலஜி'],
+    'orthopedics': ['ஆர்த்தோபெடிக்ஸ்'],
+    'gynecology': ['கைனகாலஜி'],
+    'dental': ['டென்டல்'],
+    'dentistry': ['டென்டிஸ்ட்ரி'],
+    'ent': ['இஎன்டி', 'ஈஎன்டி', 'இஎண்டி'],
+    'ophthalmology': ['ஆப்தல்மாலஜி'],
+    'psychiatry': ['சைக்கையாட்ரி'],
+    'general surgery': ['ஜெனரல் சர்ஜரி'],
+    'urology': ['யூராலஜி'],
+    'oncology': ['ஆன்காலஜி'],
+    'radiology': ['ரேடியாலஜி']
+  };
+
   // 1. Exact match first
   let found = options.find(opt => {
     const cleanId = (opt.id || '').toLowerCase().replace(/[^a-z0-9\u0B80-\u0BFF]/g, '');
     const cleanOrig = (opt.originalName || '').toLowerCase().replace(/[^a-z0-9\u0B80-\u0BFF]/g, '');
-    return cleanSpoken === cleanId || cleanSpoken === cleanOrig;
+    let tamilPart = '';
+    if (opt.label && opt.label.includes('/')) {
+      tamilPart = opt.label.split('/')[1].toLowerCase().replace(/[^a-z0-9\u0B80-\u0BFF]/g, '');
+    }
+
+    let isPhoneticMatch = false;
+    const key = (opt.originalName || '').toLowerCase();
+    if (categoryPhonetic[key]) {
+      isPhoneticMatch = categoryPhonetic[key].some(p => cleanSpoken === p.replace(/[^a-z0-9\u0B80-\u0BFF]/g, ''));
+    }
+
+    return cleanSpoken === cleanId || cleanSpoken === cleanOrig || (tamilPart && cleanSpoken === tamilPart) || isPhoneticMatch;
   });
   if (found) return found;
 
@@ -299,33 +330,73 @@ const matchCategoryOption = (spokenText, options) => {
     const cleanId = (opt.id || '').toLowerCase().replace(/[^a-z0-9\u0B80-\u0BFF]/g, '');
     const cleanOrig = (opt.originalName || '').toLowerCase().replace(/[^a-z0-9\u0B80-\u0BFF]/g, '');
     const cleanLabel = (opt.label || '').toLowerCase().replace(/[^a-z0-9\u0B80-\u0BFF]/g, '');
+    let tamilPart = '';
+    if (opt.label && opt.label.includes('/')) {
+      tamilPart = opt.label.split('/')[1].toLowerCase().replace(/[^a-z0-9\u0B80-\u0BFF]/g, '');
+    }
+
+    let isPhoneticMatch = false;
+    const key = (opt.originalName || '').toLowerCase();
+    if (categoryPhonetic[key]) {
+      isPhoneticMatch = categoryPhonetic[key].some(p => cleanSpoken.includes(p.replace(/[^a-z0-9\u0B80-\u0BFF]/g, '')));
+    }
+
     return cleanId.includes(cleanSpoken) ||
       cleanOrig.includes(cleanSpoken) ||
       cleanLabel.includes(cleanSpoken) ||
       cleanSpoken.includes(cleanId) ||
-      cleanSpoken.includes(cleanOrig);
+      cleanSpoken.includes(cleanOrig) ||
+      (tamilPart && cleanSpoken.includes(tamilPart)) ||
+      isPhoneticMatch;
   });
   return found;
 };
 
 const matchDoctorOption = (spokenText, options) => {
   if (!spokenText || !options || !Array.isArray(options)) return null;
-  const cleanSpoken = spokenText.toLowerCase().replace(/\bdr\.?\b/g, '').replace(/[^a-z0-9\u0B80-\u0BFF]/g, '').trim();
+  const cleanSpoken = spokenText.toLowerCase()
+    .replace(/\bdr\.?\b/g, '')
+    .replace(/டாக்டர்/g, '')
+    .replace(/[^a-z0-9\u0B80-\u0BFF]/g, '');
 
   // 1. Exact match
   let found = options.find(opt => {
-    const cleanName = (opt.name || '').toLowerCase().replace(/\bdr\.?\b/g, '').replace(/[^a-z0-9\u0B80-\u0BFF]/g, '').trim();
-    return cleanSpoken === cleanName;
+    const cleanName = (opt.name || '').toLowerCase()
+      .replace(/\bdr\.?\b/g, '')
+      .replace(/டாக்டர்/g, '')
+      .replace(/[^a-z0-9\u0B80-\u0BFF]/g, '');
+    let tamilPart = '';
+    if (opt.label && opt.label.includes('/')) {
+      tamilPart = opt.label.split('/')[1].split('\n')[0].toLowerCase()
+        .replace(/\bdr\.?\b/g, '')
+        .replace(/டாக்டர்/g, '')
+        .replace(/[^a-z0-9\u0B80-\u0BFF]/g, '');
+    }
+    return cleanSpoken === cleanName || (tamilPart && cleanSpoken === tamilPart);
   });
   if (found) return found;
 
   // 2. Substring match
   found = options.find(opt => {
-    const cleanName = (opt.name || '').toLowerCase().replace(/\bdr\.?\b/g, '').replace(/[^a-z0-9\u0B80-\u0BFF]/g, '').trim();
-    const cleanLabel = (opt.label || '').toLowerCase().replace(/\bdr\.?\b/g, '').replace(/[^a-z0-9\u0B80-\u0BFF]/g, '').trim();
+    const cleanName = (opt.name || '').toLowerCase()
+      .replace(/\bdr\.?\b/g, '')
+      .replace(/டாக்டர்/g, '')
+      .replace(/[^a-z0-9\u0B80-\u0BFF]/g, '');
+    const cleanLabel = (opt.label || '').toLowerCase()
+      .replace(/\bdr\.?\b/g, '')
+      .replace(/டாக்டர்/g, '')
+      .replace(/[^a-z0-9\u0B80-\u0BFF]/g, '');
+    let tamilPart = '';
+    if (opt.label && opt.label.includes('/')) {
+      tamilPart = opt.label.split('/')[1].split('\n')[0].toLowerCase()
+        .replace(/\bdr\.?\b/g, '')
+        .replace(/டாக்டர்/g, '')
+        .replace(/[^a-z0-9\u0B80-\u0BFF]/g, '');
+    }
     return cleanName.includes(cleanSpoken) ||
       cleanLabel.includes(cleanSpoken) ||
-      cleanSpoken.includes(cleanName);
+      cleanSpoken.includes(cleanName) ||
+      (tamilPart && cleanSpoken.includes(tamilPart));
   });
   return found;
 };
@@ -630,7 +701,7 @@ const ChatbotScreen = ({ navigation }) => {
               let matched = false;
               for (const text of e.value) {
                 const cleanText = text.toLowerCase();
-                if (cleanText.includes('book') || cleanText.includes('appointment')) {
+                if (cleanText.includes('book') || cleanText.includes('appointment') || cleanText.includes('முன்பதிவு') || cleanText.includes('சந்திப்பு')) {
                   matched = true;
                   break;
                 }
@@ -647,10 +718,38 @@ const ChatbotScreen = ({ navigation }) => {
             if (step === 'ASK_NAME' || step === 'EDITING_NAME') {
               const text = e.value[0];
               if (text && text.trim().length >= 2) {
-                if (handleSendRef.current) {
-                  handleSendRef.current(text.trim());
-                  return;
-                }
+                const isTamil = /[\u0B80-\u0BFF]/.test(text);
+                const sourceLang = isTamil ? 'ta' : 'en';
+                const targetLang = isTamil ? 'en' : 'ta';
+
+                axios.get(`https://translate.googleapis.com/translate_a/single?client=gtx&sl=${sourceLang}&tl=${targetLang}&dt=t&q=${encodeURIComponent(text.trim())}`)
+                  .then(res => {
+                    let translated = '';
+                    try {
+                      if (Array.isArray(res.data) && Array.isArray(res.data[0]) && Array.isArray(res.data[0][0])) {
+                        translated = String(res.data[0][0][0]).trim();
+                      }
+                    } catch (e) {
+                      console.error("Parse error:", e);
+                    }
+
+                    let finalName = text.trim();
+                    if (translated && translated !== '' && translated !== text.trim() && translated !== 'null' && translated !== 'undefined') {
+                      const engPart = isTamil ? translated : text.trim();
+                      finalName = engPart;
+                    }
+
+                    if (handleSendRef.current) {
+                      handleSendRef.current(finalName);
+                    }
+                  })
+                  .catch(err => {
+                    console.error("Translate error:", err);
+                    if (handleSendRef.current) {
+                      handleSendRef.current(text.trim());
+                    }
+                  });
+                return;
               }
             }
 
@@ -681,11 +780,30 @@ const ChatbotScreen = ({ navigation }) => {
                   matched = options[optIndex - 1];
                   break;
                 }
-                const cleanText = text.toLowerCase().trim();
+                const cleanText = text.toLowerCase().replace(/[^a-z0-9\u0B80-\u0BFF]/g, '');
                 matched = options.find(opt => {
-                  const cleanLabel = opt.label.toLowerCase();
-                  const cleanId = opt.id.toLowerCase();
-                  return cleanText.includes(cleanId) || cleanLabel.includes(cleanText);
+                  const cleanLabel = opt.label.toLowerCase().replace(/[^a-z0-9\u0B80-\u0BFF]/g, '');
+                  const cleanId = opt.id.toLowerCase().replace(/[^a-z0-9\u0B80-\u0BFF]/g, '');
+                  let tamilPart = '';
+                  if (opt.label && opt.label.includes('/')) {
+                    tamilPart = opt.label.split('/')[1].toLowerCase().replace(/[^a-z0-9\u0B80-\u0BFF]/g, '');
+                  }
+
+                  const phonetics = {
+                    'male': ['மேல்', 'மெயில்', 'மெல்'],
+                    'female': ['ஃபீமேல்', 'பீமேல்', 'பிமேல்', 'பிமெல்'],
+                    'others': ['அதர்ஸ்']
+                  };
+                  let isPhoneticMatch = false;
+                  const key = opt.id.toLowerCase();
+                  if (phonetics[key]) {
+                    isPhoneticMatch = phonetics[key].some(p => cleanText.includes(p.replace(/[^a-z0-9\u0B80-\u0BFF]/g, '')));
+                  }
+
+                  return cleanLabel.includes(cleanText) ||
+                    cleanText.includes(cleanId) ||
+                    (tamilPart && cleanText.includes(tamilPart)) ||
+                    isPhoneticMatch;
                 });
                 if (matched) break;
               }
@@ -702,7 +820,7 @@ const ChatbotScreen = ({ navigation }) => {
               let whatsappVal = null;
               for (const text of e.value) {
                 const cleanText = text.toLowerCase().trim();
-                if (cleanText === 'skip') {
+                if (cleanText === 'skip' || cleanText.includes('ஸ்கிப்') || cleanText.includes('தவிர்') || cleanText.includes('வேண்டாம்')) {
                   whatsappVal = 'skip';
                   break;
                 }
@@ -742,11 +860,29 @@ const ChatbotScreen = ({ navigation }) => {
                 } else if (step === 'ASK_TIME') {
                   matched = matchTimeOption(text, options);
                 } else if (step === 'ASK_CONFIRMATION') {
-                  const cleanText = text.toLowerCase().trim();
+                  const cleanText = text.toLowerCase().replace(/[^a-z0-9\u0B80-\u0BFF]/g, '');
                   matched = options.find(opt => {
-                    const cleanLabel = opt.label.toLowerCase();
-                    const cleanId = opt.id.toLowerCase();
-                    return cleanText.includes(cleanId) || cleanLabel.includes(cleanText);
+                    const cleanLabel = opt.label.toLowerCase().replace(/[^a-z0-9\u0B80-\u0BFF]/g, '');
+                    const cleanId = opt.id.toLowerCase().replace(/[^a-z0-9\u0B80-\u0BFF]/g, '');
+                    let tamilPart = '';
+                    if (opt.label && opt.label.includes('/')) {
+                      tamilPart = opt.label.split('/')[1].toLowerCase().replace(/[^a-z0-9\u0B80-\u0BFF]/g, '');
+                    }
+
+                    const confPhonetics = {
+                      'confirm_booking': ['கன்பார்ம்', 'கன்ஃபார்ம்', 'உறுதி'],
+                      'cancel_booking': ['கேன்சல்', 'கான்சல்', 'ரத்து']
+                    };
+                    let isPhoneticMatch = false;
+                    const key = opt.id.toLowerCase();
+                    if (confPhonetics[key]) {
+                      isPhoneticMatch = confPhonetics[key].some(p => cleanText.includes(p.replace(/[^a-z0-9\u0B80-\u0BFF]/g, '')));
+                    }
+
+                    return cleanLabel.includes(cleanText) ||
+                      cleanText.includes(cleanId) ||
+                      (tamilPart && cleanText.includes(tamilPart)) ||
+                      isPhoneticMatch;
                   });
                 }
                 if (matched) break;
@@ -1254,7 +1390,7 @@ const ChatbotScreen = ({ navigation }) => {
     switch (currentStep) {
       case 'GREETING':
         if (input === 'start_booking' || input.toLowerCase().includes('book')) {
-          addBotMessage("Sure! Let's get started.\nWhat is the patient's full name?\n\nசரி! ஆரம்பிக்கலாம்.\nநோயாளியின் முழு பெயர் என்ன?");
+          addBotMessage("What is the patient's full name?\n\nநோயாளியின் முழு பெயர் என்ன?");
           nextStep = 'ASK_NAME';
           setCurrentOptions([]);
         } else {
@@ -2193,7 +2329,8 @@ const ChatbotScreen = ({ navigation }) => {
         try {
           await Voice.destroy();
         } catch (err) { }
-        await Voice.start('en-IN');
+        // Start in Tamil/Indian English to capture Tamil text
+        await Voice.start('ta-IN');
       }
     } catch (e) {
       console.error("Voice start error:", e);
@@ -2388,13 +2525,29 @@ const ChatbotScreen = ({ navigation }) => {
           { marginBottom: 0, alignSelf: 'auto', maxWidth: isEditableUserMsg ? '80%' : '90%' }
         ]}>
           {!item.isUser && <Icon name="robot-outline" size={20} color="#1C3E55" style={styles.botIcon} />}
-          <Text style={[
-            styles.messageText,
-            item.isUser ? styles.userText : styles.botText,
-            item.isCategory && { flex: 1 }
-          ]}>
-            {item.text}{item.isUser ? "   " : ""}
-          </Text>
+          {item.isUser ? (
+            <View style={{ flexShrink: 1, marginRight: 8, paddingRight: 6 }}>
+              <Text style={[styles.messageText, { color: '#fff', flexShrink: 1 }]}>
+                {item.text.includes(' / ') ? (
+                  <>
+                    <Text>{item.text.split(' / ')[0]} / </Text>
+                    <Text>{item.text.split(' / ')[1]}    </Text>
+                  </>
+                ) : (
+                  <Text>{item.text}    </Text>
+                )}
+              </Text>
+            </View>
+          ) : (
+            <Text style={[
+              styles.messageText,
+              styles.botText,
+              item.isCategory && { flex: 1 },
+              { flexShrink: 1, flexWrap: 'wrap' }
+            ]}>
+              {item.text}
+            </Text>
+          )}
           {item.isUser && <Icon name="account-circle-outline" size={20} color="#fff" style={styles.userIcon} />}
         </View>
       </View>
@@ -2548,7 +2701,6 @@ const styles = StyleSheet.create({
     color: '#fff',
     marginRight: 8,
     paddingRight: 6,
-    flexShrink: 1,
   },
   botIcon: {
     marginRight: 8,

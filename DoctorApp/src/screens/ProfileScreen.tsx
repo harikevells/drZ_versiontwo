@@ -1,13 +1,11 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { View, Text, StyleSheet, ScrollView, ActivityIndicator, TouchableOpacity, Alert, Image, Modal, TextInput, Switch } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import Header from '../components/Header';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { API_BASE_URL } from '../config';
-import { Calendar } from 'react-native-calendars';
-import { launchImageLibrary } from 'react-native-image-picker';
 
 export default function ProfileScreen() {
   const navigation = useNavigation<any>();
@@ -15,92 +13,47 @@ export default function ProfileScreen() {
   const [totalAppointments, setTotalAppointments] = useState(0);
   const [cancelledAppointments, setCancelledAppointments] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [unreadCampsCount, setUnreadCampsCount] = useState(0);
   const [logoutModalVisible, setLogoutModalVisible] = useState(false);
 
-  const [medicalCampModalVisible, setMedicalCampModalVisible] = useState(false);
-  const [campTitle, setCampTitle] = useState('');
-  const [campDescription, setCampDescription] = useState('');
-  const [campFromDate, setCampFromDate] = useState('');
-  const [campToDate, setCampToDate] = useState('');
-  const [campActiveStatus, setCampActiveStatus] = useState(false);
-  const [showCalendar, setShowCalendar] = useState<'from' | 'to' | null>(null);
-  const [campImage, setCampImage] = useState<any>(null);
+  useFocusEffect(
+    useCallback(() => {
+      const fetchUnreadCamps = async () => {
+        try {
+          const res = await axios.get(`${API_BASE_URL}/push-notifications`);
+          const allCamps = res.data;
+          
+          const storedData = await AsyncStorage.getItem('userData');
+          let user = storedData ? JSON.parse(storedData) : null;
+          
+          const seenKey = user?.email ? `seenMedicalCampIds_${user.email}` : 'seenMedicalCampIds';
+          const seenStr = await AsyncStorage.getItem(seenKey);
+          const seenIds = seenStr ? JSON.parse(seenStr) : [];
+          
+          if (user?.email) {
+            try {
+              const docRes = await axios.get(`${API_BASE_URL}/doctors`);
+              const fullProfile = docRes.data.find((d: any) => d.email === user.email);
+              if (fullProfile) user = { ...user, ...fullProfile };
+            } catch (e) {}
+          }
+          const doctorName = user?.doctorName || '';
 
-  const onDayPress = (day: any) => {
-    const [year, month, dayPart] = day.dateString.split('-');
-    const formatted = `${dayPart}/${month}/${year}`;
-
-    if (showCalendar === 'from') {
-      setCampFromDate(formatted);
-    } else if (showCalendar === 'to') {
-      setCampToDate(formatted);
-    }
-    setShowCalendar(null);
-  };
-
-  const handleImageUpload = async () => {
-    try {
-      const result = await launchImageLibrary({
-        mediaType: 'photo',
-        quality: 0.8,
-        includeBase64: true,
-      });
-
-      if (result.assets && result.assets.length > 0) {
-        setCampImage(result.assets[0]);
-      }
-    } catch (error: any) {
-      console.error("ImagePicker Error: ", error);
-      Alert.alert(
-        "Upload Error",
-        "Image picker failed. If you just added the feature, please completely close the app, stop the packager terminal, and rebuild using 'npx react-native run-android'."
-      );
-    }
-  };
-
+          const unseenCount = allCamps.filter((camp: any) => {
+            if (camp.role === 'doctor' && camp.doctorName === doctorName) return false;
+            return !seenIds.includes(camp._id);
+          }).length;
+          
+          setUnreadCampsCount(unseenCount);
+        } catch (error) {
+          console.error('Failed to fetch unread camps count', error);
+        }
+      };
+      fetchUnreadCamps();
+    }, [])
+  );
   const handleLogout = () => {
     setLogoutModalVisible(true);
-  };
-
-  const handleSaveMedicalCamp = async () => {
-    if (!campTitle || !campDescription || !campFromDate || !campToDate) {
-      Alert.alert("Error", "Please fill all required fields.");
-      return;
-    }
-    
-    let base64Image = '';
-    if (campImage) {
-      // For simplicity in React Native, we can use the URI if it's already a base64, or send it directly.
-      // But react-native-image-picker returns base64 if includeBase64 is true. 
-      // Assuming it's already handled or we can pass just the URI for now (the backend takes a string).
-      base64Image = campImage.base64 ? `data:${campImage.type};base64,${campImage.base64}` : campImage.uri;
-    }
-
-    try {
-      const payload = {
-        title: campTitle,
-        description: campDescription,
-        fromDate: campFromDate,
-        toDate: campToDate,
-        activeStatus: campActiveStatus,
-        image: base64Image,
-        role: 'doctor',
-        doctorName: userData?.doctorName || ''
-      };
-
-      await axios.post(`${API_BASE_URL}/push-notifications`, payload);
-      Alert.alert("Success", "Medical Camp notification created.");
-      setMedicalCampModalVisible(false);
-      setCampTitle('');
-      setCampDescription('');
-      setCampFromDate('');
-      setCampToDate('');
-      setCampActiveStatus(false);
-      setCampImage(null);
-    } catch (error) {
-      console.error("Error saving medical camp:", error);
-      Alert.alert("Error", "Failed to save medical camp notification.");
-    }
   };
 
   const confirmLogout = async () => {
@@ -257,103 +210,17 @@ export default function ProfileScreen() {
           </View>
         </ScrollView>
       </View>
-
       <TouchableOpacity
         style={styles.fab}
-        onPress={() => setMedicalCampModalVisible(true)}
+        onPress={() => navigation.navigate('MedicalCampNotification', { defaultMode: 'list' })}
       >
         <Ionicons name="medkit" size={28} color="#FFF" />
+        {unreadCampsCount > 0 && (
+          <View style={styles.badgeContainer}>
+            <Text style={styles.badgeText}>{unreadCampsCount}</Text>
+          </View>
+        )}
       </TouchableOpacity>
-
-      {/* Medical Camp Modal */}
-      <Modal
-        visible={medicalCampModalVisible}
-        transparent={true}
-        animationType="slide"
-        onRequestClose={() => setMedicalCampModalVisible(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={[styles.modalContent, { width: '90%', padding: 20 }]}>
-            <TouchableOpacity
-              style={styles.closeButton}
-              onPress={() => setMedicalCampModalVisible(false)}
-            >
-              <Ionicons name="close-circle" size={24} color="#999" />
-            </TouchableOpacity>
-
-            <Text style={[styles.modalText, { marginBottom: 20, fontSize: 18 }]}>Add Medical Camp</Text>
-
-            <ScrollView showsVerticalScrollIndicator={false} style={{ width: '100%' }}>
-              <Text style={styles.inputLabel}>Title</Text>
-              <TextInput style={styles.inputField} value={campTitle} onChangeText={setCampTitle} />
-
-              <Text style={styles.inputLabel}>Description</Text>
-              <TextInput style={styles.inputField} value={campDescription} onChangeText={setCampDescription} />
-
-              <Text style={styles.inputLabel}>Date</Text>
-              <View style={styles.dateRow}>
-                <View style={[styles.dateInputHalf, styles.dateInputWrapper]}>
-                  <TextInput style={styles.dateInputField} placeholder="From Date" placeholderTextColor="#A0A0A0" value={campFromDate} onChangeText={setCampFromDate} editable={false} />
-                  <TouchableOpacity onPress={() => setShowCalendar('from')}>
-                    <Ionicons name="calendar-outline" size={20} color="#0D6EFD" />
-                  </TouchableOpacity>
-                </View>
-                <View style={[styles.dateInputHalf, styles.dateInputWrapper]}>
-                  <TextInput style={styles.dateInputField} placeholder="To Date" placeholderTextColor="#A0A0A0" value={campToDate} onChangeText={setCampToDate} editable={false} />
-                  <TouchableOpacity onPress={() => setShowCalendar('to')}>
-                    <Ionicons name="calendar-outline" size={20} color="#0D6EFD" />
-                  </TouchableOpacity>
-                </View>
-              </View>
-
-              <View style={styles.statusRow}>
-                <Text style={[styles.inputLabel, { marginTop: 0 }]}>Active Status</Text>
-                <Switch
-                  value={campActiveStatus}
-                  onValueChange={setCampActiveStatus}
-                  trackColor={{ false: '#D3D3D3', true: '#34C759' }}
-                  thumbColor={'#FFF'}
-                  style={{ marginLeft: 15 }}
-                />
-              </View>
-
-              <Text style={styles.inputLabel}>Image Upload</Text>
-              <TouchableOpacity style={[styles.uploadBox, campImage ? { padding: 5, borderWidth: 0 } : {}]} onPress={handleImageUpload}>
-                {campImage ? (
-                  <Image source={{ uri: campImage.uri }} style={{ width: '100%', height: 120, borderRadius: 10 }} resizeMode="cover" />
-                ) : (
-                  <>
-                    <Ionicons name="cloud-upload" size={45} color="#9B51E0" />
-                    <Text style={styles.uploadText}>No file chosen, yet!</Text>
-                  </>
-                )}
-              </TouchableOpacity>
-
-              <TouchableOpacity style={[styles.modalBtn, styles.confirmBtn, { marginTop: 30, height: 50, marginHorizontal: 0 }]} onPress={handleSaveMedicalCamp}>
-                <Text style={styles.confirmBtnText}>Save</Text>
-              </TouchableOpacity>
-            </ScrollView>
-          </View>
-        </View>
-      </Modal>
-
-      <Modal visible={!!showCalendar} transparent={true} animationType="fade">
-        <View style={styles.modalOverlay}>
-          <View style={styles.calendarContainer}>
-            <Calendar
-              onDayPress={onDayPress}
-              theme={{
-                selectedDayBackgroundColor: '#0D6EFD',
-                todayTextColor: '#0D6EFD',
-                arrowColor: '#0D6EFD',
-              }}
-            />
-            <TouchableOpacity style={styles.closeCalendarBtn} onPress={() => setShowCalendar(null)}>
-              <Text style={styles.closeCalendarText}>Close</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
 
       {/* Logout Modal */}
       <Modal
@@ -705,6 +572,24 @@ const styles = StyleSheet.create({
   },
   closeCalendarText: {
     color: '#FFF',
+    fontWeight: 'bold',
+  },
+  badgeContainer: {
+    position: 'absolute',
+    top: -2,
+    right: -2,
+    backgroundColor: '#FF3B30',
+    borderRadius: 12,
+    width: 22,
+    height: 22,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#FFF',
+  },
+  badgeText: {
+    color: '#FFF',
+    fontSize: 10,
     fontWeight: 'bold',
   },
 });

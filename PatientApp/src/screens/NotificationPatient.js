@@ -34,7 +34,7 @@ const NotificationPatient = ({ navigation }) => {
   const { user } = useContext(AuthContext);
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [selectedPushNotification, setSelectedPushNotification] = useState(null);
+  const [expandedPushId, setExpandedPushId] = useState(null);
 
   const isFocused = useIsFocused();
 
@@ -173,7 +173,9 @@ const NotificationPatient = ({ navigation }) => {
     }
   };
 
-  const renderItem = ({ item }) => (
+  const renderItem = ({ item }) => {
+    const isExpanded = expandedPushId === item.id;
+    return (
     <TouchableOpacity
       activeOpacity={item.isRead ? 1 : 0.7}
       onPress={() => {
@@ -181,7 +183,7 @@ const NotificationPatient = ({ navigation }) => {
           handleMarkSingleRead(item.id, item.isPushNotification);
         }
         if (item.isPushNotification) {
-          setSelectedPushNotification(item);
+          setExpandedPushId(isExpanded ? null : item.id);
         } else {
           navigation.navigate('Dashboard', { 
             screen: 'PatientAppointments', 
@@ -198,24 +200,42 @@ const NotificationPatient = ({ navigation }) => {
       <View style={styles.textContainer}>
         <View style={styles.titleRow}>
           <Text style={[styles.cardTitle, !item.isRead && styles.unreadText]}>{item.title}</Text>
+          {item.isPushNotification && (
+            <Icon name={isExpanded ? 'menu-up' : 'menu-down'} size={28} color="#333" />
+          )}
         </View>
-        <Text style={styles.cardMessage} numberOfLines={5}>
+        <Text style={styles.cardMessage} numberOfLines={item.isPushNotification ? undefined : 5}>
             {item.message}
-            {item.isPushNotification && item.fromDate && item.toDate && (
-                <Text style={{ fontWeight: '900', color: '#6B7AFF' }}>
-                    {`\n ${item.fromDate} to ${item.toDate}`}
-                </Text>
-            )}
-            {item.isPushNotification && (
-                <Text style={{ fontWeight: '500', color: '#888', fontSize: 12 }}>
-                    {`\nCreated by: ${item.role === 'doctor' ? (item.doctorName ? 'Dr. ' + item.doctorName : 'Doctor') : 'Admin'}`}
-                </Text>
-            )}
         </Text>
+        {item.isPushNotification && item.fromDate && item.toDate && (
+            <View style={{ marginTop: 6, flexDirection: 'row', alignItems: 'center' }}>
+                <Icon name="calendar-range" size={16} color="#6B7AFF" style={{ marginRight: 6 }} />
+                <Text style={{ fontWeight: 'bold', color: '#555', fontSize: 13 }}>
+                   {item.fromDate} To {item.toDate}
+                </Text>
+            </View>
+        )}
+        
+        {item.isPushNotification && isExpanded && (
+          <View style={{ marginTop: 10 }}>
+            {item.image ? (
+              <Image 
+                source={{ uri: item.image }} 
+                style={{ width: '100%', height: 200, borderRadius: 8 }} 
+                resizeMode="cover" 
+              />
+            ) : null}
+            <Text style={{ fontWeight: '500', color: '#888', fontSize: 12, marginTop: 6 }}>
+                {`Created by: ${item.role === 'doctor' ? (item.doctorName ? 'Dr. ' + item.doctorName : 'Doctor') : 'Admin'}`}
+            </Text>
+          </View>
+        )}
+
         <Text style={styles.cardDate}>{item.date}</Text>
       </View>
     </TouchableOpacity>
-  );
+    );
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -260,45 +280,6 @@ const NotificationPatient = ({ navigation }) => {
         )}
       </View>
 
-      {/* Push Notification Detail Modal */}
-      <Modal
-        visible={!!selectedPushNotification}
-        transparent={true}
-        animationType="slide"
-        onRequestClose={() => setSelectedPushNotification(null)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <TouchableOpacity 
-              style={styles.closeButton} 
-              onPress={() => setSelectedPushNotification(null)}
-            >
-              <Icon name="close-circle" size={28} color="#666" />
-            </TouchableOpacity>
-
-            <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.modalScroll}>
-              <Text style={styles.modalTitle}>{selectedPushNotification?.title}</Text>
-              
-              <View style={styles.modalDateContainer}>
-                <Icon name="calendar" size={16} color="#6B7AFF" />
-                <Text style={styles.modalDateText}>
-                  {selectedPushNotification?.fromDate} - {selectedPushNotification?.toDate}
-                </Text>
-              </View>
-
-              <Text style={styles.modalDescription}>{selectedPushNotification?.message}</Text>
-
-              {selectedPushNotification?.image ? (
-                <Image 
-                  source={{ uri: selectedPushNotification.image }} 
-                  style={styles.modalImage} 
-                  resizeMode="cover" 
-                />
-              ) : null}
-            </ScrollView>
-          </View>
-        </View>
-      </Modal>
     </SafeAreaView>
   );
 };
@@ -408,61 +389,7 @@ const styles = StyleSheet.create({
   cardMessage: { fontSize: 14, color: '#555', lineHeight: 20 },
   cardDate: { fontSize: 12, color: '#999', marginTop: 8, textAlign: 'right', paddingRight: 5 },
   emptyContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  emptyText: { marginTop: 10, fontSize: 16, color: '#888' },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20
-  },
-  modalContent: {
-    backgroundColor: '#FFF',
-    width: '100%',
-    maxHeight: '80%',
-    borderRadius: 16,
-    padding: 20,
-    elevation: 5
-  },
-  closeButton: {
-    alignSelf: 'flex-end',
-    marginBottom: 10
-  },
-  modalScroll: {
-    paddingBottom: 20
-  },
-  modalTitle: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 15
-  },
-  modalDateContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#F0F4FF',
-    padding: 10,
-    borderRadius: 8,
-    marginBottom: 20
-  },
-  modalDateText: {
-    marginLeft: 8,
-    color: '#6B7AFF',
-    fontWeight: '600',
-    fontSize: 14
-  },
-  modalDescription: {
-    fontSize: 16,
-    color: '#555',
-    lineHeight: 24,
-    marginBottom: 20
-  },
-  modalImage: {
-    width: '100%',
-    height: 200,
-    borderRadius: 12,
-    marginTop: 10
-  }
+  emptyText: { marginTop: 10, fontSize: 16, color: '#888' }
 });
 
 export default NotificationPatient;

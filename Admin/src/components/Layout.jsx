@@ -5,6 +5,7 @@ import { API_BASE_URL } from '../config';
 import { FaUserMd, FaCalendarCheck, FaBell, FaSignOutAlt, FaUserInjured } from 'react-icons/fa';
 import './Layout.css';
 import logoImage from '../assets/DoctorlogoApp1.png';
+import adminImage from '../assets/adminimage.png';
 
 const Layout = () => {
   const navigate = useNavigate();
@@ -50,7 +51,7 @@ const Layout = () => {
     <div className="layout-container">
       {/* Sidebar */}
       <aside className="sidebar">
-        <div className="sidebar-logo" style={{ marginBottom: '5px', padding: '20px 20px 0 20px', display: 'flex', justifyContent: 'center' }}>
+        <div className="sidebar-logo" style={{ marginBottom: '0px', padding: '10px 20px 10px 20px', display: 'flex', justifyContent: 'center' }}>
           <img src={logoImage} alt="DrZ Logo" style={{ height: '80px' }} />
         </div>
         
@@ -82,22 +83,33 @@ const Layout = () => {
             <h2>Welcome,Admin</h2>
             <p>Super admin For DrZ...</p>
           </div>
-          <div className="topbar-actions">
-            <button className="icon-btn" style={{ position: 'relative' }} onClick={() => navigate('/notifications')}>
-              <FaBell />
-              {unreadCount > 0 && (
-                <span style={{
-                  position: 'absolute', top: '-5px', right: '-5px',
-                  backgroundColor: '#e74c3c', color: '#fff', fontSize: '10px',
-                  borderRadius: '50%', padding: '2px 6px', fontWeight: 'bold'
-                }}>
-                  {unreadCount > 9 ? '9+' : unreadCount}
-                </span>
-              )}
-            </button>
-            <button className="icon-btn" onClick={() => setIsLogoutModalOpen(true)}>
-              <FaSignOutAlt />
-            </button>
+          <div className="topbar-actions" style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+            <div style={{ display: 'flex', gap: '15px' }}>
+              <button className="icon-btn" style={{ position: 'relative' }} onClick={() => navigate('/notifications')}>
+                <FaBell />
+                {unreadCount > 0 && (
+                  <span style={{
+                    position: 'absolute', top: '-5px', right: '-5px',
+                    backgroundColor: '#e74c3c', color: '#fff', fontSize: '10px',
+                    borderRadius: '50%', padding: '2px 6px', fontWeight: 'bold'
+                  }}>
+                    {unreadCount > 9 ? '9+' : unreadCount}
+                  </span>
+                )}
+              </button>
+              <button className="icon-btn" onClick={() => setIsLogoutModalOpen(true)}>
+                <FaSignOutAlt />
+              </button>
+            </div>
+            
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginLeft: '10px' }}>
+              <span style={{ fontWeight: '600', fontSize: '18px', color: '#1f2937' }}>Admin</span>
+              <img 
+                src={adminImage} 
+                alt="Admin Avatar" 
+                style={{ width: '45px', height: '45px', borderRadius: '50%', objectFit: 'cover' }} 
+              />
+            </div>
           </div>
         </header>
 
@@ -113,8 +125,8 @@ const Layout = () => {
             <img src={logoImage} alt="DrZ Logo" style={{ height: '50px', marginBottom: '20px' }} />
             <p>Are you sure you want to logout?</p>
             <div className="logout-modal-actions">
-              <button className="cancel-btn" onClick={() => setIsLogoutModalOpen(false)}>Cancel</button>
-              <button className="confirm-logout-btn" onClick={handleLogout}>Logout</button>
+              <button style={{width:'150px', borderRadius:'20px'}} className="cancel-btn" onClick={() => setIsLogoutModalOpen(false)}>Cancel</button>
+              <button style={{width:'150px', borderRadius:'20px'}} className="confirm-logout-btn" onClick={handleLogout}>Logout</button>
             </div>
           </div>
         </div>

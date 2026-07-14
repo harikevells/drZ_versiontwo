@@ -225,14 +225,17 @@ input:checked + .slider:before {
 }
 
 .submit-btn {
-    background-color: #0c2b5e;
-    color: white;
+    background-color: #D3D9FF;
+    color: #5F76FE;
     border: none;
     border-radius: 25px;
-    padding: 15px 50px;
+    padding: 12px 0; /* Let width dictate size */
     font-size: 16px;
     font-weight: 700;
     cursor: pointer;
+    width: 200px;
+    flex: none;
+    text-align: center;
 }
 
 .cancel-btn {
@@ -240,10 +243,13 @@ input:checked + .slider:before {
     color: #333;
     border: none;
     border-radius: 25px;
-    padding: 15px 50px;
+    padding: 12px 0;
     font-size: 16px;
     font-weight: 700;
     cursor: pointer;
+    width: 200px;
+    flex: none;
+    text-align: center;
 }
 
 .list-header-container {
@@ -290,8 +296,8 @@ input:checked + .slider:before {
 }
 
 .custom-table th {
-    background-color: #f8f9fc;
-    color: #333;
+    background-color: #F6F8FF;
+    color: #121313;
     font-weight: 700;
     font-size: 14px;
     padding: 20px 15px;

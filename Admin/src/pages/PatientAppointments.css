@@ -1,6 +1,6 @@
 .patient-appointments-container {
   /* padding: 20px; */
-  min-height: 100vh;
+  min-height: 80vh;
 }
 
 .header-section {
@@ -8,7 +8,8 @@
 }
 
 .header-section h2 {
-  color: #1a4d80; /* Doctor app theme color */
+  color: #1a4d80;
+  /* Doctor app theme color */
   font-size: 24px;
   font-weight: 600;
 }
@@ -16,20 +17,31 @@
 .table-container {
   background-color: #ffffff;
   border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  /* box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05); */
   overflow-x: auto;
-  padding: 10px;
+  /* padding: 10px; */
 }
 
 .appointments-table {
   width: 100%;
-  border-collapse: collapse;
+  border-collapse: separate;
+  border-spacing: 0;
   text-align: center;
 }
 
+.appointments-table th:first-child {
+  border-top-left-radius: 20px;
+  border-bottom-left-radius: 20px;
+}
+
+.appointments-table th:last-child {
+  border-top-right-radius: 20px;
+  border-bottom-right-radius: 20px;
+}
+
 .appointments-table th {
-  background-color: #f9fafb;
-  color: #374151;
+  background-color: #F6F8FF;
+  color: #121313;
   font-weight: 600;
   font-size: 13px;
   padding: 16px 20px;
@@ -63,7 +75,9 @@
 }
 
 .status-badge {
-  padding: 5px 12px;
+  padding: 5px 0;
+  width: 100px;
+  text-align: center;
   border-radius: 20px;
   font-size: 12px;
   font-weight: 600;
@@ -72,17 +86,48 @@
 }
 
 .status-badge.pending {
-  background-color: #fff3cd;
-  color: #856404;
+  background-color: #fdb948;
+  color: white;
 }
 
-.status-badge.new {
-  background-color: #e3f2fd;
-  color: #1976d2;
+.status-badge.reschedule, .status-badge.rescheduled {
+  background-color: #5F76FE;
+  color: white;
+}
+
+.status-badge.cancel, .status-badge.cancelled {
+  background-color: #EF4444;
+  color: white;
+}
+
+.status-badge.complete, .status-badge.completed {
+  background-color: #D3D9FF;
+  color: #114B5F;
+}
+
+.status-badge.approve, .status-badge.approved {
+  background-color: #10B981;
+  color: white;
 }
 
 .status-text.pending {
-  color: #856404;
+  color: #F59E0B;
+}
+
+.status-text.reschedule, .status-text.rescheduled {
+  color: #5F76FE;
+}
+
+.status-text.cancel, .status-text.cancelled {
+  color: #EF4444;
+}
+
+.status-text.complete, .status-text.completed {
+  color: #114B5F;
+}
+
+.status-text.approve, .status-text.approved {
+  color: #10B981;
 }
 
 .view-btn {
@@ -121,7 +166,8 @@
   background-color: white;
   border-radius: 8px;
   width: 90%;
-  max-width: 800px; /* Increased for two columns */
+  max-width: 800px;
+  /* Increased for two columns */
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
   animation: slideDown 0.3s ease-out;
 }
@@ -131,6 +177,7 @@
     opacity: 0;
     transform: translateY(-20px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);

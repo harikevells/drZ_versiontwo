@@ -7,7 +7,8 @@
   color: #114B5F;
   font-size: 24px;
   font-weight: 700;
-  margin-bottom: 30px;
+    margin-bottom: 15px !important;
+
 }
 
 .form-card {
@@ -161,8 +162,8 @@ input:checked + .slider:before {
 }
 
 .submit-btn {
-  background-color: #1173ba;
-  color: white;
+  background-color: #D3D9FF;
+  color: #5F76FE;
   border: none;
   border-radius: 6px;
   padding: 12px 40px;
@@ -173,7 +174,8 @@ input:checked + .slider:before {
 }
 
 .submit-btn:hover {
-  background-color: #0d5a94;
+  background-color: #5F76FE;
+  color : white;
 }
 
 /* List section */
@@ -209,17 +211,25 @@ input:checked + .slider:before {
   background-color: #ffffff;
   border-radius: 8px;
   overflow: hidden;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  /* box-shadow: 0 1px 3px rgba(0,0,0,0.05); */
 }
 
 .data-table {
   width: 100%;
-  border-collapse: collapse;
+  border-collapse: separate;
+  border-spacing: 0;
 }
-
+.data-table th:first-child {
+  border-top-left-radius: 20px;
+  border-bottom-left-radius: 20px;
+}
+.data-table th:last-child {
+  border-top-right-radius: 20px;
+  border-bottom-right-radius: 20px;
+}
 .data-table th {
-  background-color: #f9fafb;
-  color: #374151;
+  background-color: #D3D9FF;
+  color: #010101;
   font-weight: 600;
   font-size: 13px;
   text-align: center;

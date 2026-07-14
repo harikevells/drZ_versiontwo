@@ -302,9 +302,16 @@ const Schedule = () => {
       department: schedule.department,
       date: schedule.date,
       startTime: st,
-      endTime: et,
       time: timeArray
     });
+
+    // Scroll to top
+    const wrapper = document.querySelector('.content-wrapper');
+    if (wrapper) {
+      wrapper.scrollTo({ top: 0, behavior: 'smooth' });
+    } else {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
   };
 
   const handleInfoClick = (schedule) => {
@@ -477,7 +484,7 @@ const Schedule = () => {
               <button 
                 type="button" 
                 className="submit-btn" 
-                style={{marginLeft: '10px', backgroundColor: '#6b7280'}} 
+                style={{marginLeft: '10px', backgroundColor: '#e5e7eb', color: 'black'}} 
                 onClick={() => {
                   setEditingId(null);
                   setFormData({

@@ -301,7 +301,7 @@ const RescheduleModal = ({ isOpen, onClose, onSave, initialDate, allSchedules, d
             <h3 className="time-header" style={{ marginBottom: '15px' }}>{getDisplayDate()} Slots</h3>
             <div className="slots-list" style={{ display: 'flex', flexDirection: 'column', gap: '10px', maxHeight: '300px', overflowY: 'auto', paddingRight: '10px' }}>
               {visibleSlots.length > 0 ? visibleSlots.map((slot, index) => (
-                <div key={index} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#f9fafb', padding: '10px', borderRadius: '6px', border: '1px solid #e5e7eb' }}>
+                <div key={index} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#f9fafb', padding: '10px', borderRadius: '6px', border: '1px solid #e5e7eb' }}>
                   <span style={{ fontSize: '14px', fontWeight: '500' }}>{slot}</span>
                 </div>
               )) : (

@@ -30,7 +30,7 @@
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  color: #1173ba;
+  color: #5F76FE;
   font-size: 14px;
   transition: all 0.2s ease;
 }
@@ -47,7 +47,7 @@
 .page-capsule {
   display: flex;
   background-color: #f3f4f6;
-  border-radius: 50px;
+  border-radius: 20px;
   padding: 4px 8px;
   margin: 0 8px;
   align-items: center;
@@ -76,10 +76,9 @@
 }
 
 .page-number.active {
-  background-color: #1173ba;
-  color: #ffffff;
-  font-weight: 600;
-  box-shadow: 0 4px 10px rgba(17, 115, 186, 0.25);
+  background-color: #D3D9FF;
+  color: #5F76FE;
+  font-weight: 800;
 }
 
 .page-ellipsis {

@@ -7,6 +7,7 @@ import SplashScreen from './screens/SplashScreen';
 import LoginScreen from './screens/LoginScreen';
 import MainTabs from './navigation/MainTabs';
 import NotificationsScreen from './screens/NotificationsScreen';
+import MedicalCampNotification from './screens/MedicalCampNotification';
 
 const Stack = createNativeStackNavigator();
 
@@ -47,6 +48,7 @@ export default function App() {
         <Stack.Screen name="Login" component={LoginScreen} />
         <Stack.Screen name="MainTabs" component={MainTabs} />
         <Stack.Screen name="Notifications" component={NotificationsScreen} />
+        <Stack.Screen name="MedicalCampNotification" component={MedicalCampNotification} />
       </Stack.Navigator>
     </NavigationContainer>
   );
