@@ -102,16 +102,16 @@ const BookAppointmentScreen = ({ navigation }) => {
           const timestamp = new Date().getTime();
           const response = await axios.get(`${BASE_URL}/api/notifications/patient/${mobile}?t=${timestamp}`);
           const normalUnread = response.data.filter(n => !n.isRead).length;
-          
+
           const pushRes = await axios.get(`${BASE_URL}/api/push-notifications/active`);
           const AsyncStorage = require('@react-native-async-storage/async-storage').default;
           const readPushIdsStr = await AsyncStorage.getItem('readPushNotificationIds');
           const readPushIds = readPushIdsStr ? JSON.parse(readPushIdsStr) : [];
-          
+
           const pushUnread = (pushRes.data || []).filter(pn => {
             return !readPushIds.includes(pn._id || pn.id);
           }).length;
-          
+
           setUnreadCount(normalUnread + pushUnread);
         } catch (error) {
           console.log("Error fetching notifications count", error);

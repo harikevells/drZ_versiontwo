@@ -291,11 +291,11 @@ export default function AppointmentScreen({ route }: any) {
     const params = [];
     if (appliedFromDate) params.push(`from=${encodeURIComponent(appliedFromDate)}`);
     if (appliedToDate) params.push(`to=${encodeURIComponent(appliedToDate)}`);
-    
+
     if (params.length > 0) {
       url += `?${params.join('&')}`;
     }
-    
+
     import('react-native').then(({ Linking }) => {
       Linking.openURL(url).catch(err => {
         console.error("Couldn't open download URL", err);
@@ -514,6 +514,38 @@ export default function AppointmentScreen({ route }: any) {
                       <Text style={[styles.detailText, { width: 280 }]}>{item.treatment_category || 'General'}</Text>
                     </View>
 
+                    {(() => {
+                      const isDoctorCreated = !!(item.whatsapp_number && item.whatsapp_number.includes('|') && item.whatsapp_number.split('|')[1].startsWith('Doctor'));
+                      const badgeBgColor = isDoctorCreated ? '#EEF2FF' : '#E6F7F0';
+                      const badgeTextColor = isDoctorCreated ? '#1D4ED8' : '#059669';
+                      
+                      let creatorText = 'Patient';
+                      if (isDoctorCreated) {
+                        const parts = item.whatsapp_number.split('|')[1];
+                        if (parts.includes(':') && parts.split(':')[1].trim()) {
+                          creatorText = 'Doctor (' + parts.split(':')[1].trim() + ')';
+                        } else if (item.doctor_name) {
+                          creatorText = 'Doctor (' + item.doctor_name + ')';
+                        } else {
+                          creatorText = 'Doctor';
+                        }
+                      }
+
+                      return (
+                        <View style={[styles.createdByContainer, { backgroundColor: badgeBgColor }]}>
+                          <Ionicons
+                            name={isDoctorCreated ? "person-add" : "person"}
+                            size={12}
+                            color={badgeTextColor}
+                            style={{ marginRight: 4 }}
+                          />
+                          <Text style={[styles.createdByText, { color: badgeTextColor }]}>
+                            Created by: {creatorText}
+                          </Text>
+                        </View>
+                      );
+                    })()}
+
                     {activeTab === 'Pending' && (
                       <View style={styles.actionButtons}>
                         <TouchableOpacity
@@ -598,6 +630,13 @@ export default function AppointmentScreen({ route }: any) {
         }}
         patientName={selectedPatient?.patient_name}
       />
+
+      <TouchableOpacity
+        style={styles.fab}
+        onPress={() => navigation.navigate('AppointmentCreate')}
+      >
+        <Ionicons name="add" size={30} color="#FFF" />
+      </TouchableOpacity>
     </View>
   );
 }
@@ -878,5 +917,37 @@ const styles = StyleSheet.create({
   closeCalendarText: {
     fontWeight: 'bold',
     color: '#333',
+  },
+  createdByContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 8,
+    alignSelf: 'flex-start',
+    backgroundColor: '#F5F5F5',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+  },
+  createdByText: {
+    fontSize: 11,
+    color: '#555',
+    fontWeight: '600',
+  },
+  fab: {
+    position: 'absolute',
+    bottom: 30,
+    right: 20,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: '#0D6EFD',
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 8,
+    shadowColor: '#000',
+    shadowOpacity: 0.3,
+    shadowOffset: { width: 0, height: 6 },
+    shadowRadius: 4,
+    zIndex: 999,
   }
 });
