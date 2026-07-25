@@ -217,7 +217,7 @@ const ScheduleCreateModal = ({ isOpen, onClose, onSave, initialDate, initialSlot
 
   return (
     <div className="modal-overlay">
-      <div className="modal-content">
+      <div style={{padding:'30px'}} className="modal-content">
         <button className="modal-close" onClick={onClose} type="button">
           <FaTimes />
         </button>
@@ -294,7 +294,7 @@ const ScheduleCreateModal = ({ isOpen, onClose, onSave, initialDate, initialSlot
         </div>
         
         <div className="modal-footer">
-          <button className="save-btn" onClick={handleSave} type="button">Save</button>
+          <button style={{background:'#D3D9FF', color:'#5F76FE'}} className="save-btn" onClick={handleSave} type="button">Save</button>
         </div>
       </div>
     </div>

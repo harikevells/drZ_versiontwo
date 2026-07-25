@@ -245,12 +245,12 @@ const RescheduleModal = ({ isOpen, onClose, onSave, initialDate, allSchedules, d
 
   return (
     <div className="modal-overlay">
-      <div className="modal-content">
+      <div style={{padding:'30px'}} className="modal-content">
         <button className="modal-close" onClick={onClose}>
           <FaTimes />
         </button>
         
-        <h2 className="modal-title">Schedule</h2>
+        <h2 style={{color:'black'}} className="modal-title">Doctor's Schedule</h2>
         
         <div className="modal-body">
           {/* Calendar Section */}
@@ -312,7 +312,8 @@ const RescheduleModal = ({ isOpen, onClose, onSave, initialDate, allSchedules, d
         </div>
         
         <div className="modal-footer">
-          <button className="save-btn" onClick={handleSave}>Save Changes</button>
+          {/* <button className="save-btn" onClick={handleSave}>Save Changes</button> */}
+          <button style={{background:'#D3D9FF', color:'#5F76FE'}} className="save-btn" onClick={onClose}>Close</button>
         </div>
       </div>
     </div>

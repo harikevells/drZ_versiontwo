@@ -90,44 +90,52 @@
   color: white;
 }
 
-.status-badge.reschedule, .status-badge.rescheduled {
+.status-badge.reschedule,
+.status-badge.rescheduled {
   background-color: #5F76FE;
   color: white;
 }
 
-.status-badge.cancel, .status-badge.cancelled {
-  background-color: #EF4444;
+.status-badge.cancel,
+.status-badge.cancelled {
+  background-color: #ff6d6d;
   color: white;
 }
 
-.status-badge.complete, .status-badge.completed {
+.status-badge.complete,
+.status-badge.completed {
   background-color: #D3D9FF;
   color: #114B5F;
 }
 
-.status-badge.approve, .status-badge.approved {
-  background-color: #10B981;
-  color: white;
+.status-badge.approve,
+.status-badge.approved {
+  background-color: #D3D9FF;
+  color: #5F76FE;
 }
 
 .status-text.pending {
   color: #F59E0B;
 }
 
-.status-text.reschedule, .status-text.rescheduled {
+.status-text.reschedule,
+.status-text.rescheduled {
   color: #5F76FE;
 }
 
-.status-text.cancel, .status-text.cancelled {
+.status-text.cancel,
+.status-text.cancelled {
   color: #EF4444;
 }
 
-.status-text.complete, .status-text.completed {
+.status-text.complete,
+.status-text.completed {
   color: #114B5F;
 }
 
-.status-text.approve, .status-text.approved {
-  color: #10B981;
+.status-text.approve,
+.status-text.approved {
+  color: #5F76FE;
 }
 
 .view-btn {
@@ -184,31 +192,74 @@
   }
 }
 
-.modal-header {
+.modal-content .modal-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: 20px 25px;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid #586ff5;
 }
 
-.modal-header h3 {
+.modal-content .modal-header h3 {
   margin: 0;
-  color: #1a4d80;
+  color: #586ff5;
   font-size: 18px;
+  font-weight: 600;
 }
 
-.close-btn {
-  background: none;
+.modal-content .close-btn {
+  background-color: #586ff5;
+  color: white;
   border: none;
-  color: #888;
-  font-size: 18px;
+  border-radius: 4px;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
-  transition: color 0.3s;
+  transition: opacity 0.2s;
 }
 
-.close-btn:hover {
-  color: #e53935;
+.modal-content .close-btn:hover {
+  opacity: 0.8;
+  color: white;
+}
+
+.modal-content .modal-body-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 50px;
+  padding: 30px;
+  position: relative;
+}
+
+/* Vertical divider line with color #586ff5 */
+.modal-content .modal-body-grid::before {
+  content: '';
+  position: absolute;
+  top: 30px;
+  bottom: 30px;
+  left: 50%;
+  width: 1px;
+  background-color: #586ff5;
+  transform: translateX(-50%);
+}
+
+/* Top dot and bottom dot on the divider line */
+.modal-content .modal-body-grid::after {
+  content: '';
+  position: absolute;
+  top: 45%;
+  left: 50%;
+  width: 6px;
+  height: 6px;
+  background-color: #586ff5;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  box-shadow: 0 0 0 3px rgba(88, 111, 245, 0.2), 
+              0 60px 0 0 #586ff5, 
+              0 60px 0 3px rgba(88, 111, 245, 0.2);
 }
 
 .modal-body-grid {
@@ -224,12 +275,46 @@
 }
 
 .column-title {
-  color: #1173ba;
+  color: #0a0a0a;
   font-size: 16px;
   margin-top: 0;
   margin-bottom: 20px;
   border-bottom: 1px solid #eee;
   padding-bottom: 10px;
+}
+
+.modal-content .column-title {
+  color: #586ff5;
+  font-size: 16px;
+  margin-top: 0;
+  margin-bottom: 20px;
+  border-bottom: 1px solid #586ff5;
+  padding-bottom: 10px;
+}
+
+.modal-content .detail-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 0;
+  margin-bottom: 0;
+  width: 100%;
+}
+
+.modal-content .detail-label {
+  color: #6b7280;
+  font-size: 14px;
+  font-weight: 500;
+  width: auto;
+  flex-shrink: 0;
+}
+
+.modal-content .detail-value {
+  color: #111827;
+  font-size: 14px;
+  font-weight: 600;
+  text-align: right;
+  flex-grow: 1;
 }
 
 .detail-row {
@@ -255,4 +340,544 @@
 .status-text {
   color: #1976d2;
   font-weight: 600;
+}
+
+/* Create Appointment Modal Styles */
+.create-appointment-modal {
+  max-height: 95vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.create-appointment-modal form {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  max-height: calc(95vh - 70px);
+  /* header height */
+}
+
+.create-appointment-modal .modal-body-grid {
+  overflow-y: auto;
+  flex: 1;
+  max-height: 60vh;
+}
+
+.form-group {
+  margin-bottom: 16px;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.form-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #4b5563;
+  margin-bottom: 6px;
+  display: block;
+}
+
+.form-input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  font-size: 14px;
+  outline: none;
+  background-color: #fff;
+  transition: border-color 0.2s;
+  box-sizing: border-box;
+}
+
+.form-input:focus {
+  border-color: #1a4d80;
+}
+
+.form-input:disabled {
+  background-color: #f3f4f6;
+  color: #9ca3af;
+  cursor: not-allowed;
+}
+
+.gender-btn-group {
+  display: flex;
+  gap: 10px;
+}
+
+.gender-btn {
+  flex: 1;
+  padding: 10px;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  background-color: #fff;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  color: #4b5563;
+  transition: all 0.2s;
+}
+
+.gender-btn.active {
+  background-color: #5F76FE;
+  color: #f3f4f9;
+  font-size: 16px;
+  /* border-color: #5F76FE; */
+}
+
+.gender-btn:hover:not(.active) {
+  background-color: #f3f4f6;
+}
+
+.clear-patient-btn {
+  padding: 8px 12px;
+  background-color: #f3f4f6;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  font-size: 13px;
+  cursor: pointer;
+  color: #4b5563;
+  transition: background-color 0.2s;
+}
+
+.clear-patient-btn:hover {
+  background-color: #e5e7eb;
+}
+
+.timings-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+  gap: 8px;
+  margin-top: 5px;
+}
+
+.timing-card-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 6px;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  background-color: #fff;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 500;
+  color: #4b5563;
+  transition: all 0.2s;
+}
+
+.slot-checkbox {
+  cursor: pointer;
+  width: 14px;
+  height: 14px;
+  accent-color: #1a4d80;
+  pointer-events: none;
+}
+
+.timing-card-btn.selected .slot-checkbox {
+  accent-color: #5F76FE;
+}
+
+.timing-card-btn:hover:not(:disabled):not(.selected) {
+  background-color: #f1f7fd;
+  border-color: #1a4d80;
+}
+
+.timing-card-btn.selected {
+  background-color: #D3D9FF;
+  color: #5F76FE;
+  border-color: #5F76FE;
+}
+
+.timing-card-btn.booked {
+  background-color: #f3f4f6;
+  color: #d1d5db;
+  border-color: #e5e7eb;
+  text-decoration: line-through;
+  cursor: not-allowed;
+}
+
+.no-timings-text {
+  font-size: 13px;
+  color: #9ca3af;
+  margin-top: 5px;
+  font-style: italic;
+}
+
+.checkbox-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  padding: 12px;
+  cursor: pointer;
+  margin-top: 15px;
+  background-color: #f9fafb;
+  transition: background-color 0.2s;
+}
+
+.checkbox-group:hover {
+  background-color: #f3f4f6;
+}
+
+.checkbox-group input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+}
+
+.modal-footer-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 20px 25px;
+  border-top: 1px solid #eee;
+}
+
+.cancel-btn {
+  padding: 10px 20px;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  background-color: #fff;
+  color: #4b5563;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background-color 0.2s;
+}
+
+.cancel-btn:hover {
+  background-color: #f9fafb;
+}
+
+.confirm-btn {
+  padding: 10px 20px;
+  border: 1px solid #D3D9FF;
+  border-radius: 25px;
+  background-color: #D3D9FF;
+  color: #5F76FE;
+  cursor: pointer;
+  font-size: 15px;
+  font-weight: 700;
+  transition: background-color 0.2s;
+}
+
+.confirm-btn:hover:not(:disabled) {
+  background-color: #5F76FE;
+  color: #ffffff;
+  border-color: #5F76FE;
+}
+
+.confirm-btn:disabled {
+  background-color: #e5e7eb;
+  color: #9ca3af;
+  border-color: #d1d5db;
+  cursor: not-allowed;
+}
+
+@media (max-width: 768px) {
+  .modal-content .modal-body-grid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+    padding: 20px;
+  }
+  .modal-content .modal-body-grid::before,
+  .modal-content .modal-body-grid::after {
+    display: none;
+  }
+  .create-appointment-modal .modal-body-grid,
+  .create-appointment-inline-container .modal-body-grid {
+    grid-template-columns: 1fr;
+    gap: 15px;
+    padding: 15px;
+  }
+}
+
+.create-appointment-inline-container {
+  background-color: #ffffff;
+  border-radius: 8px;
+  padding: 25px;
+  /* box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05); */
+  border: 1px solid #e5e7eb;
+  animation: fadeInInline 0.3s ease-out;
+}
+
+@keyframes fadeInInline {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.date-picker-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.date-picker-input-wrapper .date-input {
+  width: 100%;
+  padding: 10px 36px 10px 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  font-size: 14px;
+  outline: none;
+  background-color: #fff;
+  transition: border-color 0.2s;
+  box-sizing: border-box;
+  cursor: pointer;
+}
+
+.date-picker-input-wrapper .date-input:focus {
+  border-color: #1a4d80;
+}
+
+.date-picker-input-wrapper .calendar-icon {
+  position: absolute;
+  right: 12px;
+  pointer-events: none;
+  color: #4b5563;
+}
+
+.react-datepicker-wrapper {
+  width: 100%;
+}
+
+/* Premium overrides for React Datepicker */
+.react-datepicker {
+  font-family: 'Inter', sans-serif !important;
+  border: 1px solid #e5e7eb !important;
+  border-radius: 8px !important;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05) !important;
+}
+
+.react-datepicker__header {
+  background-color: #f9fafb !important;
+  border-bottom: 1px solid #e5e7eb !important;
+  border-top-left-radius: 8px !important;
+  border-top-right-radius: 8px !important;
+  padding-top: 10px !important;
+}
+
+.react-datepicker__day-name,
+.react-datepicker__day,
+.react-datepicker__time-name {
+  color: #374151 !important;
+  width: 2rem !important;
+  line-height: 2rem !important;
+  margin: 0.2rem !important;
+}
+
+.react-datepicker__day--selected,
+.react-datepicker__day--keyboard-selected {
+  background-color: #D3D9FF !important;
+  color: #5F76FE !important;
+  border-radius: 50% !important;
+  font-weight: bold !important;
+}
+
+.react-datepicker__day--selected:hover {
+  background-color: #c0c7fa !important;
+}
+
+.react-datepicker__day:hover {
+  background-color: #f3f4f6 !important;
+  border-radius: 50% !important;
+}
+
+.react-datepicker__day--today {
+  font-weight: normal !important;
+  border: 1px solid #5F76FE !important;
+  border-radius: 50% !important;
+}
+
+.react-datepicker__day--today.react-datepicker__day--selected {
+  background-color: #D3D9FF !important;
+  color: #5F76FE !important;
+  border: none !important;
+  font-weight: bold !important;
+}
+
+.react-datepicker__day--today.react-datepicker__day--disabled {
+  border: none !important;
+  font-weight: normal !important;
+  color: #d1d5db !important;
+}
+
+.react-datepicker__day--disabled {
+  color: #d1d5db !important;
+  text-decoration: none !important;
+}
+
+.react-datepicker__day--disabled:hover {
+  background-color: transparent !important;
+  cursor: not-allowed !important;
+}
+
+.react-datepicker__navigation {
+  top: 12px !important;
+}
+
+.react-datepicker__header__dropdown {
+  margin-top: 8px;
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+}
+
+.react-datepicker__month-select,
+.react-datepicker__year-select {
+  padding: 4px 8px !important;
+  border: 1px solid #e5e7eb !important;
+  border-radius: 6px !important;
+  font-size: 13px !important;
+  color: #374151 !important;
+  outline: none !important;
+  background-color: #fff !important;
+  cursor: pointer !important;
+}
+
+.react-datepicker__month-select:focus,
+.react-datepicker__year-select:focus {
+  border-color: #1a4d80 !important;
+}
+
+.past-scheduled-day {
+  border: 1px solid #d1d5db !important;
+  color: #9ca3af !important;
+  border-radius: 50% !important;
+}
+
+.scheduled-day {
+  border: 1px solid #5F76FE !important;
+  border-radius: 50% !important;
+}
+
+/* Searchable Dropdown CSS */
+.searchable-dropdown-container {
+  position: relative;
+  width: 100%;
+}
+
+.searchable-dropdown-trigger {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  background-color: #fff;
+  font-size: 14px;
+  color: #374151;
+  text-align: left;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  outline: none;
+  min-height: 42px;
+  box-sizing: border-box;
+}
+
+.searchable-dropdown-trigger:disabled {
+  background-color: #f3f4f6;
+  color: #9ca3af;
+  cursor: not-allowed;
+}
+
+.searchable-dropdown-trigger .arrow-icon {
+  font-size: 10px;
+  color: #9ca3af;
+  transition: transform 0.2s;
+}
+
+.searchable-dropdown-trigger.open .arrow-icon {
+  transform: rotate(180deg);
+}
+
+.searchable-dropdown-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  margin-top: 4px;
+  background-color: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  z-index: 50;
+  max-height: 250px;
+  display: flex;
+  flex-direction: column;
+}
+
+.searchable-dropdown-search-wrapper {
+  padding: 8px;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.searchable-dropdown-search-input {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  font-size: 13px;
+  outline: none;
+  background-color: #f9fafb;
+  box-sizing: border-box;
+}
+
+.searchable-dropdown-search-input:focus {
+  border-color: #5F76FE;
+  background-color: #fff;
+}
+
+.searchable-dropdown-options-list {
+  overflow-y: auto;
+  max-height: 180px;
+  margin: 0;
+  padding: 4px 0;
+  list-style: none;
+}
+
+.searchable-dropdown-option {
+  padding: 8px 14px;
+  font-size: 13px;
+  color: #374151;
+  cursor: pointer;
+  transition: background-color 0.1s;
+}
+
+.searchable-dropdown-option:hover {
+  background-color: #f3f4f6;
+  color: #5F76FE;
+}
+
+.searchable-dropdown-option.selected {
+  background-color: #D3D9FF;
+  color: #5F76FE;
+  font-weight: 600;
+}
+
+.searchable-dropdown-no-results {
+  padding: 12px 14px;
+  font-size: 13px;
+  color: #9ca3af;
+  text-align: center;
+}
+
+.dept-tag-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  background-color: #f3f4f6;
+  border: 1px solid #e5e7eb;
+  border-radius: 4px;
+  font-size: 12px;
+  color: #4b5563;
+  font-weight: 500;
 }

@@ -513,11 +513,23 @@ export default function AppointmentScreen({ route }: any) {
                       <Ionicons name="medical-outline" size={14} color="#666" />
                       <Text style={[styles.detailText, { width: 280 }]}>{item.treatment_category || 'General'}</Text>
                     </View>
-
                     {(() => {
                       const isDoctorCreated = !!(item.whatsapp_number && item.whatsapp_number.includes('|') && item.whatsapp_number.split('|')[1].startsWith('Doctor'));
-                      const badgeBgColor = isDoctorCreated ? '#EEF2FF' : '#E6F7F0';
-                      const badgeTextColor = isDoctorCreated ? '#1D4ED8' : '#059669';
+                      const isAdminCreated = !!(item.whatsapp_number && item.whatsapp_number.includes('|') && item.whatsapp_number.split('|')[1] === 'Admin');
+                      
+                      let badgeBgColor = '#E6F7F0';
+                      if (isDoctorCreated) {
+                        badgeBgColor = '#EEF2FF';
+                      } else if (isAdminCreated) {
+                        badgeBgColor = '#FEE2E2';
+                      }
+
+                      let badgeTextColor = '#059669';
+                      if (isDoctorCreated) {
+                        badgeTextColor = '#1D4ED8';
+                      } else if (isAdminCreated) {
+                        badgeTextColor = '#EF4444';
+                      }
                       
                       let creatorText = 'Patient';
                       if (isDoctorCreated) {
@@ -529,12 +541,14 @@ export default function AppointmentScreen({ route }: any) {
                         } else {
                           creatorText = 'Doctor';
                         }
+                      } else if (isAdminCreated) {
+                        creatorText = 'Admin';
                       }
 
                       return (
                         <View style={[styles.createdByContainer, { backgroundColor: badgeBgColor }]}>
                           <Ionicons
-                            name={isDoctorCreated ? "person-add" : "person"}
+                            name={(isDoctorCreated || isAdminCreated) ? "person-add" : "person"}
                             size={12}
                             color={badgeTextColor}
                             style={{ marginRight: 4 }}

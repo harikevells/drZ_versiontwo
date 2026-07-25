@@ -560,7 +560,7 @@ const Schedule = () => {
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px' }}>
                     {formatDate(schedule.date)} {getSummaryTimeString(schedule.time)}
                     <FaInfoCircle 
-                      style={{ color: '#1173ba', cursor: 'pointer', fontSize: '16px' }} 
+                      style={{ color: '#5F76FE', cursor: 'pointer', fontSize: '16px' }} 
                       title="View/Reschedule Slots"
                       onClick={() => handleInfoClick(schedule)} 
                     />

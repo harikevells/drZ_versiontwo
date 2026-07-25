@@ -7,7 +7,7 @@
   color: #114B5F;
   font-size: 24px;
   font-weight: 700;
-    margin-bottom: 15px !important;
+  margin-bottom: 15px !important;
 
 }
 
@@ -78,7 +78,8 @@
   display: flex;
   align-items: center;
   gap: 30px;
-  height: 48px; /* Match input height */
+  height: 48px;
+  /* Match input height */
 }
 
 .radio-label {
@@ -111,7 +112,7 @@
   height: 20px;
 }
 
-.switch input { 
+.switch input {
   opacity: 0;
   width: 0;
   height: 0;
@@ -120,7 +121,10 @@
 .slider {
   position: absolute;
   cursor: pointer;
-  top: 0; left: 0; right: 0; bottom: 0;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
   background-color: #ccc;
   transition: .4s;
 }
@@ -136,15 +140,15 @@
   transition: .4s;
 }
 
-input:checked + .slider {
+input:checked+.slider {
   background-color: #22c55e;
 }
 
-input:focus + .slider {
+input:focus+.slider {
   box-shadow: 0 0 1px #22c55e;
 }
 
-input:checked + .slider:before {
+input:checked+.slider:before {
   transform: translateX(20px);
 }
 
@@ -175,7 +179,7 @@ input:checked + .slider:before {
 
 .submit-btn:hover {
   background-color: #5F76FE;
-  color : white;
+  color: white;
 }
 
 /* List section */
@@ -193,7 +197,8 @@ input:checked + .slider:before {
 }
 
 .add-btn {
-  background-color: #e14068; /* Pinkish red from mockup */
+  background-color: #e14068;
+  /* Pinkish red from mockup */
   color: white;
   border: none;
   border-radius: 6px;
@@ -219,14 +224,17 @@ input:checked + .slider:before {
   border-collapse: separate;
   border-spacing: 0;
 }
+
 .data-table th:first-child {
   border-top-left-radius: 20px;
   border-bottom-left-radius: 20px;
 }
+
 .data-table th:last-child {
   border-top-right-radius: 20px;
   border-bottom-right-radius: 20px;
 }
+
 .data-table th {
   background-color: #D3D9FF;
   color: #010101;
@@ -287,8 +295,8 @@ input:checked + .slider:before {
 }
 
 .dept-badge {
-  background-color: #e0f2fe;
-  color: #0369a1;
+  background-color: #D3D9FF;
+  color: #5F76FE;
   font-size: 12px;
   padding: 2px 6px;
   border-radius: 12px;
