@@ -27,6 +27,8 @@ const CustomDateInput = React.forwardRef(({ value, onClick, placeholder }, ref) 
 ));
 
 const tamilTranslations = {
+  'General': 'பொது',
+  'General Care': 'பொது நலம்',
   'Cardiology': 'இருதயவியல்',
   'Neurology': 'நரம்பியல்',
   'Orthopedics': 'எலும்பியல்',

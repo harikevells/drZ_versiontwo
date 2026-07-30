@@ -7,7 +7,7 @@ import Pagination from '../components/Pagination';
 import './DoctorManagement.css';
 
 const DEPARTMENT_OPTIONS = [
-  'Cardiology', 'Neurology', 'Orthopedics', 'Pediatrics', 
+  'General', 'General Care', 'Cardiology', 'Neurology', 'Orthopedics', 'Pediatrics', 
   'Dermatology', 'General Surgery', 'Psychiatry', 'Gynecology',
   'Oncology', 'Ophthalmology', 'Urology', 'ENT', 'Dentistry', 'Radiology'
 ];

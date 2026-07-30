@@ -295,6 +295,8 @@ const BookAppointmentScreen = ({ navigation }) => {
       });
 
       const tamilTranslations = {
+        'General': 'பொது',
+        'General Care': 'பொது நலம்',
         'Cardiology': 'இருதயவியல்',
         'Neurology': 'நரம்பியல்',
         'Orthopedics': 'எலும்பியல்',

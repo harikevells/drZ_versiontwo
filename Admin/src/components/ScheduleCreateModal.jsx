@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FaTimes, FaChevronLeft, FaChevronRight } from 'react-icons/fa';
+import { FaTimes, FaChevronLeft, FaChevronRight, FaCheckSquare } from 'react-icons/fa';
 import './RescheduleModal.css'; // Reusing styles from RescheduleModal
 
 const ScheduleCreateModal = ({ isOpen, onClose, onSave, initialDate, initialSlots, doctorId, doctorName, allSchedules, editingId }) => {
@@ -157,6 +157,31 @@ const ScheduleCreateModal = ({ isOpen, onClose, onSave, initialDate, initialSlot
     }
   };
 
+  const getSelectableSlots = () => {
+    return fullDaySlots.filter(slot => {
+      if (isSlotBooked(slot)) return false;
+      if (selectedDate !== getLocalDateString()) return true;
+      const slotMinutes = getSlotStartMinutes(slot);
+      const now = new Date();
+      const currentMinutes = now.getHours() * 60 + now.getMinutes();
+      return slotMinutes >= currentMinutes;
+    });
+  };
+
+  const selectableSlots = getSelectableSlots();
+  const isAllSelected = selectableSlots.length > 0 && selectableSlots.every(slot => selectedSlots.includes(slot));
+
+  // Select/Deselect all non-booked slots
+  const handleSelectAll = () => {
+    if (isAllSelected) {
+      // If all are selected, deselect them all
+      setSelectedSlots([]);
+    } else {
+      // Otherwise, select all selectable slots
+      setSelectedSlots(selectableSlots);
+    }
+  };
+
   const handlePrevMonth = () => {
     if (currentMonth === 0) {
       setCurrentMonth(11);
@@ -193,6 +218,8 @@ const ScheduleCreateModal = ({ isOpen, onClose, onSave, initialDate, initialSlot
   };
 
   const { emptyPrev, days, emptyNext, monthYear } = getCalendarDays();
+  const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+  const yearOptions = Array.from({ length: 21 }, (_, index) => new Date().getFullYear() - 10 + index);
 
   const getDisplayDate = () => {
     if (!selectedDate) return '';
@@ -229,7 +256,26 @@ const ScheduleCreateModal = ({ isOpen, onClose, onSave, initialDate, initialSlot
           <div className="calendar-section">
             <div className="calendar-header">
               <FaChevronLeft className="nav-icon" onClick={handlePrevMonth} style={{cursor: 'pointer'}} />
-              <span>{monthYear}</span>
+              <div className="calendar-nav-selects">
+                <select
+                  className="calendar-nav-select"
+                  value={currentMonth}
+                  onChange={(e) => setCurrentMonth(Number(e.target.value))}
+                >
+                  {monthNames.map((name, index) => (
+                    <option key={name} value={index}>{name}</option>
+                  ))}
+                </select>
+                <select
+                  className="calendar-nav-select"
+                  value={currentYear}
+                  onChange={(e) => setCurrentYear(Number(e.target.value))}
+                >
+                  {yearOptions.map((year) => (
+                    <option key={year} value={year}>{year}</option>
+                  ))}
+                </select>
+              </div>
               <FaChevronRight className="nav-icon" onClick={handleNextMonth} style={{cursor: 'pointer'}} />
             </div>
             <div className="calendar-grid">
@@ -263,7 +309,29 @@ const ScheduleCreateModal = ({ isOpen, onClose, onSave, initialDate, initialSlot
           
           {/* Time Slots Section */}
           <div className="time-section">
-            <h3 className="time-header">{getDisplayDate()}</h3>
+            <div className="time-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <h3>{getDisplayDate()}</h3>
+              <button 
+                onClick={handleSelectAll} 
+                style={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  gap: '6px', 
+                  background: isAllSelected ? 'rgb(95, 118, 254)' : 'rgb(211, 217, 255)', 
+                  border: 'none', 
+                  padding: '6px 12px', 
+                  borderRadius: '6px', 
+                  cursor: 'pointer',
+                  color: isAllSelected ? 'white' : 'rgb(95, 118, 254)',
+                  fontSize: '14px',
+                  fontWeight: '500'
+                }}
+                title="Select/Deselect All"
+                type="button"
+              >
+                <FaCheckSquare /> {isAllSelected ? 'Deselect All' : 'Select All'}
+              </button>
+            </div>
             <div className="slots-list">
               {fullDaySlots
                 .filter((slot) => {

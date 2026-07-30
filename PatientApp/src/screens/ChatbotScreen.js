@@ -287,6 +287,7 @@ const matchCategoryOption = (spokenText, options) => {
   const cleanSpoken = spokenText.toLowerCase().replace(/[^a-z0-9\u0B80-\u0BFF]/g, '');
 
   const categoryPhonetic = {
+    'general care': ['ஜெனரல் கேர்', 'ஜெனரல்கேர்', 'பொது நலம்', 'பொதுநலம்'],
     'general': ['ஜெனரல்'],
     'general medicine': ['ஜெனரல் மெடிசின்', 'ஜெனரல் மெடிசன்'],
     'cardiology': ['கார்டியாலஜி'],
@@ -1222,6 +1223,7 @@ const ChatbotScreen = ({ navigation }) => {
         }
       });
       const departmentTranslations = {
+        "General Care": "பொது நலம்",
         "General": "பொது",
         "General Medicine": "பொது மருத்துவம்",
         "Cardiology": "கார்டியாலஜி",
@@ -1502,6 +1504,7 @@ const ChatbotScreen = ({ navigation }) => {
           });
 
           const departmentTranslations = {
+            "General Care": "பொது நலம்",
             "General": "பொது",
             "General Medicine": "பொது மருத்துவம்",
             "Cardiology": "கார்டியாலஜி",
@@ -1987,6 +1990,7 @@ const ChatbotScreen = ({ navigation }) => {
               }
             });
             const departmentTranslations = {
+              "General Care": "பொது நலம்",
               "General": "பொது",
               "General Medicine": "பொது மருத்துவம்",
               "Cardiology": "கார்டியாலஜி",

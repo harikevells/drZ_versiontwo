@@ -70,6 +70,8 @@ const parseTimeStringToMinutes = (timeStr: string) => {
 };
 
 const tamilTranslations: Record<string, string> = {
+  'General': 'பொது',
+  'General Care': 'பொது நலம்',
   'Cardiology': 'இருதயவியல்',
   'Neurology': 'நரம்பியல்',
   'Orthopedics': 'எலும்பியல்',

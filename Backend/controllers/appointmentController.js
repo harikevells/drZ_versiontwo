@@ -213,7 +213,7 @@ const processFollowupReminders = async (req, res) => {
         for (const appt of followups) {
             // Notify Doctor
             if (appt.doctor_name) {
-                const doctorMessage = `Today your patient ${appt.patient_name} has a follow-up appointment. Doctor: Dr. ${appt.doctor_name}, Patient: ${appt.patient_name}, Date: ${formattedDate}.`;
+                const doctorMessage = `Today your patient ${appt.patient_name} has a follow-up appointment. Doctor: Dr. ${appt.doctor_name}, Date: ${formattedDate}.`;
                 await createNotification(
                     'doctor',
                     appt.doctor_name,

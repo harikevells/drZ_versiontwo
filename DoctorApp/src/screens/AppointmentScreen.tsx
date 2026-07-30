@@ -216,9 +216,9 @@ export default function AppointmentScreen({ route }: any) {
     fetchAppointments(false);
   };
 
-  const handleStatusUpdate = async (id: string, status: string) => {
+  const handleStatusUpdate = async (id: string, status: string, followupDate?: string) => {
     try {
-      await axios.put(`${API_URL}/${id}/status`, { status });
+      await axios.put(`${API_URL}/${id}/status`, { status, followupDate });
       Alert.alert('Success', `Appointment ${status.toLowerCase()} successfully!`);
       fetchAppointments(false);
     } catch (error) {
@@ -628,9 +628,9 @@ export default function AppointmentScreen({ route }: any) {
       <CompleteModal
         visible={completeVisible}
         onClose={() => setCompleteVisible(false)}
-        onComplete={() => {
+        onComplete={(followupDate?: string) => {
           setCompleteVisible(false);
-          handleStatusUpdate(selectedPatient?.id || selectedPatient?._id, 'Completed');
+          handleStatusUpdate(selectedPatient?.id || selectedPatient?._id, 'Completed', followupDate);
         }}
         patientName={selectedPatient?.patient_name}
       />

@@ -228,6 +228,8 @@ const RescheduleModal = ({ isOpen, onClose, onSave, initialDate, allSchedules, d
   };
 
   const { emptyPrev, days, emptyNext, monthYear } = getCalendarDays();
+  const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+  const yearOptions = Array.from({ length: 21 }, (_, index) => new Date().getFullYear() - 10 + index);
 
   const getDisplayDate = () => {
     if (!selectedDate) return '';
@@ -257,7 +259,26 @@ const RescheduleModal = ({ isOpen, onClose, onSave, initialDate, allSchedules, d
           <div className="calendar-section">
             <div className="calendar-header">
               <FaChevronLeft className="nav-icon" onClick={handlePrevMonth} style={{cursor: 'pointer'}} />
-              <span>{monthYear}</span>
+              <div className="calendar-nav-selects">
+                <select
+                  className="calendar-nav-select"
+                  value={currentMonth}
+                  onChange={(e) => setCurrentMonth(Number(e.target.value))}
+                >
+                  {monthNames.map((name, index) => (
+                    <option key={name} value={index}>{name}</option>
+                  ))}
+                </select>
+                <select
+                  className="calendar-nav-select"
+                  value={currentYear}
+                  onChange={(e) => setCurrentYear(Number(e.target.value))}
+                >
+                  {yearOptions.map((year) => (
+                    <option key={year} value={year}>{year}</option>
+                  ))}
+                </select>
+              </div>
               <FaChevronRight className="nav-icon" onClick={handleNextMonth} style={{cursor: 'pointer'}} />
             </div>
             <div className="calendar-grid">

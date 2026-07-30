@@ -118,6 +118,9 @@ const NotificationPatient = ({ navigation }) => {
         } else if (n.title.includes('Completed')) {
           iconColor = '#8E44AD';
           iconName = 'check-all';
+        } else if (n.title.includes('Follow-up')) {
+          iconColor = '#1E90FF';
+          iconName = 'calendar-heart';
         }
 
         return {
