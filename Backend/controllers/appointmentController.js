@@ -76,6 +76,29 @@ const updateAppointmentStatus = async (req, res) => {
             );
         }
 
+        // If follow-up date is set, notify doctor and patient about the follow-up
+        if (followupDate && status === 'Completed') {
+            // Notify Doctor about follow-up
+            await createNotification(
+                'doctor',
+                appointment.doctor_name,
+                'Follow-up Reminder',
+                `Today your patient ${appointment.patient_name} has a follow-up appointment. Doctor: Dr. ${appointment.doctor_name}, Patient: ${appointment.patient_name}, Date: ${followupDate}.`,
+                'followup_reminder'
+            );
+
+            // Notify Patient about follow-up
+            if (appointment.login_mobile) {
+                await createNotification(
+                    'patient',
+                    appointment.login_mobile,
+                    'Follow-up Reminder',
+                    `Today you need to consult Dr. ${appointment.doctor_name}. Patient: ${appointment.patient_name}, Date: ${followupDate}. Please visit the hospital for your follow-up appointment.`,
+                    'followup_reminder'
+                );
+            }
+        }
+
         res.json(appointment);
     } catch (err) {
         res.status(500).json({ error: err.message });
