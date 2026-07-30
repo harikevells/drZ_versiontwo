@@ -40,11 +40,12 @@ const getDoctorDashboard = async (req, res) => {
 const updateAppointmentStatus = async (req, res) => {
     try {
         const { id } = req.params;
-        const { status, appointment_date, appointment_time } = req.body; 
+        const { status, appointment_date, appointment_time, followupDate } = req.body; 
         
         let updateData = { status };
         if (appointment_date) updateData.appointment_date = appointment_date;
         if (appointment_time) updateData.appointment_time = appointment_time;
+        if (followupDate && status === 'Completed') updateData.followup_date = followupDate;
 
         const appointment = await Appointment.findByIdAndUpdate(id, updateData, { new: true });
         if (!appointment) return res.status(404).json({ error: 'Appointment not found' });
