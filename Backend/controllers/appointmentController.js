@@ -76,29 +76,6 @@ const updateAppointmentStatus = async (req, res) => {
             );
         }
 
-        // If follow-up date is set, notify doctor and patient about the follow-up
-        if (followupDate && status === 'Completed') {
-            // Notify Doctor about follow-up
-            await createNotification(
-                'doctor',
-                appointment.doctor_name,
-                'Follow-up Reminder',
-                `Today your patient ${appointment.patient_name} has a follow-up appointment. Doctor: Dr. ${appointment.doctor_name}, Patient: ${appointment.patient_name}, Date: ${followupDate}.`,
-                'followup_reminder'
-            );
-
-            // Notify Patient about follow-up
-            if (appointment.login_mobile) {
-                await createNotification(
-                    'patient',
-                    appointment.login_mobile,
-                    'Follow-up Reminder',
-                    `Today you need to consult Dr. ${appointment.doctor_name}. Patient: ${appointment.patient_name}, Date: ${followupDate}. Please visit the hospital for your follow-up appointment.`,
-                    'followup_reminder'
-                );
-            }
-        }
-
         res.json(appointment);
     } catch (err) {
         res.status(500).json({ error: err.message });
@@ -216,4 +193,54 @@ const exportDoctorAppointments = async (req, res) => {
     }
 };
 
-module.exports = { getDoctorDashboard, updateAppointmentStatus, getAllDoctorAppointments, getBookedTimingsByDate, exportDoctorAppointments };
+// Process follow-up reminders - sends notification to doctor and patient on the follow-up date
+const processFollowupReminders = async (req, res) => {
+    try {
+        const today = new Date();
+        const day = String(today.getDate()).padStart(2, '0');
+        const month = String(today.getMonth() + 1).padStart(2, '0');
+        const year = today.getFullYear();
+        const formattedDate = `${day}/${month}/${year}`;
+
+        // Find all appointments with follow-up date matching today
+        const followups = await Appointment.find({ followup_date: formattedDate });
+
+        if (followups.length === 0) {
+            return res.json({ message: 'No follow-up appointments for today.', date: formattedDate, count: 0 });
+        }
+
+        let sentCount = 0;
+        for (const appt of followups) {
+            // Notify Doctor
+            if (appt.doctor_name) {
+                const doctorMessage = `Today your patient ${appt.patient_name} has a follow-up appointment. Doctor: Dr. ${appt.doctor_name}, Patient: ${appt.patient_name}, Date: ${formattedDate}.`;
+                await createNotification(
+                    'doctor',
+                    appt.doctor_name,
+                    'Follow-up Reminder',
+                    doctorMessage,
+                    'followup_reminder'
+                );
+            }
+
+            // Notify Patient
+            if (appt.login_mobile) {
+                const patientMessage = `Today you need to consult Dr. ${appt.doctor_name}. Patient: ${appt.patient_name}, Date: ${formattedDate}. Please visit the hospital for your follow-up appointment.`;
+                await createNotification(
+                    'patient',
+                    appt.login_mobile,
+                    'Follow-up Reminder',
+                    patientMessage,
+                    'followup_reminder'
+                );
+            }
+            sentCount++;
+        }
+
+        res.json({ message: `Follow-up reminders sent successfully.`, date: formattedDate, count: sentCount });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+};
+
+module.exports = { getDoctorDashboard, updateAppointmentStatus, getAllDoctorAppointments, getBookedTimingsByDate, exportDoctorAppointments, processFollowupReminders };
