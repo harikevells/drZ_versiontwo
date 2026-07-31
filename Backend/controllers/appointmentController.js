@@ -9,7 +9,8 @@ const getDoctorDashboard = async (req, res) => {
         const pendingAppointments = await Appointment.countDocuments({ doctor_name: doctorName, status: { $in: ['Pending', 'pending'] } });
         const rescheduleAppointments = await Appointment.countDocuments({ doctor_name: doctorName, status: { $in: ['Rescheduled', 'rescheduled'] } });
         
-        const today = new Date();
+        const istDateStr = new Date().toLocaleString('en-US', { timeZone: 'Asia/Kolkata' });
+        const today = new Date(istDateStr);
         const dd = String(today.getDate()).padStart(2, '0');
         const mm = String(today.getMonth() + 1).padStart(2, '0');
         const yyyy = today.getFullYear();
@@ -196,7 +197,8 @@ const exportDoctorAppointments = async (req, res) => {
 // Process follow-up reminders - sends notification to doctor and patient on the follow-up date
 const processFollowupReminders = async (req, res) => {
     try {
-        const today = new Date();
+        const istDateStr = new Date().toLocaleString('en-US', { timeZone: 'Asia/Kolkata' });
+        const today = new Date(istDateStr);
         const day = String(today.getDate()).padStart(2, '0');
         const month = String(today.getMonth() + 1).padStart(2, '0');
         const year = today.getFullYear();

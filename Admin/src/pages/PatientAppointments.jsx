@@ -27,7 +27,7 @@ const CustomDateInput = React.forwardRef(({ value, onClick, placeholder }, ref) 
 ));
 
 const tamilTranslations = {
-  'General': 'பொது',
+  'General': 'பொது மருத்துவம்',
   'General Care': 'பொது நலம்',
   'Cardiology': 'இருதயவியல்',
   'Neurology': 'நரம்பியல்',
@@ -43,7 +43,9 @@ const tamilTranslations = {
   'ENT': 'காது மூக்கு தொண்டை',
   'Dentistry': 'பல் மருத்துவம்',
   'Radiology': 'கதிரியக்கவியல்',
-  'General Physician': 'பொது மருத்துவர்'
+  'General Physician': 'பொது மருத்துவர்',
+  'Physiotherapy': 'இயன்முறை மருத்துவம்',
+  'Multi Speciality': 'பல்துறை சிறப்பு'
 };
 
 const parseTimeStringToMinutes = (timeStr) => {

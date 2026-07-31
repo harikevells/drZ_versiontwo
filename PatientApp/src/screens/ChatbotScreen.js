@@ -288,7 +288,7 @@ const matchCategoryOption = (spokenText, options) => {
 
   const categoryPhonetic = {
     'general care': ['ஜெனரல் கேர்', 'ஜெனரல்கேர்', 'பொது நலம்', 'பொதுநலம்'],
-    'general': ['ஜெனரல்'],
+    'general': ['ஜெனரல்', 'பொது மருத்துவம்'],
     'general medicine': ['ஜெனரல் மெடிசின்', 'ஜெனரல் மெடிசன்'],
     'cardiology': ['கார்டியாலஜி'],
     'pediatrics': ['பீடியாட்ரிக்ஸ்', 'பிடியாட்ரிக்ஸ்'],
@@ -304,7 +304,9 @@ const matchCategoryOption = (spokenText, options) => {
     'general surgery': ['ஜெனரல் சர்ஜரி'],
     'urology': ['யூராலஜி'],
     'oncology': ['ஆன்காலஜி'],
-    'radiology': ['ரேடியாலஜி']
+    'radiology': ['ரேடியாலஜி'],
+    'physiotherapy': ['இயன்முறை மருத்துவம்'],
+    'multi speciality': ['பல்துறை சிறப்பு']
   };
 
   // 1. Exact match first
@@ -1224,7 +1226,7 @@ const ChatbotScreen = ({ navigation }) => {
       });
       const departmentTranslations = {
         "General Care": "பொது நலம்",
-        "General": "பொது",
+        "General": "பொது மருத்துவம்",
         "General Medicine": "பொது மருத்துவம்",
         "Cardiology": "கார்டியாலஜி",
         "Pediatrics": "குழந்தைகள் மருத்துவம்",
@@ -1241,6 +1243,8 @@ const ChatbotScreen = ({ navigation }) => {
         "Urology": "சிறுநீரகவியல்",
         "Oncology": "புற்றுநோயியல்",
         "Radiology": "கதிரியக்கவியல்",
+        "Physiotherapy": "இயன்முறை மருத்துவம்",
+        "Multi Speciality": "பல்துறை சிறப்பு",
         "Others": "மற்றவை"
       };
       const deptOptions = Array.from(depts).map((d, index) => {

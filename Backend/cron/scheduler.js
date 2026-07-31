@@ -5,12 +5,13 @@ const Appointment = require('../models/Appointment');
 const { createNotification } = require('../controllers/notificationController');
 
 const initCronJobs = () => {
-    // Schedule a job to run every day at 8:00 AM (server time)
+    // Schedule a job to run every day at 8:00 AM IST
     cron.schedule('0 8 * * *', async () => {
         console.log('Running daily schedule check...');
         try {
-            // Get today's date in YYYY-MM-DD format
-            const today = new Date();
+            // Get today's date in YYYY-MM-DD format (IST)
+            const istDateStr = new Date().toLocaleString('en-US', { timeZone: 'Asia/Kolkata' });
+            const today = new Date(istDateStr);
             const year = today.getFullYear();
             const month = String(today.getMonth() + 1).padStart(2, '0');
             const day = String(today.getDate()).padStart(2, '0');
@@ -57,14 +58,17 @@ const initCronJobs = () => {
         } catch (error) {
             console.error('Error running cron job:', error);
         }
+    }, {
+        timezone: "Asia/Kolkata"
     });
 
-    // Schedule a job to run every day at 8:00 AM for follow-up reminders
+    // Schedule a job to run every day at 8:00 AM IST for follow-up reminders
     cron.schedule('0 8 * * *', async () => {
         console.log('Running daily follow-up check...');
         try {
-            // Get today's date in DD/MM/YYYY format
-            const today = new Date();
+            // Get today's date in DD/MM/YYYY format (IST)
+            const istDateStr = new Date().toLocaleString('en-US', { timeZone: 'Asia/Kolkata' });
+            const today = new Date(istDateStr);
             const year = today.getFullYear();
             const month = String(today.getMonth() + 1).padStart(2, '0');
             const day = String(today.getDate()).padStart(2, '0');
@@ -109,6 +113,8 @@ const initCronJobs = () => {
         } catch (error) {
             console.error('Error running follow-up cron job:', error);
         }
+    }, {
+        timezone: "Asia/Kolkata"
     });
 
     console.log('Cron jobs initialized successfully.');

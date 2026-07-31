@@ -9,7 +9,7 @@ import './DoctorManagement.css';
 const DEPARTMENT_OPTIONS = [
   'General', 'General Care', 'Cardiology', 'Neurology', 'Orthopedics', 'Pediatrics', 
   'Dermatology', 'General Surgery', 'Psychiatry', 'Gynecology',
-  'Oncology', 'Ophthalmology', 'Urology', 'ENT', 'Dentistry', 'Radiology'
+  'Oncology', 'Ophthalmology', 'Urology', 'ENT', 'Dentistry', 'Radiology', 'Physiotherapy', 'Multi Speciality'
 ];
 
 const removeTamil = (text) => {

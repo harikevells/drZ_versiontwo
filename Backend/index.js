@@ -40,15 +40,16 @@ if (!process.env.FUNCTIONS_EMULATOR && !process.env.FIREBASE_CONFIG) {
 // Export the Express app as a Firebase Cloud Function in asia-south1 region
 exports.api = onRequest({ region: 'asia-south1', cors: true, maxInstances: 10 }, app);
 
-// Firebase Scheduled Function: runs daily at 8:00 AM IST (2:30 AM UTC) for follow-up reminders
-exports.dailyFollowupReminders = onSchedule({ schedule: '30 2 * * *', region: 'asia-south1', timeZone: 'Asia/Kolkata' }, async (event) => {
+// Firebase Scheduled Function: runs daily at 8:00 AM IST for follow-up reminders
+exports.dailyFollowupReminders = onSchedule({ schedule: '0 8 * * *', region: 'asia-south1', timeZone: 'Asia/Kolkata' }, async (event) => {
     console.log('Running scheduled follow-up reminders...');
     try {
         await connectDB();
         const Appointment = require('./models/Appointment');
         const { createNotification } = require('./controllers/notificationController');
 
-        const today = new Date();
+        const istDateStr = new Date().toLocaleString('en-US', { timeZone: 'Asia/Kolkata' });
+        const today = new Date(istDateStr);
         const day = String(today.getDate()).padStart(2, '0');
         const month = String(today.getMonth() + 1).padStart(2, '0');
         const year = today.getFullYear();
