@@ -60,6 +60,33 @@ const updateAppointmentStatus = async (req, res) => {
             'appointment_status'
         );
 
+        if (followupDate && status === 'Completed') {
+            const istDateStr = new Date().toLocaleString('en-US', { timeZone: 'Asia/Kolkata' });
+            const today = new Date(istDateStr);
+            const dd = String(today.getDate()).padStart(2, '0');
+            const mm = String(today.getMonth() + 1).padStart(2, '0');
+            const yyyy = today.getFullYear();
+            const todayDateStr = `${dd}/${mm}/${yyyy}`;
+
+            if (followupDate === todayDateStr) {
+                // If they schedule a follow-up exactly for today, send the reminder immediately
+                if (appointment.doctor_name) {
+                    await createNotification('doctor', appointment.doctor_name, 'Follow-up Reminder', `Today your patient ${appointment.patient_name} has a follow-up appointment. Doctor: Dr. ${appointment.doctor_name}, Date: ${todayDateStr}.`, 'followup_reminder');
+                }
+                if (appointment.login_mobile) {
+                    await createNotification('patient', appointment.login_mobile, 'Follow-up Reminder', `Today you need to consult Dr. ${appointment.doctor_name}. Patient: ${appointment.patient_name}, Date: ${todayDateStr}. Please visit the hospital for your follow-up appointment.`, 'followup_reminder');
+                }
+            } else {
+                // For future dates, just send a confirmation that it was scheduled
+                if (appointment.doctor_name) {
+                    await createNotification('doctor', appointment.doctor_name, 'Follow-up Scheduled', `You have scheduled a follow-up appointment for patient ${appointment.patient_name} on ${followupDate}.`, 'followup_scheduled');
+                }
+                if (appointment.login_mobile) {
+                    await createNotification('patient', appointment.login_mobile, 'Follow-up Scheduled', `Dr. ${appointment.doctor_name} has scheduled your follow-up appointment on ${followupDate}.`, 'followup_scheduled');
+                }
+            }
+        }
+
         // Notify Patient
         if (appointment.login_mobile) {
             let patientMessage;

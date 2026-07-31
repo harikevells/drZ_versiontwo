@@ -24,8 +24,8 @@ const createNotification = async (role, identifier, title, message, type = 'info
             if (!doc) {
                 // Try case-insensitive search
                 const allDocs = await Doctor.find({});
-                doc = allDocs.find(d => 
-                    (d.doctorName && d.doctorName.toLowerCase() === identifier.toLowerCase()) || 
+                doc = allDocs.find(d =>
+                    (d.doctorName && d.doctorName.toLowerCase() === identifier.toLowerCase()) ||
                     (d.email && d.email.toLowerCase() === identifier.toLowerCase())
                 );
             }
@@ -69,10 +69,10 @@ const createNotification = async (role, identifier, title, message, type = 'info
 const getNotifications = async (req, res) => {
     try {
         const { role, identifier } = req.params;
-        
+
         const notifications = await Notification.find({ role, identifier })
-                                              .sort({ createdAt: -1 })
-                                              .limit(50);
+            .sort({ createdAt: -1 })
+            .limit(50);
         res.status(200).json(notifications);
     } catch (error) {
         res.status(500).json({ message: "Failed to fetch notifications", error: error.message });
@@ -84,7 +84,7 @@ const markAsRead = async (req, res) => {
     try {
         const { id } = req.params;
         const notification = await Notification.findByIdAndUpdate(id, { isRead: true }, { new: true });
-        
+
         if (!notification) {
             return res.status(404).json({ message: "Notification not found" });
         }
