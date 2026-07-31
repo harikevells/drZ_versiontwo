@@ -76,14 +76,6 @@ const updateAppointmentStatus = async (req, res) => {
                 if (appointment.login_mobile) {
                     await createNotification('patient', appointment.login_mobile, 'Follow-up Reminder', `Today you need to consult Dr. ${appointment.doctor_name}. Patient: ${appointment.patient_name}, Date: ${todayDateStr}. Please visit the hospital for your follow-up appointment.`, 'followup_reminder');
                 }
-            } else {
-                // For future dates, just send a confirmation that it was scheduled
-                if (appointment.doctor_name) {
-                    await createNotification('doctor', appointment.doctor_name, 'Follow-up Scheduled', `You have scheduled a follow-up appointment for patient ${appointment.patient_name} on ${followupDate}.`, 'followup_scheduled');
-                }
-                if (appointment.login_mobile) {
-                    await createNotification('patient', appointment.login_mobile, 'Follow-up Scheduled', `Dr. ${appointment.doctor_name} has scheduled your follow-up appointment on ${followupDate}.`, 'followup_scheduled');
-                }
             }
         }
 
