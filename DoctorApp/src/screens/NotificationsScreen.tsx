@@ -135,10 +135,16 @@ export default function NotificationsScreen() {
             {notifications.length === 0 ? (
               <Text style={{ textAlign: 'center', color: '#999', marginTop: 50 }}>No notifications found.</Text>
             ) : (
-              notifications.map((item: any) => (
+              notifications.map((item: any) => {
+                const isFollowUp = item.type === 'followup_scheduled' || item.type === 'followup_reminder' || (item.title || '').toLowerCase().includes('follow-up');
+                
+                return (
                 <TouchableOpacity
                   key={item.id || item._id}
-                  style={[styles.notificationItem, !item.isRead && styles.unreadNotificationItem]}
+                  style={[
+                    styles.notificationItem, 
+                    !item.isRead && (isFollowUp ? styles.unreadFollowUpItem : styles.unreadNotificationItem)
+                  ]}
                   onPress={() => {
                     if (!item.isRead) handleMarkAsRead(item.id || item._id);
                     
@@ -156,7 +162,7 @@ export default function NotificationsScreen() {
                     }
                   }}
                 >
-                  <Text style={[styles.title, !item.isRead && styles.unreadTitle]}>{formatMessageDate(item.title)}</Text>
+                  <Text style={[styles.title, !item.isRead && styles.unreadTitle, isFollowUp && { color: '#2CA01C' }]}>{formatMessageDate(item.title)}</Text>
                   <Text style={styles.description}>{formatMessageDate(item.message)}</Text>
                   <View style={styles.itemFooter}>
                     <Text style={styles.footerText}>{formatDateLeft(item.createdAt)}</Text>
@@ -164,7 +170,8 @@ export default function NotificationsScreen() {
                   </View>
                   {!item.isRead && <View style={styles.redDot} />}
                 </TouchableOpacity>
-              ))
+                );
+              })
             )}
           </ScrollView>
         )}
@@ -229,6 +236,12 @@ const styles = StyleSheet.create({
   },
   unreadNotificationItem: {
     backgroundColor: '#ccdcf3ff',
+    borderRadius: 8,
+    borderBottomWidth: 0,
+    marginBottom: 8,
+  },
+  unreadFollowUpItem: {
+    backgroundColor: '#F0FDF0',
     borderRadius: 8,
     borderBottomWidth: 0,
     marginBottom: 8,

@@ -45,7 +45,7 @@ export default function CompleteModal({ visible, onClose, onComplete, patientNam
             <Ionicons name="close-circle" size={24} color="#666" />
           </TouchableOpacity>
           
-          <Text style={styles.title}>Complete Booking</Text>
+          <Text style={styles.title}>Appointment Complete</Text>
           <Text style={styles.patientName}>{patientName}</Text>
           
           <Text style={styles.message}>Are you sure to complete this booking?</Text>
@@ -81,9 +81,6 @@ export default function CompleteModal({ visible, onClose, onComplete, patientNam
           )}
           
           <View style={styles.buttonRow}>
-            <TouchableOpacity style={[styles.btn, styles.cancelBtn]} onPress={handleClose}>
-              <Text style={styles.btnTextDark}>Cancel</Text>
-            </TouchableOpacity>
             {!showFollowup && (
               <TouchableOpacity style={[styles.btn, styles.followupBtn]} onPress={() => setShowFollowup(true)}>
                 <Text style={styles.btnTextDark}>Follow-up</Text>

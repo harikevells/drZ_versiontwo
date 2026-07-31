@@ -18,7 +18,7 @@ export default function ApproveModal({ visible, onClose, onConfirm, patientName 
             <Ionicons name="close-circle" size={24} color="#666" />
           </TouchableOpacity>
           
-          <Text style={styles.title}>Approve</Text>
+          <Text style={styles.title}>Appointment Approve</Text>
           <Text style={styles.patientName}>{patientName}</Text>
           
           <Text style={styles.message}>Are you sure to Approve Appointment?</Text>

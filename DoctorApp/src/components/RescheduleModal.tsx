@@ -237,7 +237,7 @@ export default function RescheduleModal({ visible, onClose, patientId, doctorNam
             <Ionicons name="close-circle" size={24} color="#666" />
           </TouchableOpacity>
           
-          <Text style={styles.title}>Reschedule appointment</Text>
+          <Text style={styles.title}>Appointment Reschedule</Text>
           
           <Text style={styles.label}>Select Date</Text>
           <TouchableOpacity style={styles.dateInput} onPress={() => setShowCalendar(!showCalendar)}>
