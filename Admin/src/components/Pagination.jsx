@@ -10,32 +10,19 @@ const Pagination = ({ currentPage, totalPages, onPageChange, totalItems, itemsPe
 
   const getPageNumbers = () => {
     const pages = [];
-    
-    if (totalPages <= 7) {
+
+    if (totalPages <= 5) {
       for (let i = 1; i <= totalPages; i++) {
         pages.push(i);
       }
     } else {
-      // Always show page 1
-      pages.push(1);
-      
-      if (currentPage > 4) {
-        pages.push('...');
+      if (currentPage <= 3) {
+        pages.push(1, 2, 3, 4, '...', totalPages);
+      } else if (currentPage >= totalPages - 2) {
+        pages.push(1, '...', totalPages - 3, totalPages - 2, totalPages - 1, totalPages);
+      } else {
+        pages.push(1, '...', currentPage - 1, currentPage, currentPage + 1, '...', totalPages);
       }
-      
-      const start = Math.max(2, currentPage - 1);
-      const end = Math.min(totalPages - 1, currentPage + 1);
-      
-      for (let i = start; i <= end; i++) {
-        pages.push(i);
-      }
-      
-      if (currentPage < totalPages - 3) {
-        pages.push('...');
-      }
-      
-      // Always show last page
-      pages.push(totalPages);
     }
     return pages;
   };
@@ -48,9 +35,9 @@ const Pagination = ({ currentPage, totalPages, onPageChange, totalItems, itemsPe
         Showing {startItem} to {endItem} of {totalItems} entries
       </div>
       <div className="pagination-controls">
-        <button 
-          className="page-arrow" 
-          onClick={() => onPageChange(currentPage - 1)} 
+        <button
+          className="page-arrow"
+          onClick={() => onPageChange(currentPage - 1)}
           disabled={currentPage === 1}
         >
           <FaChevronLeft />
@@ -71,9 +58,9 @@ const Pagination = ({ currentPage, totalPages, onPageChange, totalItems, itemsPe
             );
           })}
         </div>
-        <button 
-          className="page-arrow" 
-          onClick={() => onPageChange(currentPage + 1)} 
+        <button
+          className="page-arrow"
+          onClick={() => onPageChange(currentPage + 1)}
           disabled={currentPage === totalPages}
         >
           <FaChevronRight />
