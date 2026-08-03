@@ -109,6 +109,16 @@ const initCronJobs = () => {
                     );
                     console.log(`Follow-up notification sent to Dr. ${appt.doctor_name}.`);
                 }
+
+                // Notify Admin
+                const adminMessage = `Today patient ${appt.patient_name} has a follow-up appointment with Dr. ${appt.doctor_name}. Date: ${formattedDate}.`;
+                await createNotification(
+                    'admin',
+                    'admin',
+                    'Follow-up Reminder',
+                    adminMessage,
+                    'followup_reminder'
+                );
             }
         } catch (error) {
             console.error('Error running follow-up cron job:', error);

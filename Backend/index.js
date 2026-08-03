@@ -86,6 +86,16 @@ exports.dailyFollowupReminders = onSchedule({ schedule: '0 8 * * *', region: 'as
                     'followup_reminder'
                 );
             }
+
+            // Notify Admin
+            const adminMessage = `Today patient ${appt.patient_name} has a follow-up appointment with Dr. ${appt.doctor_name}. Date: ${formattedDate}.`;
+            await createNotification(
+                'admin',
+                'admin',
+                'Follow-up Reminder',
+                adminMessage,
+                'followup_reminder'
+            );
         }
 
         console.log(`Follow-up reminders sent for ${followups.length} appointments on ${formattedDate}.`);

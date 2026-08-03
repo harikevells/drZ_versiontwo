@@ -4,11 +4,11 @@ const { createNotification } = require('./notificationController');
 const getDoctorDashboard = async (req, res) => {
     try {
         const { doctorName } = req.params;
-        
+
         const totalAttended = await Appointment.countDocuments({ doctor_name: doctorName, status: { $in: ['Completed', 'completed'] } });
         const pendingAppointments = await Appointment.countDocuments({ doctor_name: doctorName, status: { $in: ['Pending', 'pending'] } });
         const rescheduleAppointments = await Appointment.countDocuments({ doctor_name: doctorName, status: { $in: ['Rescheduled', 'rescheduled'] } });
-        
+
         const istDateStr = new Date().toLocaleString('en-US', { timeZone: 'Asia/Kolkata' });
         const today = new Date(istDateStr);
         const dd = String(today.getDate()).padStart(2, '0');
@@ -16,11 +16,11 @@ const getDoctorDashboard = async (req, res) => {
         const yyyy = today.getFullYear();
         const todayDateStr = `${dd}/${mm}/${yyyy}`;
 
-        const todaysAppointments = await Appointment.countDocuments({ 
-            doctor_name: doctorName, 
+        const todaysAppointments = await Appointment.countDocuments({
+            doctor_name: doctorName,
             appointment_date: todayDateStr,
-            status: { $in: ['Pending', 'pending', 'Rescheduled', 'rescheduled', 'Approved', 'approved', 'Completed', 'completed'] } 
-        }); 
+            status: { $in: ['Pending', 'pending', 'Rescheduled', 'rescheduled', 'Approved', 'approved', 'Completed', 'completed'] }
+        });
 
         const patientRequests = await Appointment.find({ doctor_name: doctorName, status: { $in: ['Pending', 'pending', 'Rescheduled', 'rescheduled'] } }).sort({ createdAt: -1 });
 
@@ -41,8 +41,8 @@ const getDoctorDashboard = async (req, res) => {
 const updateAppointmentStatus = async (req, res) => {
     try {
         const { id } = req.params;
-        const { status, appointment_date, appointment_time, followupDate } = req.body; 
-        
+        const { status, appointment_date, appointment_time, followupDate } = req.body;
+
         let updateData = { status };
         if (appointment_date) updateData.appointment_date = appointment_date;
         if (appointment_time) updateData.appointment_time = appointment_time;
@@ -50,7 +50,7 @@ const updateAppointmentStatus = async (req, res) => {
 
         const appointment = await Appointment.findByIdAndUpdate(id, updateData, { new: true });
         if (!appointment) return res.status(404).json({ error: 'Appointment not found' });
-        
+
         // Notify Admin
         await createNotification(
             'admin',
@@ -76,6 +76,19 @@ const updateAppointmentStatus = async (req, res) => {
                 if (appointment.login_mobile) {
                     await createNotification('patient', appointment.login_mobile, 'Follow-up Reminder', `Today you need to consult Dr. ${appointment.doctor_name}. Patient: ${appointment.patient_name}, Date: ${todayDateStr}. Please visit the hospital for your follow-up appointment.`, 'followup_reminder');
                 }
+                
+                // Notify Admin
+                await createNotification('admin', 'admin', 'Follow-up Reminder', `Today patient ${appointment.patient_name} has a follow-up appointment with Dr. ${appointment.doctor_name}. Date: ${todayDateStr}.`, 'followup_reminder');
+            } else if (followupDate) {
+                // If they schedule a follow-up for a future date, send an immediate notification that it was scheduled
+                if (appointment.doctor_name) {
+                    await createNotification('doctor', appointment.doctor_name, 'Follow-up Scheduled', `Follow-up scheduled for patient ${appointment.patient_name} on ${followupDate}.`, 'followup_scheduled');
+                }
+                if (appointment.login_mobile) {
+                    await createNotification('patient', appointment.login_mobile, 'Follow-up Scheduled', `Your follow-up with Dr. ${appointment.doctor_name} is scheduled for ${followupDate}.`, 'followup_scheduled');
+                }
+                // Notify Admin
+                await createNotification('admin', 'admin', 'Follow-up Scheduled', `Follow-up scheduled for patient ${appointment.patient_name} with Dr. ${appointment.doctor_name} on ${followupDate}.`, 'followup_scheduled');
             }
         }
 
@@ -115,14 +128,14 @@ const getAllDoctorAppointments = async (req, res) => {
 const getBookedTimingsByDate = async (req, res) => {
     try {
         const { doctorName, date } = req.params;
-        
+
         // Find all appointments for this doctor on this date that are either pending or approved
-        const appointments = await Appointment.find({ 
-            doctor_name: doctorName, 
+        const appointments = await Appointment.find({
+            doctor_name: doctorName,
             appointment_date: date,
             status: { $in: ['Pending', 'Approved', 'Rescheduled'] }
         });
-        
+
         const bookedTimes = appointments.map(a => a.appointment_time);
         res.json({ bookedTimes });
     } catch (err) {
@@ -138,12 +151,12 @@ const exportDoctorAppointments = async (req, res) => {
         const appointments = await Appointment.find({ doctor_name: doctorName }).sort({ createdAt: -1 });
 
         let filteredAppointments = appointments;
-        
+
         const parseDateStr = (dateStr) => {
             if (!dateStr) return null;
             const parts = dateStr.split('/');
             if (parts.length === 3) {
-              return new Date(parseInt(parts[2]), parseInt(parts[1]) - 1, parseInt(parts[0]));
+                return new Date(parseInt(parts[2]), parseInt(parts[1]) - 1, parseInt(parts[0]));
             }
             const d = new Date(dateStr);
             if (!isNaN(d.getTime())) return d;
@@ -201,7 +214,7 @@ const exportDoctorAppointments = async (req, res) => {
             const pPhone = app.whatsapp_number || app.login_mobile || '';
             const pTime = formatTimeSlot(app.appointment_time || '');
             const pDate = app.appointment_date || '';
-            
+
             csvContent += `"${bookingId}","${app.patient_name || ''}","${pAge}","${pGender}","${pPhone}","${app.treatment_category || ''}","${pDate}","${pTime}","${app.status || ''}","${app.createdAt ? new Date(app.createdAt).toLocaleString() : ''}"\n`;
         });
 
@@ -255,6 +268,17 @@ const processFollowupReminders = async (req, res) => {
                     'followup_reminder'
                 );
             }
+
+            // Notify Admin
+            const adminMessage = `Today patient ${appt.patient_name} has a follow-up appointment with Dr. ${appt.doctor_name}. Date: ${formattedDate}.`;
+            await createNotification(
+                'admin',
+                'admin',
+                'Follow-up Reminder',
+                adminMessage,
+                'followup_reminder'
+            );
+            
             sentCount++;
         }
 

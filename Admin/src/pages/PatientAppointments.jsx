@@ -1323,6 +1323,12 @@ const PatientAppointments = () => {
                   <span className="detail-label">Video call</span>
                   <span className="detail-value">{selectedAppointment.video_call || 'No'}</span>
                 </div>
+                <div className="detail-row">
+                  <span className="detail-label">Follow up date</span>
+                  <span className="detail-value">
+                    {selectedAppointment.followup_date ? selectedAppointment.followup_date : 'N/A'}
+                  </span>
+                </div>
 
                 <div style={{ marginTop: '20px', borderTop: '1px solid #e5e7eb', paddingTop: '15px' }}>
                   {(() => {
