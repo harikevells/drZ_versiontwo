@@ -20,7 +20,8 @@ export default function Header({ title, isNotification = false, variant = 'defau
   const [doctorName, setDoctorName] = useState('Doctor');
   const [greeting, setGreeting] = useState('');
   const [currentDate, setCurrentDate] = useState('');
-  const [unreadCount, setUnreadCount] = useState(0);
+  const [unreadNotificationCount, setUnreadNotificationCount] = useState(0);
+  const [unreadReminderCount, setUnreadReminderCount] = useState(0);
 
   useEffect(() => {
     // Get Doctor Name
@@ -68,8 +69,12 @@ export default function Header({ title, isNotification = false, variant = 'defau
   const fetchUnreadCount = async (name: string) => {
     try {
       const response = await axios.get(`${API_BASE_URL}/notifications/doctor/${name}`);
-      const count = response.data.filter((n: any) => !n.isRead).length;
-      setUnreadCount(count);
+      const unread = response.data.filter((n: any) => !n.isRead);
+      const reminders = unread.filter((n: any) => n.type === 'followup_scheduled' || n.type === 'followup_reminder' || (n.title || '').toLowerCase().includes('follow-up'));
+      const notifications = unread.filter((n: any) => !(n.type === 'followup_scheduled' || n.type === 'followup_reminder' || (n.title || '').toLowerCase().includes('follow-up')));
+      
+      setUnreadReminderCount(reminders.length);
+      setUnreadNotificationCount(notifications.length);
     } catch (error) {
       console.log('Error fetching notification count:', error);
     }
@@ -80,7 +85,7 @@ export default function Header({ title, isNotification = false, variant = 'defau
       <View style={styles.headerContent}>
         <View style={[styles.userInfo, variant === 'appointment' && styles.appointmentUserInfo]}>
           <Image
-            source={require('../assets/DoctorlogoApp1.png')}
+            source={require('../assets/Dclogo.png')}
             style={styles.avatar}
           />
           <View style={styles.textContainer}>
@@ -95,14 +100,25 @@ export default function Header({ title, isNotification = false, variant = 'defau
           </View>
         </View>
         {!isNotification && (
-          <TouchableOpacity style={[styles.notificationIconContainer, variant === 'appointment' && styles.appointmentNotificationIcon]} onPress={() => navigation.navigate('Notifications')}>
-            <Ionicons name="notifications-outline" size={24} color={variant === 'appointment' ? "#0D6EFD" : "#052A3F"} />
-            {unreadCount > 0 && (
-              <View style={styles.badge}>
-                <Text style={styles.badgeText}>{unreadCount > 99 ? '99+' : unreadCount}</Text>
-              </View>
-            )}
-          </TouchableOpacity>
+          <View style={{ flexDirection: 'row' }}>
+            <TouchableOpacity style={[styles.notificationIconContainer, variant === 'appointment' && styles.appointmentNotificationIcon, { marginRight: 15 }]} onPress={() => navigation.navigate('Remainder')}>
+              <Ionicons name="alarm-outline" size={24} color={variant === 'appointment' ? "#0D6EFD" : "#052A3F"} />
+              {unreadReminderCount > 0 && (
+                <View style={styles.badge}>
+                  <Text style={styles.badgeText}>{unreadReminderCount > 99 ? '99+' : unreadReminderCount}</Text>
+                </View>
+              )}
+            </TouchableOpacity>
+            
+            <TouchableOpacity style={[styles.notificationIconContainer, variant === 'appointment' && styles.appointmentNotificationIcon]} onPress={() => navigation.navigate('Notifications')}>
+              <Ionicons name="notifications-outline" size={24} color={variant === 'appointment' ? "#0D6EFD" : "#052A3F"} />
+              {unreadNotificationCount > 0 && (
+                <View style={styles.badge}>
+                  <Text style={styles.badgeText}>{unreadNotificationCount > 99 ? '99+' : unreadNotificationCount}</Text>
+                </View>
+              )}
+            </TouchableOpacity>
+          </View>
         )}
       </View>
     </View>
@@ -139,8 +155,8 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
   },
   avatar: {
-    width: 35,
-    height: 35,
+    width: 50,
+    height: 30,
     resizeMode: 'contain',
   },
   textContainer: {
@@ -191,7 +207,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#0D6EFD',
     paddingTop: 20,
     paddingBottom: 25,
-    marginBottom: -20, 
+    marginBottom: -20,
     height: 200,
     borderBottomLeftRadius: 60,
     borderBottomRightRadius: 60,

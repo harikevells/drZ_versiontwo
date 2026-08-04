@@ -9,7 +9,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { API_BASE_URL } from '../config';
 const API_URL = `${API_BASE_URL}/notifications`;
 
-export default function NotificationsScreen() {
+export default function RemainderScreen() {
   const navigation = useNavigation();
   const isFocused = useIsFocused();
   const [notifications, setNotifications] = useState([]);
@@ -25,7 +25,7 @@ export default function NotificationsScreen() {
         if (parsed.doctorName) {
           const response = await axios.get(`${API_URL}/doctor/${parsed.doctorName}`);
           const filteredNotifications = response.data.filter((n: any) => 
-            !(n.type === 'followup_scheduled' || n.type === 'followup_reminder' || (n.title || '').toLowerCase().includes('follow-up'))
+            (n.type === 'followup_scheduled' || n.type === 'followup_reminder' || (n.title || '').toLowerCase().includes('follow-up'))
           );
           setNotifications(filteredNotifications);
         }
@@ -115,7 +115,7 @@ export default function NotificationsScreen() {
       <View style={styles.customHeader}>
         <TouchableOpacity style={styles.headerBtn} onPress={() => navigation.goBack()}>
           <Ionicons name="arrow-back" size={24} color="#FFF" />
-          <Text style={styles.headerTitle}>Notifications</Text>
+          <Text style={styles.headerTitle}>Remainder</Text>
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.headerBtn} onPress={handleMarkAllAsRead}>
@@ -140,20 +140,11 @@ export default function NotificationsScreen() {
             ) : (
               notifications.map((item: any) => {
                 const titleStr = (item.title || '').toLowerCase();
+                const isScheduled = item.type === 'followup_scheduled' || titleStr.includes('scheduled');
                 
-                let iconName = 'notifications-outline';
-                let iconBgColor = '#F0F4F8';
-                let titleColor = '#4A5568';
-                
-                if (titleStr.includes('appointment')) {
-                  iconName = 'calendar-outline';
-                  iconBgColor = '#E6F0FA';
-                  titleColor = '#0084FF';
-                } else if (titleStr.includes('schedule')) {
-                  iconName = 'time-outline';
-                  iconBgColor = '#FFF5E6';
-                  titleColor = '#FF9500';
-                }
+                const titleColor = isScheduled ? '#2CA01C' : '#5C45B3';
+                const iconBgColor = isScheduled ? '#EAF7EC' : '#F0F0FC';
+                const iconName = isScheduled ? 'calendar-outline' : 'alarm-outline';
 
                 return (
                   <TouchableOpacity
@@ -165,7 +156,8 @@ export default function NotificationsScreen() {
                     onPress={() => {
                       if (!item.isRead) handleMarkAsRead(item.id || item._id);
 
-                      if (!titleStr.includes('schedule')) {
+                      const title = (item.title || '').toLowerCase();
+                      if (!title.includes('schedule')) {
                         navigation.navigate('MainTabs', {
                           screen: 'Appointment',
                           params: {
@@ -194,7 +186,7 @@ export default function NotificationsScreen() {
                         </View>
                       </View>
                     </View>
-                    {!item.isRead && <View style={[styles.redDot, { backgroundColor: titleColor }]} />}
+                    {!item.isRead && <View style={[styles.redDot, { backgroundColor: isScheduled ? '#2CA01C' : '#E74C3C' }]} />}
                   </TouchableOpacity>
                 );
               })

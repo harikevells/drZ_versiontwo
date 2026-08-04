@@ -7,6 +7,7 @@ import SplashScreen from './screens/SplashScreen';
 import LoginScreen from './screens/LoginScreen';
 import MainTabs from './navigation/MainTabs';
 import NotificationsScreen from './screens/NotificationsScreen';
+import RemainderScreen from './screens/Remainder';
 import MedicalCampNotification from './screens/MedicalCampNotification';
 import AppointmentCreate from './screens/AppointmentCreate';
 
@@ -49,6 +50,7 @@ export default function App() {
         <Stack.Screen name="Login" component={LoginScreen} />
         <Stack.Screen name="MainTabs" component={MainTabs} />
         <Stack.Screen name="Notifications" component={NotificationsScreen} />
+        <Stack.Screen name="Remainder" component={RemainderScreen} />
         <Stack.Screen name="MedicalCampNotification" component={MedicalCampNotification} />
         <Stack.Screen name="AppointmentCreate" component={AppointmentCreate} />
       </Stack.Navigator>

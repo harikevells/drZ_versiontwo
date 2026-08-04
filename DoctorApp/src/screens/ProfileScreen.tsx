@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { View, Text, StyleSheet, ScrollView, ActivityIndicator, TouchableOpacity, Alert, Image, Modal, TextInput, Switch } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, ActivityIndicator, TouchableOpacity, Alert, Image, Modal, TextInput, Switch, ImageBackground } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -22,20 +22,20 @@ export default function ProfileScreen() {
         try {
           const res = await axios.get(`${API_BASE_URL}/push-notifications`);
           const allCamps = res.data;
-          
+
           const storedData = await AsyncStorage.getItem('userData');
           let user = storedData ? JSON.parse(storedData) : null;
-          
+
           const seenKey = user?.email ? `seenMedicalCampIds_${user.email}` : 'seenMedicalCampIds';
           const seenStr = await AsyncStorage.getItem(seenKey);
           const seenIds = seenStr ? JSON.parse(seenStr) : [];
-          
+
           if (user?.email) {
             try {
               const docRes = await axios.get(`${API_BASE_URL}/doctors`);
               const fullProfile = docRes.data.find((d: any) => d.email === user.email);
               if (fullProfile) user = { ...user, ...fullProfile };
-            } catch (e) {}
+            } catch (e) { }
           }
           const doctorName = user?.doctorName || '';
 
@@ -43,7 +43,7 @@ export default function ProfileScreen() {
             if (camp.role === 'doctor' && camp.doctorName === doctorName) return false;
             return !seenIds.includes(camp._id);
           }).length;
-          
+
           setUnreadCampsCount(unseenCount);
         } catch (error) {
           console.error('Failed to fetch unread camps count', error);
@@ -120,96 +120,106 @@ export default function ProfileScreen() {
 
   return (
     <View style={styles.container}>
-      <View style={styles.blueTopBackground} />
-      <View style={styles.customHeader}>
-        <TouchableOpacity style={styles.headerBtn} onPress={() => navigation.goBack()}>
-          <Ionicons name="arrow-back" size={24} color="#FFF" />
-          <Text style={styles.headerTitle}>Profile</Text>
-        </TouchableOpacity>
 
-        <TouchableOpacity style={styles.headerBtn} onPress={handleLogout}>
-          <Ionicons name="log-out-outline" size={24} color="#FFF" />
-          <Text style={styles.headerLogoutText}>Logout</Text>
-        </TouchableOpacity>
-      </View>
 
-      <View style={styles.whiteBackground}>
-        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
-          <View style={styles.profileHeader}>
-            <View style={styles.avatarContainer}>
-              <Image
-                source={require('../assets/doctorlogo.png')}
-                style={{ width: '100%', height: '100%', borderRadius: 60, resizeMode: 'cover' }}
-              />
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
+        
+        {/* Top Section with Background Image */}
+        <ImageBackground 
+          source={require('../assets/profilebg.png')} 
+          style={styles.topSectionWrapper}
+          resizeMode="cover"
+        >
+          {/* Transparent Header */}
+          <View style={styles.customHeader}>
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <TouchableOpacity style={styles.headerBtn} onPress={() => navigation.goBack()}>
+                <Ionicons name="arrow-back" size={24} color="#333" />
+              </TouchableOpacity>
+              <Text style={styles.headerTitle}>Profile</Text>
             </View>
-            <View style={styles.headerTextContainer}>
+            <TouchableOpacity style={styles.headerBtn} onPress={handleLogout}>
+              <Ionicons name="log-out-outline" size={26} color="#333" />
+            </TouchableOpacity>
+          </View>
+
+          {/* Profile Header (Avatar, Name, Email) */}
+          <View style={styles.mainContentWrapper}>
+            <View style={styles.profileHeader}>
+              <View style={styles.avatarWrapper}>
+                <Image
+                  source={require('../assets/doctorlogo.png')}
+                  style={styles.avatarImage}
+                />
+                <View style={styles.editIconBadge}>
+                  <Ionicons name="pencil" size={14} color="#FFF" />
+                </View>
+              </View>
               <Text style={styles.doctorName}>Dr. {userData?.doctorName || 'Doctor'}</Text>
               <Text style={styles.doctorEmail}>{userData?.email || 'N/A'}</Text>
             </View>
           </View>
+        </ImageBackground>
 
-          <View style={styles.statsBoxContainer}>
-            <View style={styles.statsBox}>
-              <View style={styles.statItem}>
-                <Text style={styles.statNumber}>
-                  {totalAppointments.toString().padStart(2, '0')}
-                </Text>
-                <Text style={styles.statLabel}>Total Appointment</Text>
-              </View>
-              <View style={styles.statItem}>
-                <Text style={styles.statNumber}>
-                  {cancelledAppointments.toString().padStart(2, '0')}
-                </Text>
-                <Text style={styles.statLabel}>Cancel Appointment</Text>
-              </View>
+        {/* Stats Card */}
+        <View style={styles.statsCardContainer}>
+          <View style={styles.statsCard}>
+            <View style={styles.statColumn}>
+              <Text style={styles.statCardLabel}>Total Appointment</Text>
+              <Text style={styles.statCardNumber}>
+                {totalAppointments.toString().padStart(2, '0')}
+              </Text>
+            </View>
+            <View style={styles.statDivider} />
+            <View style={styles.statColumn}>
+              <Text style={styles.statCardLabel}>Cancel Appointment</Text>
+              <Text style={styles.statCardNumber}>
+                {cancelledAppointments.toString().padStart(2, '0')}
+              </Text>
+            </View>
+          </View>
+        </View>
+
+        {/* Bottom Details Section */}
+        <View style={styles.detailsSection}>
+          <Text style={styles.detailsHeading}>Profile Details</Text>
+
+          <View style={styles.detailCard}>
+            <Ionicons name="person-outline" size={22} color="#5582F7" style={styles.detailIcon} />
+            <View style={styles.detailTextContainer}>
+              <Text style={styles.detailLabel}>Specialization</Text>
+              <Text style={styles.detailValue}>
+                {userData?.department ? userData.department.split(',').map((dept: string) => dept.split('/')[0].split('-')[0].trim()).filter(Boolean).join(', ') : 'N/A'}
+              </Text>
             </View>
           </View>
 
-          <View style={styles.detailsContainer}>
-            <Text style={styles.sectionTitle}>Profile Details</Text>
-
-            <View style={styles.detailRow}>
-              <View style={styles.iconBox}>
-                <Ionicons name="person" size={22} color="#6B7AFF" />
-              </View>
-              <View style={styles.detailTextContainer}>
-                <Text style={styles.detailLabel}>Specialization</Text>
-                <Text style={styles.detailValue}>{userData?.department ? userData.department.split(',').map((dept: string) => dept.split('/')[0].split('-')[0].trim()).filter(Boolean).join(', ') : 'N/A'}</Text>
-              </View>
-            </View>
-
-            <View style={styles.detailRow}>
-              <View style={styles.iconBox}>
-                <Ionicons name="call" size={22} color="#6B7AFF" />
-              </View>
-              <View style={styles.detailTextContainer}>
-                <Text style={styles.detailLabel}>Mobile Number</Text>
-                <Text style={styles.detailValue}>{userData?.mobile || 'N/A'}</Text>
-              </View>
-            </View>
-
-            <View style={styles.detailRow}>
-              <View style={styles.iconBox}>
-                <Ionicons name="briefcase" size={22} color="#6B7AFF" />
-              </View>
-              <View style={styles.detailTextContainer}>
-                <Text style={styles.detailLabel}>Experience</Text>
-                <Text style={styles.detailValue}>{userData?.experience ? `${userData.experience} Years` : 'N/A'}</Text>
-              </View>
-            </View>
-
-            <View style={styles.detailRow}>
-              <View style={styles.iconBox}>
-                <Ionicons name="person" size={22} color="#6B7AFF" />
-              </View>
-              <View style={styles.detailTextContainer}>
-                <Text style={styles.detailLabel}>Gender</Text>
-                <Text style={styles.detailValue}>{userData?.gender || 'N/A'}</Text>
-              </View>
+          <View style={styles.detailCard}>
+            <Ionicons name="call-outline" size={22} color="#5582F7" style={styles.detailIcon} />
+            <View style={styles.detailTextContainer}>
+              <Text style={styles.detailLabel}>Mobile Number</Text>
+              <Text style={styles.detailValue}>{userData?.mobile || 'N/A'}</Text>
             </View>
           </View>
-        </ScrollView>
-      </View>
+
+          <View style={styles.detailCard}>
+            <Ionicons name="briefcase-outline" size={22} color="#5582F7" style={styles.detailIcon} />
+            <View style={styles.detailTextContainer}>
+              <Text style={styles.detailLabel}>Experience</Text>
+              <Text style={styles.detailValue}>{userData?.experience ? `${userData.experience} Years` : 'N/A'}</Text>
+            </View>
+          </View>
+
+          <View style={styles.detailCard}>
+            <Ionicons name="person-circle-outline" size={22} color="#5582F7" style={styles.detailIcon} />
+            <View style={styles.detailTextContainer}>
+              <Text style={styles.detailLabel}>Gender</Text>
+              <Text style={styles.detailValue}>{userData?.gender || 'N/A'}</Text>
+            </View>
+          </View>
+        </View>
+      </ScrollView>
+
       <TouchableOpacity
         style={styles.fab}
         onPress={() => navigation.navigate('MedicalCampNotification', { defaultMode: 'list' })}
@@ -239,7 +249,7 @@ export default function ProfileScreen() {
             </TouchableOpacity>
 
             <Image
-              source={require('../assets/DoctorlogoApp1.png')}
+              source={require('../assets/Dclogo.png')}
               style={styles.modalLogo}
               resizeMode="contain"
             />
@@ -271,153 +281,189 @@ export default function ProfileScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#ffffffff',
+    backgroundColor: '#FFFFFF',
   },
-  blueTopBackground: {
+  bgPattern: {
     position: 'absolute',
     top: 0,
     left: 0,
-    right: 0,
-    height: 200,
-    backgroundColor: '#0D6EFD',
-    borderBottomLeftRadius: 60,
-    borderBottomRightRadius: 60,
+    width: '100%',
+    height: '100%',
+    opacity: 0.5,
   },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: '#FFF',
-
+  },
+  topSectionWrapper: {
+    width: '100%',
+    paddingBottom: 20,
   },
   customHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 20,
-    paddingTop: 30,
-    paddingBottom: 30,
-
+    paddingTop: 20,
+    paddingBottom: 10,
+    zIndex: 10,
   },
   headerBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    padding: 8,
   },
   headerTitle: {
-    color: '#FFF',
-    fontSize: 16,
-    fontWeight: 'bold',
+    color: '#000',
+    fontSize: 20,
+    fontWeight: '900',
     marginLeft: 8,
   },
-  headerLogoutText: {
-    color: '#FFF',
-    fontSize: 14,
-    fontWeight: 'bold',
-    marginLeft: 8,
+  scrollContent: {
+    paddingBottom: 10,
   },
-  whiteBackground: {
-    flex: 1,
-    backgroundColor: '#FFF',
-    borderTopLeftRadius: 30,
-    borderTopRightRadius: 30,
-    overflow: 'hidden',
+  mainContentWrapper: {
     width: '95%',
     alignSelf: 'center',
   },
-  scrollContent: {
-    paddingBottom: 20,
-  },
   profileHeader: {
-    flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 20,
-    paddingTop: 30,
-    paddingBottom: 40,
-    backgroundColor: '#FFF',
+    paddingTop: 10,
+    paddingBottom: 15,
   },
-  avatarContainer: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    backgroundColor: '#F5F5F5',
+  avatarWrapper: {
+    width: 110,
+    height: 110,
+    borderRadius: 75,
+    borderWidth: 3,
+    borderColor: '#0D6EFD',
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 20,
+    marginBottom: 15,
+    backgroundColor: '#FFF',
+    position: 'relative',
   },
-  headerTextContainer: {
-    flex: 1,
+  avatarImage: {
+    width: 100,
+    height: 100,
+    borderRadius: 65,
+    resizeMode: 'cover',
+  },
+  editIconBadge: {
+    position: 'absolute',
+    bottom: -5,
+    right: 10,
+    backgroundColor: '#0D6EFD',
+    width: 28,
+    height: 28,
+    borderRadius: 14,
     justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#FFF',
   },
   doctorName: {
-    fontSize: 22,
-    fontWeight: 'bold',
+    fontSize: 24,
+    fontWeight: '900',
     color: '#000',
-    marginBottom: 8,
+    marginBottom: 5,
   },
   doctorEmail: {
     fontSize: 14,
-    color: '#334155',
+    color: '#5582F7',
+    marginBottom: -10,
+    width: '100%',
+    textAlign: 'center',
   },
-  statsBoxContainer: {
+  bioText: {
+    fontSize: 12,
+    color: '#888',
+    textAlign: 'center',
     paddingHorizontal: 20,
-    marginBottom: 30,
-    marginTop: -15,
+    lineHeight: 18,
+    marginBottom: 10,
   },
-  statsBox: {
-    backgroundColor: '#F8F9FA',
+  statsCardContainer: {
+    paddingHorizontal: 20,
+    marginBottom: -30,
+    zIndex: 5,
+    width: '90%',
+    alignSelf: 'center',
+  },
+  statsCard: {
+    flexDirection: 'row',
+    backgroundColor: '#FFF',
     borderRadius: 16,
+    borderWidth: 2,
+    borderColor: '#0D6EFD',
+    paddingVertical: 20,
+  },
+  statColumn: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  statDivider: {
+    width: 1,
+    backgroundColor: '#E0E0E0',
+    marginVertical: 5,
+  },
+  statCardLabel: {
+    fontSize: 12,
+    color: '#0D6EFD',
+    fontWeight: '800',
+    marginBottom: 10,
+  },
+  statCardNumber: {
+    fontSize: 20,
+    fontWeight: '900',
+    color: '#000',
+  },
+  detailsSection: {
+    backgroundColor: '#D9ECFF',
+    borderRadius: 30,
+    paddingTop: 40,
+    paddingHorizontal: 20,
+    paddingBottom: 10,
+    width: '90%',
+    alignSelf: 'center',
+    marginBottom: 20,
+  },
+  detailsHeading: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: '#5582F7',
+    marginBottom: 20,
+  },
+  detailCard: {
     flexDirection: 'row',
-    justifyContent: 'space-evenly',
+    backgroundColor: '#FFF',
+    borderRadius: 12,
+    padding: 15,
+    marginBottom: 15,
     alignItems: 'center',
-    paddingVertical: 25,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 5,
+    elevation: 2,
   },
-  statItem: {
-    alignItems: 'center',
-  },
-  statNumber: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    color: '#6B7AFF',
-    marginBottom: 8,
-  },
-  statLabel: {
-    fontSize: 14,
-    color: '#555',
-    fontWeight: 'bold',
-  },
-  detailsContainer: {
-    paddingHorizontal: 30,
-  },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 30,
-  },
-  detailRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    marginBottom: 30,
-  },
-  iconBox: {
-    width: 30,
-    height: 30,
-    justifyContent: 'flex-start',
-    alignItems: 'center',
+  detailIcon: {
     marginRight: 15,
   },
   detailTextContainer: {
     flex: 1,
   },
   detailLabel: {
-    fontSize: 15,
-    fontWeight: 'bold',
-    color: '#6B7AFF',
-    marginBottom: 8,
+    fontSize: 14,
+    fontWeight: '800',
+    color: '#5582F7',
+    marginBottom: 4,
   },
   detailValue: {
-    fontSize: 15,
-    color: '#1E293B',
+    fontSize: 12,
+    color: '#666',
+    fontWeight: '500',
   },
   modalOverlay: {
     flex: 1,

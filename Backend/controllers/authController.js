@@ -70,7 +70,7 @@ const patientLogin = async (req, res) => {
     try {
         const patient = await Patient.findOne({ identifier });
         if (!patient) return res.status(401).json({ error: 'Invalid credentials' });
-        
+
         const isMatch = await patient.matchPassword(password);
         if (isMatch) {
             const token = jwt.sign({ id: patient._id, identifier: patient.identifier, role: patient.role }, process.env.JWT_SECRET || 'supersecret123', { expiresIn: '7d' });
@@ -97,7 +97,7 @@ const updateFcmToken = async (req, res) => {
         } else {
             updatedUser = await User.findByIdAndUpdate(req.user.id, { fcmToken }, { new: true });
         }
-        
+
         if (!updatedUser) {
             return res.status(404).json({ error: 'User not found' });
         }

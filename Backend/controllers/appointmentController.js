@@ -76,7 +76,7 @@ const updateAppointmentStatus = async (req, res) => {
                 if (appointment.login_mobile) {
                     await createNotification('patient', appointment.login_mobile, 'Follow-up Reminder', `Today you need to consult Dr. ${appointment.doctor_name}. Patient: ${appointment.patient_name}, Date: ${todayDateStr}. Please visit the hospital for your follow-up appointment.`, 'followup_reminder');
                 }
-                
+
                 // Notify Admin
                 await createNotification('admin', 'admin', 'Follow-up Reminder', `Today patient ${appointment.patient_name} has a follow-up appointment with Dr. ${appointment.doctor_name}. Date: ${todayDateStr}.`, 'followup_reminder');
             } else if (followupDate) {
@@ -278,7 +278,7 @@ const processFollowupReminders = async (req, res) => {
                 adminMessage,
                 'followup_reminder'
             );
-            
+
             sentCount++;
         }
 

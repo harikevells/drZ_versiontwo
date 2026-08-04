@@ -58,7 +58,7 @@ export default function LoginScreen() {
       <View style={styles.contentContainer}>
         <View style={styles.logoContainer}>
           <Image 
-            source={require('../assets/DoctorlogoApp.png')} 
+            source={require('../assets/Dclogo.png')} 
             style={styles.logo} 
             resizeMode="contain"
           />
@@ -188,7 +188,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   loginButton: {
-    backgroundColor: '#6B7AFF',
+    backgroundColor: '#0088FF',
     borderRadius: 30,
     height: 55,
     alignItems: 'center',

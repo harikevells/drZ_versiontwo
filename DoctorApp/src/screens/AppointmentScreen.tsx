@@ -204,7 +204,19 @@ export default function AppointmentScreen({ route }: any) {
   const fetchUnreadCount = async (name: string) => {
     try {
       const response = await axios.get(`${API_BASE_URL}/notifications/doctor/${name}`);
-      const count = response.data.filter((n: any) => !n.isRead).length;
+      const count = response.data.filter((n: any) => {
+        if (n.isRead) return false;
+        const type = n.type || '';
+        const title = (n.title || '').toLowerCase();
+        
+        const isFollowUpOrSchedule = 
+          type === 'followup_scheduled' || 
+          type === 'followup_reminder' || 
+          title.includes('follow-up') || 
+          title.includes('schedule');
+          
+        return !isFollowUpOrSchedule;
+      }).length;
       setUnreadCount(count);
     } catch (error) {
       console.log('Error fetching notification count:', error);
