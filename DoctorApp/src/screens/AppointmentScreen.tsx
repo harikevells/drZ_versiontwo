@@ -61,6 +61,7 @@ export default function AppointmentScreen({ route }: any) {
   const [activeTab, setActiveTab] = useState<'Pending' | 'Approved' | 'Completed' | 'Cancelled'>(route?.params?.activeTab || 'Pending');
   const [doctorName, setDoctorName] = useState('');
   const [unreadCount, setUnreadCount] = useState(0);
+  const [reminderCount, setReminderCount] = useState(0);
   const isFocused = useIsFocused();
   const navigation = useNavigation<any>();
   const [refreshing, setRefreshing] = useState(false);
@@ -120,13 +121,21 @@ export default function AppointmentScreen({ route }: any) {
       foundApp = appointments.find(app => app.booking_id === targetId || app.id === targetId || app._id === targetId);
     } else if (!targetId && hMessage && appointments.length > 0) {
       const msg = hMessage.toLowerCase();
-      // Only match by patient name because if the appointment is rescheduled, the old date in the notification won't match the new appointment date.
-      // We reverse the array to find the latest appointment for that patient, as find() returns the first match.
       const reversedAppointments = [...appointments].reverse();
-      foundApp = reversedAppointments.find(app => {
+      
+      const possibleApps = reversedAppointments.filter(app => {
         return app.patient_name && msg.includes(app.patient_name.toLowerCase());
       });
-      if (foundApp) {
+
+      if (possibleApps.length > 0) {
+        // Try to find one that also matches the date in the message
+        let exactMatch = possibleApps.find(app => {
+          const fDate = app.followup_date || app.followupDate || '';
+          const aDate = app.appointment_date || '';
+          return (fDate && msg.includes(fDate)) || (aDate && msg.includes(aDate));
+        });
+
+        foundApp = exactMatch || possibleApps[0];
         targetId = foundApp.id || foundApp._id;
       }
     }
@@ -204,20 +213,28 @@ export default function AppointmentScreen({ route }: any) {
   const fetchUnreadCount = async (name: string) => {
     try {
       const response = await axios.get(`${API_BASE_URL}/notifications/doctor/${name}`);
-      const count = response.data.filter((n: any) => {
-        if (n.isRead) return false;
-        const type = n.type || '';
-        const title = (n.title || '').toLowerCase();
-        
-        const isFollowUpOrSchedule = 
-          type === 'followup_scheduled' || 
-          type === 'followup_reminder' || 
-          title.includes('follow-up') || 
-          title.includes('schedule');
+      let notifCount = 0;
+      let remCount = 0;
+      response.data.forEach((n: any) => {
+        if (!n.isRead) {
+          const type = n.type || '';
+          const title = (n.title || '').toLowerCase();
           
-        return !isFollowUpOrSchedule;
-      }).length;
-      setUnreadCount(count);
+          const isFollowUpOrSchedule = 
+            type === 'followup_scheduled' || 
+            type === 'followup_reminder' || 
+            title.includes('follow-up') || 
+            title.includes('schedule');
+            
+          if (isFollowUpOrSchedule) {
+            remCount++;
+          } else {
+            notifCount++;
+          }
+        }
+      });
+      setUnreadCount(notifCount);
+      setReminderCount(remCount);
     } catch (error) {
       console.log('Error fetching notification count:', error);
     }
@@ -366,14 +383,24 @@ export default function AppointmentScreen({ route }: any) {
           <Ionicons name="arrow-back" size={24} color="#FFF" />
           <Text style={styles.headerTitle}>Appointment List</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.notificationIconContainer} onPress={() => navigation.navigate('Notifications')}>
-          <Ionicons name="notifications-outline" size={24} color="#0D6EFD" />
-          {unreadCount > 0 && (
-            <View style={styles.badge}>
-              <Text style={styles.badgeText}>{unreadCount > 99 ? '99+' : unreadCount}</Text>
-            </View>
-          )}
-        </TouchableOpacity>
+        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          <TouchableOpacity style={[styles.notificationIconContainer, { marginRight: 15 }]} onPress={() => navigation.navigate('Remainder')}>
+            <Ionicons name="alarm-outline" size={24} color="#0D6EFD" />
+            {reminderCount > 0 && (
+              <View style={styles.badge}>
+                <Text style={styles.badgeText}>{reminderCount > 99 ? '99+' : reminderCount}</Text>
+              </View>
+            )}
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.notificationIconContainer} onPress={() => navigation.navigate('Notifications')}>
+            <Ionicons name="notifications-outline" size={24} color="#0D6EFD" />
+            {unreadCount > 0 && (
+              <View style={styles.badge}>
+                <Text style={styles.badgeText}>{unreadCount > 99 ? '99+' : unreadCount}</Text>
+              </View>
+            )}
+          </TouchableOpacity>
+        </View>
       </View>
       <View style={styles.content}>
 
@@ -517,14 +544,24 @@ export default function AppointmentScreen({ route }: any) {
 
                     <View style={styles.detailRow}>
                       <Ionicons name="calendar-outline" size={14} color="#666" />
-                      <Text style={[styles.detailText, { width: 90 }]}>{item.appointment_date}</Text>
-                      <Ionicons name="time-outline" size={14} color="#666" style={{ marginLeft: 15 }} />
-                      <Text style={[styles.detailText, { width: 150 }]}>{formatTimeSlot(item.appointment_time)}</Text>
+                      <Text style={styles.detailText}>{item.appointment_date}</Text>
+                    </View>
+                    <View style={styles.detailRow}>
+                      <Ionicons name="time-outline" size={14} color="#666" />
+                      <Text style={styles.detailText}>{formatTimeSlot(item.appointment_time)}</Text>
                     </View>
                     <View style={styles.detailRow}>
                       <Ionicons name="medical-outline" size={14} color="#666" />
-                      <Text style={[styles.detailText, { width: 280 }]}>{item.treatment_category || 'General'}</Text>
+                      <Text style={styles.detailText}>{item.treatment_category || 'General'}</Text>
                     </View>
+                    {(item.followup_date || item.followupDate) ? (
+                      <View style={styles.detailRow}>
+                        <Ionicons name="alarm-outline" size={14} color="#666" />
+                        <Text style={[styles.detailText, { fontWeight: 'bold' }]}>
+                          Follow up Remainder : {item.followup_date || item.followupDate}
+                        </Text>
+                      </View>
+                    ) : null}
                     {(() => {
                       const isDoctorCreated = !!(item.whatsapp_number && item.whatsapp_number.includes('|') && item.whatsapp_number.split('|')[1].startsWith('Doctor'));
                       const isAdminCreated = !!(item.whatsapp_number && item.whatsapp_number.includes('|') && item.whatsapp_number.split('|')[1] === 'Admin');
@@ -880,14 +917,15 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     marginTop: 5,
     marginBottom: 5,
-    flexWrap: 'wrap',
+    // flexWrap: 'wrap',
   },
   detailText: {
     fontSize: 13,
     color: '#333',
+    width:'100%',
     marginLeft: 6,
     flexShrink: 1,
-    width: 'auto', // change from fixed 110 to auto for date
+    // width: 'auto', // change from fixed 110 to auto for date
   },
   actionButtons: {
     flexDirection: 'row',

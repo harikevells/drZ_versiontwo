@@ -67,6 +67,19 @@ export default function RemainderScreen() {
     return text.replace(/(\d{4})[-\/](\d{2})[-\/](\d{2})/g, '$3/$2/$1');
   };
 
+  const extractDate = (text: string) => {
+    if (!text) return null;
+    const match = text.match(/(\d{2}\/\d{2}\/\d{4})|(\d{4}[-\/]\d{2}[-\/]\d{2})/);
+    if (match) {
+      let dateStr = match[0];
+      if (dateStr.match(/^\d{4}/)) {
+        dateStr = dateStr.replace(/(\d{4})[-\/](\d{2})[-\/](\d{2})/, '$3/$2/$1');
+      }
+      return dateStr;
+    }
+    return null;
+  };
+
   const formatDateLeft = (dateString: string) => {
     if (!dateString) return '';
     const d = new Date(dateString);
@@ -141,10 +154,13 @@ export default function RemainderScreen() {
               notifications.map((item: any) => {
                 const titleStr = (item.title || '').toLowerCase();
                 const isScheduled = item.type === 'followup_scheduled' || titleStr.includes('scheduled');
+                const isFollowUpReminder = item.type === 'followup_reminder' || (titleStr.includes('follow-up') && titleStr.includes('reminder'));
                 
                 const titleColor = isScheduled ? '#2CA01C' : '#5C45B3';
                 const iconBgColor = isScheduled ? '#EAF7EC' : '#F0F0FC';
                 const iconName = isScheduled ? 'calendar-outline' : 'alarm-outline';
+
+                const extractedDate = isFollowUpReminder ? extractDate(item.message) : null;
 
                 return (
                   <TouchableOpacity
@@ -156,18 +172,15 @@ export default function RemainderScreen() {
                     onPress={() => {
                       if (!item.isRead) handleMarkAsRead(item.id || item._id);
 
-                      const title = (item.title || '').toLowerCase();
-                      if (!title.includes('schedule')) {
-                        navigation.navigate('MainTabs', {
-                          screen: 'Appointment',
-                          params: {
-                            activeTab: 'Pending',
-                            highlightBookingId: item.booking_id || item.appointment_id || item.appointmentId,
-                            highlightMessage: item.message,
-                            _timestamp: Date.now()
-                          }
-                        });
-                      }
+                      navigation.navigate('MainTabs', {
+                        screen: 'Appointment',
+                        params: {
+                          activeTab: 'Pending',
+                          highlightBookingId: item.booking_id || item.appointment_id || item.appointmentId,
+                          highlightMessage: item.message,
+                          _timestamp: Date.now()
+                        }
+                      });
                     }}
                   >
                     <View style={styles.itemRow}>
@@ -180,6 +193,12 @@ export default function RemainderScreen() {
                           {formatMessageDate(item.title)}
                         </Text>
                         <Text style={styles.description}>{formatMessageDate(item.message)}</Text>
+                        
+                        {isFollowUpReminder && extractedDate && (
+                          <Text style={[styles.followupDateText, { color: 'black' }]}>
+                         {extractedDate}
+                          </Text>
+                        )}
                         <View style={styles.itemFooter}>
                           <Text style={styles.footerText}>{formatDateLeft(item.createdAt).replace('  ', ' - ')}</Text>
                           <Text style={styles.footerTextRight}>{formatTimeAgo(item.createdAt)}</Text>
@@ -286,6 +305,12 @@ const styles = StyleSheet.create({
     color: '#666',
     lineHeight: 18,
     marginBottom: 10,
+  },
+  followupDateText: {
+    fontSize: 13,
+    fontWeight: 'bold',
+    marginBottom: 10,
+    marginTop: -5,
   },
   itemFooter: {
     flexDirection: 'row',
