@@ -20,6 +20,7 @@ const Login = () => {
     e.preventDefault();
     if (email.toLowerCase() === 'admin@drz.com' && password === 'Admin@123') {
       sessionStorage.setItem('token', 'static-admin-token');
+      sessionStorage.setItem('adminId', 'ADMIN-STATIC');
       sessionStorage.setItem('loginTimestamp', new Date().getTime().toString());
       navigate('/dashboard');
       return;
@@ -30,6 +31,11 @@ const Login = () => {
         password
       });
       sessionStorage.setItem('token', response.data.token);
+      if (response.data.user && response.data.user.uniqueId) {
+        sessionStorage.setItem('adminId', response.data.user.uniqueId);
+      } else if (response.data.user && response.data.user.id) {
+        sessionStorage.setItem('adminId', 'ADMIN-SYS');
+      }
       sessionStorage.setItem('loginTimestamp', new Date().getTime().toString());
       navigate('/dashboard');
     } catch (err) {

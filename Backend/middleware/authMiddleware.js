@@ -6,7 +6,7 @@ const authenticateToken = (req, res, next) => {
     if (token == null) return res.sendStatus(401);
 
     if (token === 'static-admin-token') {
-        req.user = { id: 'static-admin-id', email: 'admin@drz.com' };
+        req.user = { id: 'static-admin-id', email: 'admin@drz.com', role: 'admin' };
         return next();
     }
 
@@ -20,4 +20,23 @@ const authenticateToken = (req, res, next) => {
     });
 };
 
+const optionalAuthenticateToken = (req, res, next) => {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+    if (token == null) return next();
+
+    if (token === 'static-admin-token') {
+        req.user = { id: 'static-admin-id', email: 'admin@drz.com', role: 'admin' };
+        return next();
+    }
+
+    jwt.verify(token, process.env.JWT_SECRET || 'supersecret123', (err, user) => {
+        if (!err) {
+            req.user = user;
+        }
+        next();
+    });
+};
+
 module.exports = authenticateToken;
+module.exports.optional = optionalAuthenticateToken;

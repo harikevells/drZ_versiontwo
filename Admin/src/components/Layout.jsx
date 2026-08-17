@@ -13,6 +13,7 @@ const Layout = () => {
 
   const handleLogout = () => {
     sessionStorage.removeItem('token');
+    sessionStorage.removeItem('adminId');
     sessionStorage.removeItem('loginTimestamp');
     navigate('/login');
   };
@@ -64,6 +65,7 @@ const Layout = () => {
 
   const greeting = getGreeting();
   const { dateString, dayString } = getFormattedDate();
+  const adminId = sessionStorage.getItem('adminId');
 
   return (
     <div className="layout-container">
@@ -103,7 +105,9 @@ const Layout = () => {
         <header className="topbar">
           <div className="topbar-left">
             <p className="greeting-text">{greeting} <span className="wave-emoji">👋</span></p>
-            <h2 className="welcome-text">Welcome back, Administrator</h2>
+            <h2 className="welcome-text">
+              Welcome back, Administrator {adminId && <span style={{ color: '#6366f1', fontSize: '0.9em', marginLeft: '5px' }}>({adminId})</span>}
+            </h2>
           </div>
           
           <div className="topbar-right">

@@ -7,11 +7,13 @@ const {
     updatePushNotification,
     deletePushNotification
 } = require('../controllers/pushNotificationController');
+const authenticateToken = require('../middleware/authMiddleware');
+const optionalAuthenticateToken = authenticateToken.optional;
 
-router.post('/', createPushNotification);
-router.get('/', getAllPushNotifications);
-router.get('/active', getActivePushNotifications);
-router.put('/:id', updatePushNotification);
-router.delete('/:id', deletePushNotification);
+router.post('/', authenticateToken, createPushNotification);
+router.get('/', optionalAuthenticateToken, getAllPushNotifications);
+router.get('/active', optionalAuthenticateToken, getActivePushNotifications);
+router.put('/:id', authenticateToken, updatePushNotification);
+router.delete('/:id', authenticateToken, deletePushNotification);
 
 module.exports = router;

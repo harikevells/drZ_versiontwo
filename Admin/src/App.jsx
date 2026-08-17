@@ -14,6 +14,7 @@ const ProtectedRoute = ({ element }) => {
   const loginTime = sessionStorage.getItem('loginTimestamp');
   if (!token || !loginTime) {
     sessionStorage.removeItem('token');
+    sessionStorage.removeItem('adminId');
     sessionStorage.removeItem('loginTimestamp');
     return <Navigate to="/login" replace />;
   }
@@ -24,6 +25,7 @@ const ProtectedRoute = ({ element }) => {
   
   if (timeElapsed > twentyFourHours) {
     sessionStorage.removeItem('token');
+    sessionStorage.removeItem('adminId');
     sessionStorage.removeItem('loginTimestamp');
     return <Navigate to="/login" replace />;
   }
