@@ -11,6 +11,22 @@ const login = async (req, res) => {
 
         const isMatch = await user.matchPassword(password);
         if (isMatch) {
+            if (user.role === 'admin') {
+                if (!user.isActive) {
+                    return res.status(403).json({ error: 'Your account is deactivated. Contact your Super Admin.' });
+                }
+                
+                if (user.accessStartDate && user.accessStartTime && user.accessEndDate && user.accessEndTime) {
+                    const now = new Date();
+                    const startDateTime = new Date(`${user.accessStartDate}T${user.accessStartTime}`);
+                    const endDateTime = new Date(`${user.accessEndDate}T${user.accessEndTime}`);
+                    
+                    if (now < startDateTime || now > endDateTime) {
+                        return res.status(403).json({ error: 'Your access period has expired. Contact your Super Admin.' });
+                    }
+                }
+            }
+
             const token = jwt.sign({ id: user._id, email: user.email, uniqueId: user.uniqueId, role: user.role || 'admin' }, process.env.JWT_SECRET || 'supersecret123', { expiresIn: '1d' });
             res.json({ token, user: { id: user._id, email: user.email, uniqueId: user.uniqueId, role: user.role || 'admin' } });
         } else {
@@ -37,6 +53,27 @@ const doctorLogin = async (req, res) => {
 
         const isMatch = await doctor.matchPassword(password);
         if (isMatch) {
+            if (doctor.adminId) {
+                const admin = await User.findOne({ uniqueId: doctor.adminId });
+                if (admin) {
+                    if (!admin.isActive) {
+                        console.log(`[Doctor Login Failed] Associated Admin is deactivated for email: "${email}"`);
+                        return res.status(403).json({ error: 'Your Hospital Admin account is deactivated. Contact Super Admin.' });
+                    }
+                    
+                    if (admin.accessStartDate && admin.accessStartTime && admin.accessEndDate && admin.accessEndTime) {
+                        const now = new Date();
+                        const startDateTime = new Date(`${admin.accessStartDate}T${admin.accessStartTime}`);
+                        const endDateTime = new Date(`${admin.accessEndDate}T${admin.accessEndTime}`);
+                        
+                        if (now < startDateTime || now > endDateTime) {
+                            console.log(`[Doctor Login Failed] Associated Admin access expired for email: "${email}"`);
+                            return res.status(403).json({ error: 'Your Hospital Admin access period has expired. Contact Super Admin.' });
+                        }
+                    }
+                }
+            }
+
             console.log(`[Doctor Login Success] Logged in successfully: "${email}"`);
             const token = jwt.sign({ id: doctor._id, email: doctor.email, role: 'doctor' }, process.env.JWT_SECRET || 'supersecret123', { expiresIn: '7d' });
             res.json({ token, user: { id: doctor.id, email: doctor.email, doctorName: doctor.doctorName, department: doctor.department } });
