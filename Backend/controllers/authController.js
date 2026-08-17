@@ -106,5 +106,34 @@ const updateFcmToken = async (req, res) => {
         res.status(500).json({ error: err.message });
     }
 };
+const adminRegister = async (req, res) => {
+    const { name, email, password, accessStartDate, accessStartTime, accessEndDate, accessEndTime } = req.body;
+    try {
+        const existing = await User.findOne({ email });
+        if (existing) {
+            return res.status(400).json({ error: 'Admin already exists with this email' });
+        }
+        
+        // Generate a unique ID for the admin
+        const uniqueId = `ADMIN-${Date.now().toString().slice(-6)}`;
+        
+        const adminUser = await User.create({ 
+            name,
+            email, 
+            password, 
+            uniqueId,
+            role: 'admin',
+            accessStartDate,
+            accessStartTime,
+            accessEndDate,
+            accessEndTime,
+            isActive: true
+        });
+        
+        res.json({ message: 'Admin registered successfully', user: { id: adminUser._id, uniqueId: adminUser.uniqueId, email: adminUser.email } });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+};
 
-module.exports = { login, doctorLogin, patientRegister, patientLogin, updateFcmToken };
+module.exports = { login, doctorLogin, patientRegister, patientLogin, updateFcmToken, adminRegister };

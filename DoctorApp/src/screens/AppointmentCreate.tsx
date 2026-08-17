@@ -808,24 +808,7 @@ export default function AppointmentCreate() {
             )}
           </View>
 
-          {/* Video Call Request */}
-          <View style={styles.section}>
-            <TouchableOpacity
-              style={styles.videoCard}
-              onPress={() => setIsVideoCall(!isVideoCall)}
-              activeOpacity={0.8}
-            >
-              <View style={{ flex: 1 }}>
-                <Text style={styles.videoTitle}>Video Call Consult</Text>
-                <Text style={styles.videoSubtitle}>Request video consultation</Text>
-              </View>
-              <Ionicons
-                name={isVideoCall ? 'checkbox' : 'square-outline'}
-                size={28}
-                color={isVideoCall ? '#2DC045' : '#ccc'}
-              />
-            </TouchableOpacity>
-          </View>
+    
 
           {/* Confirm Button */}
           <TouchableOpacity
