@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import { API_BASE_URL } from '../config';
-import { FaUserMd, FaCalendarCheck, FaBell, FaSignOutAlt, FaUserInjured, FaThLarge, FaSearch, FaCalendarAlt, FaCog, FaMoon } from 'react-icons/fa';
+import { FaUserMd, FaCalendarCheck, FaBell, FaSignOutAlt, FaUserInjured, FaThLarge, FaSearch, FaCalendarAlt, FaCog, FaMoon, FaLock } from 'react-icons/fa';
 import './Layout.css';
 import logoImage from '../assets/Adminlogo.svg';
 import adminImage from '../assets/adminimage.png';
@@ -20,6 +20,40 @@ const Layout = () => {
 
   const [unreadCount, setUnreadCount] = useState(0);
   const location = useLocation();
+
+  // Lock Screen States
+  const [isLocked, setIsLocked] = useState(false);
+  const [lockReason, setLockReason] = useState('');
+
+  useEffect(() => {
+    // Check Admin Live Status
+    const checkStatus = async () => {
+      try {
+        const token = sessionStorage.getItem('token');
+        if (!token || token === 'static-admin-token') return;
+        
+        const config = { headers: { Authorization: `Bearer ${token}` } };
+        const res = await axios.get(`${API_BASE_URL}/auth/admin/status`, config);
+        
+        if (res.data.locked) {
+          setIsLocked(true);
+          setLockReason(res.data.reason || 'Your access period has expired. Contact your Super Admin.');
+        } else {
+          setIsLocked(false);
+        }
+      } catch (error) {
+        if (error.response && error.response.status === 401) {
+          setIsLocked(true);
+          setLockReason('Your session is invalid or expired. Contact your Super Admin.');
+        }
+      }
+    };
+
+    checkStatus(); // Initial check
+    const intervalId = setInterval(checkStatus, 60000); // Check every 60 seconds
+
+    return () => clearInterval(intervalId);
+  }, []);
 
   useEffect(() => {
     fetchUnreadCount();
@@ -201,6 +235,35 @@ const Layout = () => {
               <button style={{ width: '150px', borderRadius: '20px' }} className="confirm-logout-btn" onClick={handleLogout}>Logout</button>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Access Lock Screen Overlay */}
+      {isLocked && (
+        <div style={{
+          position: 'fixed',
+          top: 0, left: 0, right: 0, bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.85)',
+          zIndex: 9999,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          backdropFilter: 'blur(8px)'
+        }}>
+          <FaLock style={{ color: '#fff', fontSize: '72px', marginBottom: '24px' }} />
+          <h2 style={{ color: '#fff', fontSize: '32px', marginBottom: '16px', textAlign: 'center', fontWeight: 'bold' }}>Access Locked</h2>
+          <p style={{ color: '#e5e7eb', fontSize: '18px', textAlign: 'center', maxWidth: '450px', lineHeight: '1.5', marginBottom: '32px' }}>
+            {lockReason}
+          </p>
+          <button 
+            onClick={handleLogout}
+            style={{ padding: '12px 32px', backgroundColor: '#3b82f6', color: '#fff', border: 'none', borderRadius: '8px', fontSize: '16px', fontWeight: '600', cursor: 'pointer', transition: 'background-color 0.2s' }}
+            onMouseOver={(e) => e.target.style.backgroundColor = '#2563eb'}
+            onMouseOut={(e) => e.target.style.backgroundColor = '#3b82f6'}
+          >
+            Return to Login
+          </button>
         </div>
       )}
     </div>

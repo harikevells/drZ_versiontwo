@@ -224,4 +224,35 @@ const deleteAdmin = async (req, res) => {
     }
 };
 
-module.exports = { login, doctorLogin, patientRegister, patientLogin, updateFcmToken, adminRegister, getAdmins, updateAdminStatus, updateAdmin, deleteAdmin };
+const checkAdminStatus = async (req, res) => {
+    try {
+        if (!req.user || !req.user.id) {
+            return res.status(401).json({ locked: true, reason: 'Unauthorized' });
+        }
+        
+        const admin = await User.findById(req.user.id);
+        if (!admin) {
+            return res.status(404).json({ locked: true, reason: 'Admin not found' });
+        }
+        
+        if (!admin.isActive) {
+            return res.json({ locked: true, reason: 'Your account is deactivated. Contact your Super Admin.' });
+        }
+        
+        if (admin.accessStartDate && admin.accessStartTime && admin.accessEndDate && admin.accessEndTime) {
+            const now = new Date();
+            const startDateTime = new Date(`${admin.accessStartDate}T${admin.accessStartTime}`);
+            const endDateTime = new Date(`${admin.accessEndDate}T${admin.accessEndTime}`);
+            
+            if (now < startDateTime || now > endDateTime) {
+                return res.json({ locked: true, reason: 'Your access period has expired. Contact your Super Admin.' });
+            }
+        }
+        
+        res.json({ locked: false });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+};
+
+module.exports = { login, doctorLogin, patientRegister, patientLogin, updateFcmToken, adminRegister, getAdmins, updateAdminStatus, updateAdmin, deleteAdmin, checkAdminStatus };
