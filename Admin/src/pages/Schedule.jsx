@@ -27,6 +27,11 @@ const Schedule = () => {
     time: []
   });
   
+  const [scheduleType, setScheduleType] = useState('weekly');
+  const [selectedDays, setSelectedDays] = useState([]);
+  const [weeklyStartDate, setWeeklyStartDate] = useState('');
+  const [weeklyEndDate, setWeeklyEndDate] = useState('');
+  
   const [isPickerModalOpen, setIsPickerModalOpen] = useState(false);
   
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -230,26 +235,84 @@ const Schedule = () => {
       const token = sessionStorage.getItem('token');
       const config = { headers: { Authorization: `Bearer ${token}` } };
       
-      const generatedSlots = formData.time && formData.time.length > 0 ? formData.time : generateTimeSlots(formData.startTime, formData.endTime);
+      const isWeekly = scheduleType === 'weekly';
+      
+      const generatedSlots = formData.time && formData.time.length > 0
+        ? formData.time 
+        : generateTimeSlots(formData.startTime, formData.endTime);
       
       if (!generatedSlots || generatedSlots.length === 0) {
         alert("Please select a valid time range or slots.");
         return;
       }
+      if (isWeekly && selectedDays.length === 0) {
+        alert("Please select at least one day for weekly schedule.");
+        return;
+      }
       
-      const dataToSubmit = { 
-        doctorId: formData.doctorId,
-        doctorName: formData.doctorName,
-        department: formData.department,
-        date: formData.date,
-        time: generatedSlots,
-        status: 'Approved' // Admin created schedules are auto-approved
-      };
-      
-      if (editingId) {
-        await axios.put(`${API_BASE_URL}/schedules/${editingId}`, dataToSubmit, config);
+      if (isWeekly) {
+        if (!weeklyStartDate || !weeklyEndDate) {
+          alert("Please select both From Date and To Date.");
+          return;
+        }
+        
+        const start = new Date(weeklyStartDate);
+        const end = new Date(weeklyEndDate);
+        
+        if (end < start) {
+          alert("To Date must be after From Date.");
+          return;
+        }
+        
+        const daysMap = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+        
+        let currentDate = new Date(start);
+        const datesToCreate = [];
+        
+        while (currentDate <= end) {
+          const dayName = daysMap[currentDate.getDay()];
+          if (selectedDays.includes(dayName)) {
+            const y = currentDate.getFullYear();
+            const m = String(currentDate.getMonth() + 1).padStart(2, '0');
+            const d = String(currentDate.getDate()).padStart(2, '0');
+            datesToCreate.push(`${y}-${m}-${d}`);
+          }
+          currentDate.setDate(currentDate.getDate() + 1);
+        }
+        
+        if (datesToCreate.length === 0) {
+          alert("No matching days found within the selected date range.");
+          return;
+        }
+
+        // Loop through generated dates and create schedules
+        await Promise.all(datesToCreate.map(async (calculatedDate) => {
+          const dataToSubmit = { 
+            doctorId: formData.doctorId,
+            doctorName: formData.doctorName,
+            department: formData.department,
+            date: calculatedDate,
+            time: generatedSlots,
+            status: 'Approved' 
+          };
+          await axios.post(`${API_BASE_URL}/schedules`, dataToSubmit, config);
+        }));
       } else {
-        await axios.post(`${API_BASE_URL}/schedules`, dataToSubmit, config);
+        // Specific date schedule
+        const dataToSubmit = { 
+          doctorId: formData.doctorId,
+          doctorName: formData.doctorName,
+          department: formData.department,
+          date: formData.date,
+          time: generatedSlots,
+          status: 'Approved'
+        };
+        
+        if (editingId) {
+          await axios.put(`${API_BASE_URL}/schedules/${editingId}`, dataToSubmit, config);
+        } else {
+          await axios.post(`${API_BASE_URL}/schedules`, dataToSubmit, config);
+        }
       }
       
       setFormData({
@@ -261,6 +324,9 @@ const Schedule = () => {
         endTime: '',
         time: []
       });
+      setSelectedDays([]);
+      setWeeklyStartDate('');
+      setWeeklyEndDate('');
       setEditingId(null);
       fetchSchedulesAndDoctors();
     } catch (err) {
@@ -296,12 +362,19 @@ const Schedule = () => {
       }
     }
     
+    // When editing, always default to 'specific' since the record corresponds to a specific date now
+    setScheduleType('specific');
+    setSelectedDays([]);
+    setWeeklyStartDate('');
+    setWeeklyEndDate('');
+    
     setFormData({
       doctorId: schedule.doctorId || 0,
       doctorName: schedule.doctorName,
       department: schedule.department,
       date: schedule.date,
       startTime: st,
+      endTime: et,
       time: timeArray
     });
 
@@ -401,6 +474,16 @@ const Schedule = () => {
       
       <div className="form-card">
         <form onSubmit={handleSubmit}>
+          <div className="schedule-type-toggle" style={{ marginBottom: '20px', display: 'flex', gap: '20px', alignItems: 'center' }}>
+            <label style={{ fontWeight: '600', color: '#374151' }}>Schedule Type:</label>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+              <input type="radio" name="scheduleType" value="weekly" checked={scheduleType === 'weekly'} onChange={() => setScheduleType('weekly')} /> Weekly (Mon - Sun)
+            </label>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+              <input type="radio" name="scheduleType" value="specific" checked={scheduleType === 'specific'} onChange={() => setScheduleType('specific')} /> Specific Date
+            </label>
+          </div>
+
           <div className="form-grid">
             <div className="form-group">
               <label>Doctor Name</label>
@@ -454,28 +537,84 @@ const Schedule = () => {
               </select>
             </div>
             
-            <div className="form-group date-time-group combined-group">
-              <label>Date & Time</label>
-              <div 
-                className="combined-date-time-input" 
-                onClick={() => setIsPickerModalOpen(true)}
-                style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', padding: '0 16px', height: '48px', border: '1px solid #e5e7eb', borderRadius: '6px', backgroundColor: '#fff', gap: '30px' }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  <FaRegCalendarAlt style={{ color: '#9ca3af', fontSize: '15px' }} />
-                  <span style={{ color: formData.date ? '#6b7280' : '#9ca3af', fontSize: '14px' }}>
-                    {formData.date ? formatDate(formData.date) : "Select Date"}
-                  </span>
-                </div>
-                
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  <FaRegClock style={{ color: '#9ca3af', fontSize: '15px' }} />
-                  <span style={{ color: formData.time && formData.time.length > 0 ? '#6b7280' : '#9ca3af', fontSize: '14px' }}>
-                    {formData.time && formData.time.length > 0 ? getSummaryTimeString(formData.time) : "Select Time"}
-                  </span>
+            {scheduleType === 'specific' ? (
+              <div className="form-group date-time-group combined-group">
+                <label>Date & Time</label>
+                <div 
+                  className="combined-date-time-input" 
+                  onClick={() => setIsPickerModalOpen(true)}
+                  style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', padding: '0 16px', height: '48px', border: '1px solid #e5e7eb', borderRadius: '6px', backgroundColor: '#fff', gap: '30px' }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <FaRegCalendarAlt style={{ color: '#9ca3af', fontSize: '15px' }} />
+                    <span style={{ color: formData.date ? '#6b7280' : '#9ca3af', fontSize: '14px' }}>
+                      {formData.date ? formatDate(formData.date) : "Select Date"}
+                    </span>
+                  </div>
+                  
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <FaRegClock style={{ color: '#9ca3af', fontSize: '15px' }} />
+                    <span style={{ color: formData.time && formData.time.length > 0 ? '#6b7280' : '#9ca3af', fontSize: '14px' }}>
+                      {formData.time && formData.time.length > 0 ? getSummaryTimeString(formData.time) : "Select Time"}
+                    </span>
+                  </div>
                 </div>
               </div>
-            </div>
+            ) : (
+              <div className="weekly-schedule-group" style={{ gridColumn: '1 / -1', display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                <div style={{ display: 'flex', gap: '20px' }}>
+                  <div className="form-group" style={{ flex: 1, marginBottom: 0 }}>
+                    <label>From Date</label>
+                    <input type="date" value={weeklyStartDate} onChange={(e) => setWeeklyStartDate(e.target.value)} required={scheduleType === 'weekly'} />
+                  </div>
+                  <div className="form-group" style={{ flex: 1, marginBottom: 0 }}>
+                    <label>To Date</label>
+                    <input type="date" value={weeklyEndDate} onChange={(e) => setWeeklyEndDate(e.target.value)} required={scheduleType === 'weekly'} />
+                  </div>
+                </div>
+                
+                <div className="form-group" style={{ marginBottom: 0 }}>
+                  <label>Select Days</label>
+                  <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                    {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map(day => (
+                      <div 
+                        key={day}
+                        onClick={() => setSelectedDays(prev => prev.includes(day) ? prev.filter(d => d !== day) : [...prev, day])}
+                        style={{ 
+                          padding: '8px 16px', 
+                          borderRadius: '20px', 
+                          cursor: 'pointer',
+                          fontSize: '14px',
+                          fontWeight: '500',
+                          backgroundColor: selectedDays.includes(day) ? '#5F76FE' : '#f3f4f6',
+                          color: selectedDays.includes(day) ? '#fff' : '#4b5563',
+                          border: `1px solid ${selectedDays.includes(day) ? '#5F76FE' : '#e5e7eb'}`,
+                          transition: 'all 0.2s'
+                        }}
+                      >
+                        {day.substring(0, 3)}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                
+                <div className="form-group date-time-group combined-group" style={{ marginTop: '5px' }}>
+                  <label>Select Time Slots</label>
+                  <div 
+                    className="combined-date-time-input" 
+                    onClick={() => setIsPickerModalOpen(true)}
+                    style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', padding: '0 16px', height: '48px', border: '1px solid #e5e7eb', borderRadius: '6px', backgroundColor: '#fff' }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      <FaRegClock style={{ color: '#9ca3af', fontSize: '15px' }} />
+                      <span style={{ color: formData.time && formData.time.length > 0 ? '#6b7280' : '#9ca3af', fontSize: '14px' }}>
+                        {formData.time && formData.time.length > 0 ? getSummaryTimeString(formData.time) : "Click to select Time Slots"}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
           
           <div className="form-actions-center">
@@ -496,6 +635,9 @@ const Schedule = () => {
                     endTime: '',
                     time: []
                   });
+                  setSelectedDays([]);
+                  setWeeklyStartDate('');
+                  setWeeklyEndDate('');
                 }}
               >
                 Cancel
@@ -628,6 +770,7 @@ const Schedule = () => {
         doctorName={formData.doctorName}
         allSchedules={schedules}
         editingId={editingId}
+        isWeekly={scheduleType === 'weekly'}
       />
     </div>
   );

@@ -40,7 +40,9 @@ const Layout = () => {
 
   const fetchUnreadCount = async () => {
     try {
-      const res = await axios.get(`${API_BASE_URL}/notifications/admin/admin`);
+      const token = sessionStorage.getItem('token');
+      const config = { headers: { Authorization: `Bearer ${token}` } };
+      const res = await axios.get(`${API_BASE_URL}/notifications/admin/admin`, config);
       const unread = res.data.filter(n => !n.isRead).length;
       setUnreadCount(unread);
     } catch (error) {
@@ -67,32 +69,58 @@ const Layout = () => {
   const { dateString, dayString } = getFormattedDate();
   const adminId = sessionStorage.getItem('adminId');
 
+  const getAdminNameFromToken = () => {
+    try {
+      const token = sessionStorage.getItem('token');
+      if (!token) return 'Administrator';
+      if (token === 'static-admin-token') return 'Super Admin';
+      
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      if (payload && payload.email) {
+        const namePart = payload.email.split('@')[0];
+        // Add a space before "hospital" or "clinic" if it's concatenated directly
+        let spacedName = namePart.replace(/(hospital)/gi, ' $1').replace(/(clinic)/gi, ' $1');
+        // Replace special characters with spaces
+        let cleanName = spacedName.replace(/[_.+-]/g, ' ').trim();
+        // Capitalize words
+        cleanName = cleanName.split(/\s+/).map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+        
+        return cleanName;
+      }
+      return 'Administrator';
+    } catch (e) {
+      return 'Administrator';
+    }
+  };
+
+  const adminName = getAdminNameFromToken();
+
   return (
     <div className="layout-container">
       {/* Sidebar */}
       <aside className="sidebar">
         <div className="sidebar-logo" style={{ marginBottom: '0px', padding: '10px 20px 10px 20px', display: 'flex', justifyContent: 'center' }}>
-          <img src={logoImage} alt="DrZ Logo" style={{ height: '80px',marginLeft:'-20px' }} />
+          <img src={logoImage} alt="DrZ Logo" style={{ height: '80px', marginLeft: '-20px' }} />
         </div>
-        
+
         <nav className="sidebar-nav">
-          <NavLink to="/dashboard" className={({isActive}) => isActive ? "nav-item active" : "nav-item"}>
+          <NavLink to="/dashboard" className={({ isActive }) => isActive ? "nav-item active" : "nav-item"}>
             <FaThLarge className="nav-icon" />
             <span>Dashboard</span>
           </NavLink>
-          <NavLink to="/doctors" className={({isActive}) => isActive ? "nav-item active" : "nav-item"}>
+          <NavLink to="/doctors" className={({ isActive }) => isActive ? "nav-item active" : "nav-item"}>
             <FaUserMd className="nav-icon" />
             <span>DR Management</span>
           </NavLink>
-          <NavLink to="/schedule" className={({isActive}) => isActive ? "nav-item active" : "nav-item"}>
+          <NavLink to="/schedule" className={({ isActive }) => isActive ? "nav-item active" : "nav-item"}>
             <FaCalendarCheck className="nav-icon" />
             <span>Schedule</span>
           </NavLink>
-          <NavLink to="/patient" className={({isActive}) => isActive ? "nav-item active" : "nav-item"}>
+          <NavLink to="/patient" className={({ isActive }) => isActive ? "nav-item active" : "nav-item"}>
             <FaUserInjured className="nav-icon" />
             <span>Appointment</span>
           </NavLink>
-          <NavLink to="/medical-camp" className={({isActive}) => isActive ? "nav-item active" : "nav-item"}>
+          <NavLink to="/medical-camp" className={({ isActive }) => isActive ? "nav-item active" : "nav-item"}>
             <FaBell className="nav-icon" />
             <span>Push Notification</span>
           </NavLink>
@@ -106,10 +134,10 @@ const Layout = () => {
           <div className="topbar-left">
             <p className="greeting-text">{greeting} <span className="wave-emoji">👋</span></p>
             <h2 className="welcome-text">
-              Welcome back, Administrator {adminId && <span style={{ color: '#6366f1', fontSize: '0.9em', marginLeft: '5px' }}>({adminId})</span>}
+              Welcome back, {adminName}
             </h2>
           </div>
-          
+
           <div className="topbar-right">
             <div className="date-display">
               <div className="calendar-icon-container">
@@ -129,18 +157,30 @@ const Layout = () => {
                 </span>
               )}
             </button>
-            
+
             <button className="icon-btn" onClick={() => setIsLogoutModalOpen(true)} title="Logout">
               <FaSignOutAlt />
             </button>
 
-            <div className="profile-container">
-              <img 
-                src={adminImage} 
-                alt="Admin Avatar" 
-                className="profile-avatar"
-              />
-              <span className="online-indicator"></span>
+            <div className="profile-container" style={{ display: 'flex', alignItems: 'center' }}>
+              <div style={{ position: 'relative' }}>
+                <img
+                  src={adminImage}
+                  alt="Admin Avatar"
+                  className="profile-avatar"
+                />
+                <span className="online-indicator"></span>
+              </div>
+              <div className="profile-info" style={{ display: 'flex', flexDirection: 'column', marginLeft: '10px' }}>
+                <span className="profile-name" style={{ fontWeight: '600', fontSize: '14px', color: '#1f2937', lineHeight: '1.2', textTransform: 'capitalize' }}>
+                  {adminName}
+                </span>
+                {adminId && (
+                  <span className="profile-id" style={{ fontSize: '12px', color: '#6b7280', lineHeight: '1.2', marginTop: '2px' }}>
+                    {adminId}
+                  </span>
+                )}
+              </div>
             </div>
           </div>
         </header>
@@ -157,8 +197,8 @@ const Layout = () => {
             <img src={logoImage} alt="DrZ Logo" style={{ height: '50px', marginBottom: '20px' }} />
             <p>Are you sure you want to logout?</p>
             <div className="logout-modal-actions">
-              <button style={{width:'150px', borderRadius:'20px'}} className="cancel-btn" onClick={() => setIsLogoutModalOpen(false)}>Cancel</button>
-              <button style={{width:'150px', borderRadius:'20px'}} className="confirm-logout-btn" onClick={handleLogout}>Logout</button>
+              <button style={{ width: '150px', borderRadius: '20px' }} className="cancel-btn" onClick={() => setIsLogoutModalOpen(false)}>Cancel</button>
+              <button style={{ width: '150px', borderRadius: '20px' }} className="confirm-logout-btn" onClick={handleLogout}>Logout</button>
             </div>
           </div>
         </div>

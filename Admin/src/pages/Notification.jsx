@@ -13,7 +13,9 @@ const Notification = () => {
 
   const fetchNotifications = async () => {
     try {
-      const response = await axios.get(`${API_BASE_URL}/notifications/admin/admin`);
+      const token = sessionStorage.getItem('token');
+      const config = { headers: { Authorization: `Bearer ${token}` } };
+      const response = await axios.get(`${API_BASE_URL}/notifications/admin/admin`, config);
       // Sort by newest first just in case
       const sorted = response.data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
       setNotifications(sorted);
@@ -30,7 +32,9 @@ const Notification = () => {
 
   const handleMarkAsRead = async (id) => {
     try {
-      await axios.put(`${API_BASE_URL}/notifications/${id}/read`);
+      const token = sessionStorage.getItem('token');
+      const config = { headers: { Authorization: `Bearer ${token}` } };
+      await axios.put(`${API_BASE_URL}/notifications/${id}/read`, {}, config);
       setNotifications((prev) =>
         prev.map((notif) => {
           const itemId = notif.id || notif._id;
@@ -56,17 +60,20 @@ const Notification = () => {
         return !isRead;
       });
 
+      const token = sessionStorage.getItem('token');
+      const config = { headers: { Authorization: `Bearer ${token}` } };
+
       if(unreadNotifs.length === 0) return;
 
       await Promise.all(
         unreadNotifs.map((notif) => {
           const itemId = notif.id || notif._id;
-          return axios.put(`${API_BASE_URL}/notifications/${itemId}/read`);
+          return axios.put(`${API_BASE_URL}/notifications/${itemId}/read`, {}, config);
         })
       );
 
       try {
-        await axios.put(`${API_BASE_URL}/notifications/readAll/admin/admin`);
+        await axios.put(`${API_BASE_URL}/notifications/readAll/admin/admin`, {}, config);
       } catch (err) {
         console.warn('Bulk readAll fallback warning:', err);
       }

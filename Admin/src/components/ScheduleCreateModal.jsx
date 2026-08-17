@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { FaTimes, FaChevronLeft, FaChevronRight, FaCheckSquare } from 'react-icons/fa';
 import './RescheduleModal.css'; // Reusing styles from RescheduleModal
 
-const ScheduleCreateModal = ({ isOpen, onClose, onSave, initialDate, initialSlots, doctorId, doctorName, allSchedules, editingId }) => {
+const ScheduleCreateModal = ({ isOpen, onClose, onSave, initialDate, initialSlots, doctorId, doctorName, allSchedules, editingId, isWeekly }) => {
   const [selectedDate, setSelectedDate] = useState('');
   const [selectedSlots, setSelectedSlots] = useState([]);
 
@@ -159,7 +159,8 @@ const ScheduleCreateModal = ({ isOpen, onClose, onSave, initialDate, initialSlot
 
   const getSelectableSlots = () => {
     return fullDaySlots.filter(slot => {
-      if (isSlotBooked(slot)) return false;
+      if (!isWeekly && isSlotBooked(slot)) return false;
+      if (isWeekly) return true;
       if (selectedDate !== getLocalDateString()) return true;
       const slotMinutes = getSlotStartMinutes(slot);
       const now = new Date();
@@ -253,64 +254,67 @@ const ScheduleCreateModal = ({ isOpen, onClose, onSave, initialDate, initialSlot
         
         <div className="modal-body">
           {/* Calendar Section */}
-          <div className="calendar-section">
-            <div className="calendar-header">
-              <FaChevronLeft className="nav-icon" onClick={handlePrevMonth} style={{cursor: 'pointer'}} />
-              <div className="calendar-nav-selects">
-                <select
-                  className="calendar-nav-select"
-                  value={currentMonth}
-                  onChange={(e) => setCurrentMonth(Number(e.target.value))}
-                >
-                  {monthNames.map((name, index) => (
-                    <option key={name} value={index}>{name}</option>
-                  ))}
-                </select>
-                <select
-                  className="calendar-nav-select"
-                  value={currentYear}
-                  onChange={(e) => setCurrentYear(Number(e.target.value))}
-                >
-                  {yearOptions.map((year) => (
-                    <option key={year} value={year}>{year}</option>
-                  ))}
-                </select>
-              </div>
-              <FaChevronRight className="nav-icon" onClick={handleNextMonth} style={{cursor: 'pointer'}} />
-            </div>
-            <div className="calendar-grid">
-              <div className="weekday">Sun</div><div className="weekday">Mon</div>
-              <div className="weekday">Tue</div><div className="weekday">Wed</div>
-              <div className="weekday">Thu</div><div className="weekday">Fri</div>
-              <div className="weekday">Sat</div>
-              
-              {emptyPrev.map((_, i) => <div key={`ep-${i}`} className="day disabled"></div>)}
-              
-              {days.map((day) => {
-                const dateStr = `${currentYear}-${(currentMonth + 1).toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
-                const isPast = isPastDate(currentYear, currentMonth, day);
-                
-                return (
-                  <div 
-                    key={day} 
-                    className={`day ${isPast ? 'disabled' : ''} ${selectedDate === dateStr ? 'selected' : ''}`}
-                    onClick={() => {
-                      if (!isPast) setSelectedDate(dateStr);
-                    }}
+          {/* Calendar Section */}
+          {!isWeekly && (
+            <div className="calendar-section">
+              <div className="calendar-header">
+                <FaChevronLeft className="nav-icon" onClick={handlePrevMonth} style={{cursor: 'pointer'}} />
+                <div className="calendar-nav-selects">
+                  <select
+                    className="calendar-nav-select"
+                    value={currentMonth}
+                    onChange={(e) => setCurrentMonth(Number(e.target.value))}
                   >
-                    {day.toString().padStart(2, '0')}
-                  </div>
-                );
-              })}
-              
-              {emptyNext.map((_, i) => <div key={`en-${i}`} className="day disabled"></div>)}
+                    {monthNames.map((name, index) => (
+                      <option key={name} value={index}>{name}</option>
+                    ))}
+                  </select>
+                  <select
+                    className="calendar-nav-select"
+                    value={currentYear}
+                    onChange={(e) => setCurrentYear(Number(e.target.value))}
+                  >
+                    {yearOptions.map((year) => (
+                      <option key={year} value={year}>{year}</option>
+                    ))}
+                  </select>
+                </div>
+                <FaChevronRight className="nav-icon" onClick={handleNextMonth} style={{cursor: 'pointer'}} />
+              </div>
+              <div className="calendar-grid">
+                <div className="weekday">Sun</div><div className="weekday">Mon</div>
+                <div className="weekday">Tue</div><div className="weekday">Wed</div>
+                <div className="weekday">Thu</div><div className="weekday">Fri</div>
+                <div className="weekday">Sat</div>
+                
+                {emptyPrev.map((_, i) => <div key={`ep-${i}`} className="day disabled"></div>)}
+                
+                {days.map((day) => {
+                  const dateStr = `${currentYear}-${(currentMonth + 1).toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
+                  const isPast = isPastDate(currentYear, currentMonth, day);
+                  
+                  return (
+                    <div 
+                      key={day} 
+                      className={`day ${isPast ? 'disabled' : ''} ${selectedDate === dateStr ? 'selected' : ''}`}
+                      onClick={() => {
+                        if (!isPast) setSelectedDate(dateStr);
+                      }}
+                    >
+                      {day.toString().padStart(2, '0')}
+                    </div>
+                  );
+                })}
+                
+                {emptyNext.map((_, i) => <div key={`en-${i}`} className="day disabled"></div>)}
+              </div>
             </div>
-          </div>
+          )}
           
           {/* Time Slots Section */}
-          <div className="time-section">
+          <div className="time-section" style={isWeekly ? { width: '100%', maxWidth: '100%', margin: '0 auto' } : undefined}>
             <div className="time-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <h3>{getDisplayDate()}</h3>
+              <h3>{isWeekly ? 'Select Time Slots' : getDisplayDate()}</h3>
               <button 
                 onClick={handleSelectAll} 
                 style={{ 
@@ -335,6 +339,7 @@ const ScheduleCreateModal = ({ isOpen, onClose, onSave, initialDate, initialSlot
             <div className="slots-list">
               {fullDaySlots
                 .filter((slot) => {
+                  if (isWeekly) return true;
                   if (selectedDate !== getLocalDateString()) return true;
                   const slotMinutes = getSlotStartMinutes(slot);
                   const now = new Date();
@@ -343,7 +348,7 @@ const ScheduleCreateModal = ({ isOpen, onClose, onSave, initialDate, initialSlot
                 })
                 .map((slot, index) => {
                   const isSelected = selectedSlots.includes(slot);
-                  const isBooked = isSlotBooked(slot);
+                  const isBooked = !isWeekly && isSlotBooked(slot);
                   return (
                     <div 
                       key={index} 

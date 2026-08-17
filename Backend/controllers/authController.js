@@ -113,14 +113,14 @@ const adminRegister = async (req, res) => {
         if (existing) {
             return res.status(400).json({ error: 'Admin already exists with this email' });
         }
-        
+
         // Generate a unique ID for the admin
         const uniqueId = `ADMIN-${Date.now().toString().slice(-6)}`;
-        
-        const adminUser = await User.create({ 
+
+        const adminUser = await User.create({
             name,
-            email, 
-            password, 
+            email,
+            password,
             uniqueId,
             role: 'admin',
             accessStartDate,
@@ -129,11 +129,62 @@ const adminRegister = async (req, res) => {
             accessEndTime,
             isActive: true
         });
-        
+
         res.json({ message: 'Admin registered successfully', user: { id: adminUser._id, uniqueId: adminUser.uniqueId, email: adminUser.email } });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
 };
 
-module.exports = { login, doctorLogin, patientRegister, patientLogin, updateFcmToken, adminRegister };
+const getAdmins = async (req, res) => {
+    try {
+        const admins = await User.find({ role: 'admin' });
+        res.json(admins);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+};
+
+const updateAdminStatus = async (req, res) => {
+    const { isActive } = req.body;
+    try {
+        const admin = await User.findByIdAndUpdate(req.params.id, { isActive }, { new: true });
+        if (!admin) return res.status(404).json({ error: 'Admin not found' });
+        res.json(admin);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+};
+
+const updateAdmin = async (req, res) => {
+    try {
+        const { name, email, password, accessStartDate, accessStartTime, accessEndDate, accessEndTime } = req.body;
+        const admin = await User.findById(req.params.id);
+        if (!admin) return res.status(404).json({ error: 'Admin not found' });
+        
+        if (name) admin.name = name;
+        if (email) admin.email = email;
+        if (password) admin.password = password;
+        if (accessStartDate) admin.accessStartDate = accessStartDate;
+        if (accessStartTime) admin.accessStartTime = accessStartTime;
+        if (accessEndDate) admin.accessEndDate = accessEndDate;
+        if (accessEndTime) admin.accessEndTime = accessEndTime;
+        
+        await admin.save();
+        res.json(admin);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+};
+
+const deleteAdmin = async (req, res) => {
+    try {
+        const admin = await User.findByIdAndDelete(req.params.id);
+        if (!admin) return res.status(404).json({ error: 'Admin not found' });
+        res.json({ message: 'Admin deleted successfully' });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+};
+
+module.exports = { login, doctorLogin, patientRegister, patientLogin, updateFcmToken, adminRegister, getAdmins, updateAdminStatus, updateAdmin, deleteAdmin };

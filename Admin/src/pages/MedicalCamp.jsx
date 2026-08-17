@@ -56,7 +56,9 @@ const MedicalCamp = () => {
 
     const fetchNotifications = async () => {
         try {
-            const res = await axios.get(`${API_BASE_URL}/push-notifications`);
+            const token = sessionStorage.getItem('token');
+            const config = { headers: { Authorization: `Bearer ${token}` } };
+            const res = await axios.get(`${API_BASE_URL}/push-notifications`, config);
             setNotifications(res.data);
         } catch (error) {
             console.error("Error fetching notifications", error);
@@ -140,11 +142,13 @@ const MedicalCamp = () => {
         };
 
         try {
+            const token = sessionStorage.getItem('token');
+            const config = { headers: { Authorization: `Bearer ${token}` } };
             if (editingId) {
-                await axios.put(`${API_BASE_URL}/push-notifications/${editingId}`, payload);
+                await axios.put(`${API_BASE_URL}/push-notifications/${editingId}`, payload, config);
                 alert("Notification updated successfully");
             } else {
-                await axios.post(`${API_BASE_URL}/push-notifications`, payload);
+                await axios.post(`${API_BASE_URL}/push-notifications`, payload, config);
                 alert("Notification created successfully");
             }
             resetForm();
@@ -194,7 +198,9 @@ const MedicalCamp = () => {
     const handleDelete = async (id) => {
         if (window.confirm("Are you sure you want to delete this notification?")) {
             try {
-                await axios.delete(`${API_BASE_URL}/push-notifications/${id}`);
+                const token = sessionStorage.getItem('token');
+                const config = { headers: { Authorization: `Bearer ${token}` } };
+                await axios.delete(`${API_BASE_URL}/push-notifications/${id}`, config);
                 fetchNotifications();
             } catch (error) {
                 console.error("Error deleting notification", error);

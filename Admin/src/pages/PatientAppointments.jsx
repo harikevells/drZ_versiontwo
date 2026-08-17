@@ -1182,7 +1182,7 @@ const PatientAppointments = () => {
                   )}
                 </div>
 
-                <div className="form-group checkbox-group" onClick={() => setIsVideoCall(!isVideoCall)}>
+                {/* <div className="form-group checkbox-group" onClick={() => setIsVideoCall(!isVideoCall)}>
                   <input
                     type="checkbox"
                     checked={isVideoCall}
@@ -1193,7 +1193,7 @@ const PatientAppointments = () => {
                     <div style={{ fontWeight: '600', fontSize: '14px' }}>Video Call Consult</div>
                     <div style={{ fontSize: '12px', color: '#6b7280' }}>Request video consultation</div>
                   </div>
-                </div>
+                </div> */}
               </div>
             </div>
             <div className="modal-footer-actions" style={{ padding: '20px 0 0 0', borderTop: '1px solid #e5e7eb', marginTop: '20px' }}>
