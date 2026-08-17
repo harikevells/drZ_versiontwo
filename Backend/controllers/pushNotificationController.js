@@ -17,7 +17,8 @@ const createPushNotification = async (req, res) => {
             image,
             activeStatus: activeStatus || false,
             role: role || 'admin',
-            doctorName: doctorName || ''
+            doctorName: doctorName || '',
+            adminId: (req.user && req.user.role === 'admin' && req.user.uniqueId) ? req.user.uniqueId : undefined
         });
 
         await pushNotification.save();
@@ -29,12 +30,18 @@ const createPushNotification = async (req, res) => {
 
         // Notify Admin if created by a Doctor
         if (role === 'doctor') {
+            let assignedAdminId = null;
+            if (req.user && req.user.id) {
+                const docObj = await Doctor.findById(req.user.id);
+                assignedAdminId = docObj ? docObj.adminId : null;
+            }
             await createNotification(
                 'admin',
                 'admin',
                 'New Medical Camp Created',
                 `Dr. ${doctorName || 'Doctor'} has created a new Medical Camp Notification: ${title}`,
-                'medical_camp'
+                'medical_camp',
+                assignedAdminId
             );
         }
 
@@ -69,7 +76,11 @@ const createPushNotification = async (req, res) => {
 // Get all push notifications (for Admin/Doctor)
 const getAllPushNotifications = async (req, res) => {
     try {
-        const notifications = await PushNotification.find({}).sort({ createdAt: -1 });
+        const query = {};
+        if (req.user && req.user.role === 'admin' && req.user.uniqueId) {
+            query.adminId = req.user.uniqueId;
+        }
+        const notifications = await PushNotification.find(query).sort({ createdAt: -1 });
         res.status(200).json(notifications);
     } catch (error) {
         console.error("Error fetching push notifications:", error);
@@ -97,6 +108,16 @@ const updatePushNotification = async (req, res) => {
         // Prevent changing id
         delete updateData.id;
 
+        const checkNotification = await PushNotification.findById(id);
+        if (!checkNotification) {
+            return res.status(404).json({ message: "Push notification not found" });
+        }
+        if (req.user && req.user.role === 'admin' && req.user.uniqueId) {
+            if (checkNotification.adminId && checkNotification.adminId !== req.user.uniqueId) {
+                return res.status(403).json({ message: 'Forbidden: You cannot modify this notification' });
+            }
+        }
+
         const updated = await PushNotification.findByIdAndUpdate(id, updateData, { new: true });
         
         if (!updated) {
@@ -117,6 +138,15 @@ const updatePushNotification = async (req, res) => {
 const deletePushNotification = async (req, res) => {
     try {
         const { id } = req.params;
+        const checkNotification = await PushNotification.findById(id);
+        if (!checkNotification) {
+            return res.status(404).json({ message: "Push notification not found" });
+        }
+        if (req.user && req.user.role === 'admin' && req.user.uniqueId) {
+            if (checkNotification.adminId && checkNotification.adminId !== req.user.uniqueId) {
+                return res.status(403).json({ message: 'Forbidden: You cannot delete this notification' });
+            }
+        }
         await PushNotification.findByIdAndDelete(id);
         res.status(200).json({ message: "Push notification deleted successfully" });
     } catch (error) {

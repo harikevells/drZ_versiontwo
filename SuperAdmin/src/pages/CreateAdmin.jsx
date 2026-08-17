@@ -1,7 +1,4 @@
 import { useState } from 'react';
-import { createUserWithEmailAndPassword } from 'firebase/auth';
-import { doc, setDoc } from 'firebase/firestore';
-import { secondaryAuth, db } from '../firebase';
 import { useNavigate } from 'react-router-dom';
 
 const CreateAdmin = () => {
@@ -62,27 +59,17 @@ const CreateAdmin = () => {
 
     setLoading(true);
     try {
-      // 1. Create user in Firebase Auth using the secondary app instance
-      // This prevents the Super Admin from being logged out if they were using Firebase Auth.
-      const userCredential = await createUserWithEmailAndPassword(
-        secondaryAuth, 
-        formData.email, 
-        formData.password
-      );
-      
-      const user = userCredential.user;
-
-      // 2. Store admin profile in Firestore
-      await setDoc(doc(db, 'admins', user.uid), {
-        name: formData.name,
-        email: formData.email,
-        accessStartDate: formData.accessStartDate,
-        accessStartTime: formData.accessStartTime,
-        accessEndDate: formData.accessEndDate,
-        accessEndTime: formData.accessEndTime,
-        isActive: true, // Default to active, but actual access depends on dates
-        createdAt: new Date().toISOString()
+      const response = await fetch('https://drz-versiontwo.onrender.com/api/auth/admin/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData)
       });
+      
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to register admin in backend');
+      }
 
       setSuccess('Admin registered successfully!');
       

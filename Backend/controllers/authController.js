@@ -11,8 +11,8 @@ const login = async (req, res) => {
 
         const isMatch = await user.matchPassword(password);
         if (isMatch) {
-            const token = jwt.sign({ id: user._id, email: user.email }, process.env.JWT_SECRET || 'supersecret123', { expiresIn: '1d' });
-            res.json({ token, user: { email: user.email } });
+            const token = jwt.sign({ id: user._id, email: user.email, uniqueId: user.uniqueId, role: user.role || 'admin' }, process.env.JWT_SECRET || 'supersecret123', { expiresIn: '1d' });
+            res.json({ token, user: { id: user._id, email: user.email, uniqueId: user.uniqueId, role: user.role || 'admin' } });
         } else {
             res.status(401).json({ error: 'Invalid credentials' });
         }

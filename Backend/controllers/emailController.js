@@ -1,5 +1,6 @@
 const nodemailer = require('nodemailer');
 const Appointment = require('../models/Appointment');
+const Doctor = require('../models/Doctor');
 const { createNotification } = require('./notificationController');
 
 const sendBookingEmail = async (req, res) => {
@@ -35,6 +36,10 @@ const sendBookingEmail = async (req, res) => {
             ? `${treatment_category} / ${departmentTranslations[treatment_category]}`
             : treatment_category;
 
+        // Lookup Doctor to inherit adminId
+        const doctorObj = await Doctor.findOne({ doctorName: doctor_name });
+        const assignedAdminId = doctorObj && doctorObj.adminId ? doctorObj.adminId : null;
+
         // Save appointment to MongoDB
         const newAppointment = new Appointment({
             patient_name,
@@ -47,7 +52,8 @@ const sendBookingEmail = async (req, res) => {
             appointment_date,
             appointment_time,
             video_call,
-            status: 'Pending'
+            status: 'Pending',
+            adminId: assignedAdminId
         });
         await newAppointment.save();
 
@@ -57,7 +63,8 @@ const sendBookingEmail = async (req, res) => {
             'admin',
             'New Appointment Booked',
             `A new appointment has been booked by Patient ${patient_name} with Dr. ${doctor_name} on ${appointment_date} at ${appointment_time}.`,
-            'appointment'
+            'appointment',
+            assignedAdminId
         );
 
         // Notify Doctor
@@ -142,6 +149,10 @@ const getBookedTimings = async (req, res) => {
         if (doctor_name) {
             filter.doctor_name = doctor_name;
         }
+
+        if (req.user && req.user.role === 'admin' && req.user.uniqueId) {
+            filter.adminId = req.user.uniqueId;
+        }
         
         const appointments = await Appointment.find(filter);
         // Return array of objects { doctor_name, booked_timings: [] } or just the raw appointments
@@ -154,7 +165,11 @@ const getBookedTimings = async (req, res) => {
 
 const getAllAppointments = async (req, res) => {
     try {
-        const appointments = await Appointment.find().sort({ createdAt: -1 }); // Sorting by newest first if createdAt exists, else default sort
+        const filter = {};
+        if (req.user && req.user.role === 'admin' && req.user.uniqueId) {
+            filter.adminId = req.user.uniqueId;
+        }
+        const appointments = await Appointment.find(filter).sort({ createdAt: -1 }); // Sorting by newest first if createdAt exists, else default sort
         res.status(200).json(appointments);
     } catch (error) {
         console.error("Error fetching all appointments:", error);

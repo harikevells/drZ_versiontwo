@@ -26,7 +26,11 @@ const translateDepartment = (deptString) => {
 
 const getDoctors = async (req, res) => {
     try {
-        const doctors = await Doctor.find({});
+        let query = {};
+        if (req.user && req.user.role === 'admin' && req.user.uniqueId) {
+            query.adminId = req.user.uniqueId;
+        }
+        const doctors = await Doctor.find(query);
         res.json(doctors);
     } catch (err) {
         res.status(500).json({ error: err.message });
@@ -37,6 +41,9 @@ const createDoctor = async (req, res) => {
     try {
         console.log("Creating new doctor:", req.body.doctorName);
         const doctorData = { ...req.body };
+        if (req.user && req.user.role === 'admin' && req.user.uniqueId) {
+            doctorData.adminId = req.user.uniqueId;
+        }
         if (doctorData.department) {
             doctorData.department = translateDepartment(doctorData.department);
         }
@@ -55,6 +62,12 @@ const updateDoctor = async (req, res) => {
         if (!doctor) {
             console.error("Doctor not found for update");
             return res.status(404).json({ error: 'Doctor not found' });
+        }
+
+        if (req.user && req.user.role === 'admin' && req.user.uniqueId) {
+            if (doctor.adminId && doctor.adminId !== req.user.uniqueId) {
+                return res.status(403).json({ error: 'Forbidden: You cannot modify this doctor' });
+            }
         }
 
         doctor.doctorName = req.body.doctorName;
@@ -82,6 +95,17 @@ const updateDoctor = async (req, res) => {
 const deleteDoctor = async (req, res) => {
     try {
         console.log(`Deleting doctor ID ${req.params.id}`);
+        const doctorCheck = await Doctor.findById(req.params.id);
+        if (!doctorCheck) {
+            return res.status(404).json({ error: 'Doctor not found' });
+        }
+
+        if (req.user && req.user.role === 'admin' && req.user.uniqueId) {
+            if (doctorCheck.adminId && doctorCheck.adminId !== req.user.uniqueId) {
+                return res.status(403).json({ error: 'Forbidden: You cannot delete this doctor' });
+            }
+        }
+
         const doctor = await Doctor.findByIdAndDelete(req.params.id);
         if (!doctor) {
             console.error("Doctor not found for delete");

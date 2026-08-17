@@ -3,7 +3,7 @@ const Doctor = require('../models/Doctor');
 const Patient = require('../models/Patient');
 const admin = require('firebase-admin');
 
-const createNotification = async (role, identifier, title, message, type = 'info') => {
+const createNotification = async (role, identifier, title, message, type = 'info', adminId = null) => {
     try {
         const notification = new Notification({
             role,
@@ -11,7 +11,8 @@ const createNotification = async (role, identifier, title, message, type = 'info
             title,
             message,
             type,
-            isRead: false
+            isRead: false,
+            adminId
         });
         await notification.save();
 
@@ -70,7 +71,12 @@ const getNotifications = async (req, res) => {
     try {
         const { role, identifier } = req.params;
 
-        const notifications = await Notification.find({ role, identifier })
+        const query = { role, identifier };
+        if (req.user && req.user.role === 'admin' && req.user.uniqueId) {
+            query.adminId = req.user.uniqueId;
+        }
+
+        const notifications = await Notification.find(query)
             .sort({ createdAt: -1 })
             .limit(50);
         res.status(200).json(notifications);
@@ -98,7 +104,11 @@ const markAsRead = async (req, res) => {
 const markAllAsRead = async (req, res) => {
     try {
         const { role, identifier } = req.params;
-        await Notification.updateMany({ role, identifier }, { isRead: true });
+        const query = { role, identifier };
+        if (req.user && req.user.role === 'admin' && req.user.uniqueId) {
+            query.adminId = req.user.uniqueId;
+        }
+        await Notification.updateMany(query, { isRead: true });
         res.status(200).json({ message: "All notifications marked as read" });
     } catch (error) {
         res.status(500).json({ message: "Failed to update notifications", error: error.message });

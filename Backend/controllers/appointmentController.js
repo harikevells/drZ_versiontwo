@@ -5,9 +5,11 @@ const getDoctorDashboard = async (req, res) => {
     try {
         const { doctorName } = req.params;
 
-        const totalAttended = await Appointment.countDocuments({ doctor_name: doctorName, status: { $in: ['Completed', 'completed'] } });
-        const pendingAppointments = await Appointment.countDocuments({ doctor_name: doctorName, status: { $in: ['Pending', 'pending'] } });
-        const rescheduleAppointments = await Appointment.countDocuments({ doctor_name: doctorName, status: { $in: ['Rescheduled', 'rescheduled'] } });
+        const baseQuery = req.user && req.user.role === 'admin' && req.user.uniqueId ? { adminId: req.user.uniqueId, doctor_name: doctorName } : { doctor_name: doctorName };
+
+        const totalAttended = await Appointment.countDocuments({ ...baseQuery, status: { $in: ['Completed', 'completed'] } });
+        const pendingAppointments = await Appointment.countDocuments({ ...baseQuery, status: { $in: ['Pending', 'pending'] } });
+        const rescheduleAppointments = await Appointment.countDocuments({ ...baseQuery, status: { $in: ['Rescheduled', 'rescheduled'] } });
 
         const istDateStr = new Date().toLocaleString('en-US', { timeZone: 'Asia/Kolkata' });
         const today = new Date(istDateStr);
@@ -17,14 +19,14 @@ const getDoctorDashboard = async (req, res) => {
         const todayDateStr = `${dd}/${mm}/${yyyy}`;
 
         const todaysAppointments = await Appointment.countDocuments({
-            doctor_name: doctorName,
+            ...baseQuery,
             appointment_date: todayDateStr,
             status: { $in: ['Pending', 'pending', 'Rescheduled', 'rescheduled', 'Approved', 'approved', 'Completed', 'completed'] }
         });
 
-        const patientRequests = await Appointment.find({ doctor_name: doctorName, status: { $in: ['Pending', 'pending', 'Rescheduled', 'rescheduled'] } }).sort({ createdAt: -1 });
+        const patientRequests = await Appointment.find({ ...baseQuery, status: { $in: ['Pending', 'pending', 'Rescheduled', 'rescheduled'] } }).sort({ createdAt: -1 });
 
-        const recentPatients = await Appointment.find({ doctor_name: doctorName, status: { $in: ['Completed', 'completed', 'Approved', 'approved'] } })
+        const recentPatients = await Appointment.find({ ...baseQuery, status: { $in: ['Completed', 'completed', 'Approved', 'approved'] } })
             .sort({ updatedAt: -1 })
             .limit(10);
 
@@ -57,7 +59,8 @@ const updateAppointmentStatus = async (req, res) => {
             'admin',
             `Appointment ${status}`,
             `Appointment for Patient ${appointment.patient_name} was marked as ${status} by Dr. ${appointment.doctor_name}.`,
-            'appointment_status'
+            'appointment_status',
+            appointment.adminId
         );
 
         if (followupDate && status === 'Completed') {
@@ -78,7 +81,7 @@ const updateAppointmentStatus = async (req, res) => {
                 }
 
                 // Notify Admin
-                await createNotification('admin', 'admin', 'Follow-up Reminder', `Today patient ${appointment.patient_name} has a follow-up appointment with Dr. ${appointment.doctor_name}. Date: ${todayDateStr}.`, 'followup_reminder');
+                await createNotification('admin', 'admin', 'Follow-up Reminder', `Today patient ${appointment.patient_name} has a follow-up appointment with Dr. ${appointment.doctor_name}. Date: ${todayDateStr}.`, 'followup_reminder', appointment.adminId);
             } else if (followupDate) {
                 // If they schedule a follow-up for a future date, send an immediate notification that it was scheduled
                 if (appointment.doctor_name) {
@@ -88,7 +91,7 @@ const updateAppointmentStatus = async (req, res) => {
                     await createNotification('patient', appointment.login_mobile, 'Follow-up Scheduled', `Your follow-up with Dr. ${appointment.doctor_name} is scheduled for ${followupDate}.`, 'followup_scheduled');
                 }
                 // Notify Admin
-                await createNotification('admin', 'admin', 'Follow-up Scheduled', `Follow-up scheduled for patient ${appointment.patient_name} with Dr. ${appointment.doctor_name} on ${followupDate}.`, 'followup_scheduled');
+                await createNotification('admin', 'admin', 'Follow-up Scheduled', `Follow-up scheduled for patient ${appointment.patient_name} with Dr. ${appointment.doctor_name} on ${followupDate}.`, 'followup_scheduled', appointment.adminId);
             }
         }
 
@@ -118,7 +121,8 @@ const updateAppointmentStatus = async (req, res) => {
 const getAllDoctorAppointments = async (req, res) => {
     try {
         const { doctorName } = req.params;
-        const appointments = await Appointment.find({ doctor_name: doctorName }).sort({ createdAt: -1 });
+        const baseQuery = req.user && req.user.role === 'admin' && req.user.uniqueId ? { adminId: req.user.uniqueId, doctor_name: doctorName } : { doctor_name: doctorName };
+        const appointments = await Appointment.find(baseQuery).sort({ createdAt: -1 });
         res.json(appointments);
     } catch (err) {
         res.status(500).json({ error: err.message });
@@ -130,8 +134,9 @@ const getBookedTimingsByDate = async (req, res) => {
         const { doctorName, date } = req.params;
 
         // Find all appointments for this doctor on this date that are either pending or approved
+        const baseQuery = req.user && req.user.role === 'admin' && req.user.uniqueId ? { adminId: req.user.uniqueId, doctor_name: doctorName } : { doctor_name: doctorName };
         const appointments = await Appointment.find({
-            doctor_name: doctorName,
+            ...baseQuery,
             appointment_date: date,
             status: { $in: ['Pending', 'Approved', 'Rescheduled'] }
         });
@@ -148,7 +153,8 @@ const exportDoctorAppointments = async (req, res) => {
         const { doctorName } = req.params;
         const { from, to } = req.query;
 
-        const appointments = await Appointment.find({ doctor_name: doctorName }).sort({ createdAt: -1 });
+        const baseQuery = req.user && req.user.role === 'admin' && req.user.uniqueId ? { adminId: req.user.uniqueId, doctor_name: doctorName } : { doctor_name: doctorName };
+        const appointments = await Appointment.find(baseQuery).sort({ createdAt: -1 });
 
         let filteredAppointments = appointments;
 
@@ -276,7 +282,8 @@ const processFollowupReminders = async (req, res) => {
                 'admin',
                 'Follow-up Reminder',
                 adminMessage,
-                'followup_reminder'
+                'followup_reminder',
+                appt.adminId
             );
 
             sentCount++;

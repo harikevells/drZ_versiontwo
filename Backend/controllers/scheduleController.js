@@ -1,4 +1,5 @@
 const Schedule = require('../models/Schedule');
+const Doctor = require('../models/Doctor');
 const { createNotification } = require('./notificationController');
 
 const departmentTranslations = {
@@ -32,6 +33,10 @@ const getSchedules = async (req, res) => {
         if (req.query.doctorName) filter.doctorName = req.query.doctorName;
         if (req.query.date) filter.date = req.query.date;
 
+        if (req.user && req.user.role === 'admin' && req.user.uniqueId) {
+            filter.adminId = req.user.uniqueId;
+        }
+
         const schedules = await Schedule.find(filter);
         res.json(schedules);
     } catch (err) {
@@ -42,6 +47,9 @@ const getSchedules = async (req, res) => {
 const createSchedule = async (req, res) => {
     try {
         const scheduleData = { ...req.body };
+        if (req.user && req.user.role === 'admin' && req.user.uniqueId) {
+            scheduleData.adminId = req.user.uniqueId;
+        }
         if (scheduleData.department) {
             scheduleData.department = translateDepartment(scheduleData.department);
         }
@@ -49,6 +57,14 @@ const createSchedule = async (req, res) => {
 
         // Determine who created the schedule based on JWT payload
         const createdByDoctor = req.user && req.user.role === 'doctor';
+        
+        let assignedAdminId = null;
+        if (createdByDoctor && req.user && req.user.id) {
+            const docObj = await Doctor.findById(req.user.id);
+            assignedAdminId = docObj ? docObj.adminId : null;
+        } else if (req.user && req.user.role === 'admin') {
+            assignedAdminId = req.user.uniqueId;
+        }
 
         if (createdByDoctor) {
             // Doctor created the schedule -> Notify Admin only
@@ -57,7 +73,8 @@ const createSchedule = async (req, res) => {
                 'admin',
                 'New Schedule Created',
                 `Dr. ${scheduleData.doctorName || 'A Doctor'} has created a new schedule for ${scheduleData.date}.`,
-                'schedule'
+                'schedule',
+                assignedAdminId
             );
         } else {
             // Admin created the schedule -> Notify Doctor only
@@ -93,6 +110,15 @@ const updateSchedule = async (req, res) => {
         if (scheduleData.department) {
             scheduleData.department = translateDepartment(scheduleData.department);
         }
+        const scheduleCheck = await Schedule.findById(req.params.id);
+        if (!scheduleCheck) return res.status(404).json({ error: 'Schedule not found' });
+
+        if (req.user && req.user.role === 'admin' && req.user.uniqueId) {
+            if (scheduleCheck.adminId && scheduleCheck.adminId !== req.user.uniqueId) {
+                return res.status(403).json({ error: 'Forbidden: You cannot modify this schedule' });
+            }
+        }
+
         const schedule = await Schedule.findByIdAndUpdate(req.params.id, scheduleData, { new: true });
         if (!schedule) return res.status(404).json({ error: 'Schedule not found' });
         res.json(schedule);
@@ -103,6 +129,15 @@ const updateSchedule = async (req, res) => {
 
 const deleteSchedule = async (req, res) => {
     try {
+        const scheduleCheck = await Schedule.findById(req.params.id);
+        if (!scheduleCheck) return res.status(404).json({ error: 'Schedule not found' });
+
+        if (req.user && req.user.role === 'admin' && req.user.uniqueId) {
+            if (scheduleCheck.adminId && scheduleCheck.adminId !== req.user.uniqueId) {
+                return res.status(403).json({ error: 'Forbidden: You cannot delete this schedule' });
+            }
+        }
+
         const schedule = await Schedule.findByIdAndDelete(req.params.id);
         if (!schedule) return res.status(404).json({ error: 'Schedule not found' });
         res.json({ deleted: true });
