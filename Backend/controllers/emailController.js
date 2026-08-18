@@ -6,6 +6,12 @@ const { createNotification } = require('./notificationController');
 const fs = require('fs');
 const path = require('path');
 const pdf = require('html-pdf');
+const dns = require('dns');
+
+// Force Node.js to use IPv4 instead of IPv6 to prevent Render ENETUNREACH timeouts
+if (dns.setDefaultResultOrder) {
+    dns.setDefaultResultOrder('ipv4first');
+}
 
 const sendBookingEmail = async (req, res) => {
     try {
