@@ -5,7 +5,7 @@ const Doctor = require('../models/Doctor');
 const { createNotification } = require('./notificationController');
 const fs = require('fs');
 const path = require('path');
-const html_to_pdf = require('html-pdf-node');
+// html-pdf-node removed to prevent Render crash
 
 const sendBookingEmail = async (req, res) => {
     try {
@@ -74,7 +74,7 @@ const sendBookingEmail = async (req, res) => {
 
         // Configure transporter and send email if credentials are present
         const senderEmail = process.env.EMAIL_USER || 'drzproject2026@gmail.com';
-        const senderPass = process.env.EMAIL_PASS || 'gtqu obdt hhqm nnyc';
+        const senderPass = (process.env.EMAIL_PASS || 'gtquobdthhqmnnyc').replace(/\s+/g, '');
 
         // Send email in the background to prevent request blocking or timeouts
         const sendEmailInBackground = async () => {
@@ -190,7 +190,7 @@ const sendInvoiceEmail = async (req, res) => {
         }
 
         const senderEmail = process.env.EMAIL_USER || 'drzproject2026@gmail.com';
-        const senderPass = process.env.EMAIL_PASS || 'gtqu obdt hhqm nnyc';
+        const senderPass = (process.env.EMAIL_PASS || 'gtquobdthhqmnnyc').replace(/\s+/g, '');
 
         // IMMEDIATELY RETURN SUCCESS TO AVOID RENDER TIMEOUTS
         res.json({ message: 'Invoice sending initiated' });
@@ -312,32 +312,48 @@ const sendInvoiceEmail = async (req, res) => {
         </div>
         `;
 
+        const emailBodyHtml = `
+            <div style="font-family: Arial, sans-serif; color: #333; line-height: 1.6;">
+                <p>Dear Sir/mam,</p>
+                <p>Greetings from DrZ Management.</p>
+                <p>We are pleased to confirm that your DrZ Subscription payment has been successfully received.</p>
+                <p>Please find the subscription and invoice details below:</p>
+                <br/>
+                <p>Best Regards,<br/><strong>DrZ Management Team</strong></p>
+            </div>
+        `;
+
         const mailOptions = {
             from: senderEmail,
             to: admin.email,
-            subject: 'Your DrZ Subscription Invoice',
-            html: htmlContent
+            subject: 'Subscription Payment Successful – DrZ Management',
+            html: emailBodyHtml
         };
 
-        const options = { 
-            format: 'A4',
-            args: ['--no-sandbox', '--disable-setuid-sandbox']
-        };
-        const file = { content: htmlContent };
-        
         try {
-            const pdfBuffer = await html_to_pdf.generatePdf(file, options);
-            mailOptions.attachments = [
-                {
-                    filename: `Invoice-INV-DRZ-${Date.now().toString().slice(-6)}.pdf`,
-                    content: pdfBuffer,
-                    contentType: 'application/pdf'
-                }
-            ];
-            // Optional: send generic text if attachment is present
-            mailOptions.text = "Please find your attached invoice.";
+            // Use QuickChart free API to bypass Render Puppeteer crash
+            const response = await fetch('https://quickchart.io/html-to-pdf', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ html: htmlContent, format: 'A4' })
+            });
+
+            if (response.ok) {
+                const arrayBuffer = await response.arrayBuffer();
+                const pdfBuffer = Buffer.from(arrayBuffer);
+                mailOptions.attachments = [
+                    {
+                        filename: `Invoice-INV-DRZ-${Date.now().toString().slice(-6)}.pdf`,
+                        content: pdfBuffer,
+                        contentType: 'application/pdf'
+                    }
+                ];
+                mailOptions.text = "Please find your attached invoice.";
+            } else {
+                console.error('QuickChart API failed:', response.statusText);
+            }
         } catch (pdfErr) {
-            console.error('Error generating PDF:', pdfErr);
+            console.error('Error generating PDF via API:', pdfErr);
         }
 
                 await transporter.sendMail(mailOptions);
