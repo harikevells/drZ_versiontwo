@@ -194,17 +194,22 @@ const sendInvoiceEmail = async (req, res) => {
             return res.status(500).json({ error: 'Email configuration is missing on the server' });
         }
 
-        const transporter = nodemailer.createTransport({
-            service: process.env.EMAIL_SERVICE || 'gmail',
-            auth: {
-                user: process.env.EMAIL_USER,
-                pass: process.env.EMAIL_PASS
-            }
-        });
-        
-        const today = new Date();
-        const invoiceDate = `${today.getDate().toString().padStart(2, '0')}.${(today.getMonth() + 1).toString().padStart(2, '0')}.${today.getFullYear()}`;
-        const amount = "1499"; 
+        // IMMEDIATELY RETURN SUCCESS TO AVOID RENDER TIMEOUTS
+        res.json({ message: 'Invoice sending initiated' });
+
+        const sendInvoiceInBackground = async () => {
+            try {
+                const transporter = nodemailer.createTransport({
+                    service: process.env.EMAIL_SERVICE || 'gmail',
+                    auth: {
+                        user: process.env.EMAIL_USER,
+                        pass: process.env.EMAIL_PASS
+                    }
+                });
+                
+                const today = new Date();
+                const invoiceDate = `${today.getDate().toString().padStart(2, '0')}.${(today.getMonth() + 1).toString().padStart(2, '0')}.${today.getFullYear()}`;
+                const amount = "1499"; 
 
         // Read Logo as Base64
         let logoHtml = '<div style="background-color: #372332; color: white; display: inline-block; padding: 15px; border-radius: 5px; font-weight: bold; font-size: 24px; font-family: serif;">KEVELL<br/>CORP</div>';
@@ -337,12 +342,20 @@ const sendInvoiceEmail = async (req, res) => {
             console.error('Error generating PDF:', pdfErr);
         }
 
-        await transporter.sendMail(mailOptions);
+                await transporter.sendMail(mailOptions);
+                console.log('Invoice sent successfully in background');
+            } catch (err) {
+                console.error('Failed to send background invoice:', err);
+            }
+        };
 
-        res.json({ message: 'Invoice sent successfully' });
+        sendInvoiceInBackground();
+
     } catch (err) {
         console.error(err);
-        res.status(500).json({ error: 'Failed to send invoice' });
+        if (!res.headersSent) {
+            res.status(500).json({ error: 'Failed to initiate invoice' });
+        }
     }
 };
 
