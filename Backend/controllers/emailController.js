@@ -5,7 +5,7 @@ const Doctor = require('../models/Doctor');
 const { createNotification } = require('./notificationController');
 const fs = require('fs');
 const path = require('path');
-// html-pdf-node removed to prevent Render crash
+const pdf = require('html-pdf');
 
 const sendBookingEmail = async (req, res) => {
     try {
@@ -331,37 +331,34 @@ const sendInvoiceEmail = async (req, res) => {
         };
 
         try {
-            // Use QuickChart free API to bypass Render Puppeteer crash
-            const response = await fetch('https://quickchart.io/html-to-pdf', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ html: htmlContent, format: 'A4' })
+            const pdfBuffer = await new Promise((resolve, reject) => {
+                pdf.create(htmlContent, { format: 'A4' }).toBuffer((err, buffer) => {
+                    if (err) reject(err);
+                    else resolve(buffer);
+                });
             });
 
-            if (response.ok) {
-                const arrayBuffer = await response.arrayBuffer();
-                const pdfBuffer = Buffer.from(arrayBuffer);
-                mailOptions.attachments = [
-                    {
-                        filename: `Invoice-INV-DRZ-${Date.now().toString().slice(-6)}.pdf`,
-                        content: pdfBuffer,
-                        contentType: 'application/pdf'
-                    }
-                ];
-                mailOptions.text = "Please find your attached invoice.";
-            } else {
-                console.error('QuickChart API failed:', response.statusText);
-            }
+            mailOptions.attachments = [
+                {
+                    filename: `Invoice-INV-DRZ-${Date.now().toString().slice(-6)}.pdf`,
+                    content: pdfBuffer,
+                    contentType: 'application/pdf'
+                }
+            ];
         } catch (pdfErr) {
-            console.error('Error generating PDF via API:', pdfErr);
+            console.error('Error generating PDF via html-pdf:', pdfErr);
         }
 
-                await transporter.sendMail(mailOptions);
-                console.log('Invoice sent successfully in background');
-            } catch (err) {
-                console.error('Failed to send background invoice:', err);
-            }
-        };
+        try {
+            await transporter.sendMail(mailOptions);
+            console.log('Invoice sent successfully in background');
+        } catch (err) {
+            console.error('Failed to send background invoice:', err);
+        }
+    } catch (globalErr) {
+        console.error('Unexpected error in background email task:', globalErr);
+    }
+};
 
         sendInvoiceInBackground();
 
