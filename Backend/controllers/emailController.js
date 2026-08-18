@@ -73,21 +73,23 @@ const sendBookingEmail = async (req, res) => {
         );
 
         // Configure transporter and send email if credentials are present
-        if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
-            // Send email in the background to prevent request blocking or timeouts
-            const sendEmailInBackground = async () => {
-                try {
-                    const transporter = nodemailer.createTransport({
-                        service: process.env.EMAIL_SERVICE || 'gmail',
-                        auth: {
-                            user: process.env.EMAIL_USER,
-                            pass: process.env.EMAIL_PASS
-                        }
-                    });
+        const senderEmail = process.env.EMAIL_USER || 'drzproject2026@gmail.com';
+        const senderPass = process.env.EMAIL_PASS || 'gtqu obdt hhqm nnyc';
 
-                    // Email content
-                    const mailOptions = {
-                        from: process.env.EMAIL_USER,
+        // Send email in the background to prevent request blocking or timeouts
+        const sendEmailInBackground = async () => {
+            try {
+                const transporter = nodemailer.createTransport({
+                    service: process.env.EMAIL_SERVICE || 'gmail',
+                    auth: {
+                        user: senderEmail,
+                        pass: senderPass
+                    }
+                });
+
+                // Email content
+                const mailOptions = {
+                    from: senderEmail,
                         to: process.env.EMAIL_USER, // Sending to the same email or change it to admin email
                         subject: `New Appointment Booking: ${patient_name}`,
                         html: `
@@ -114,9 +116,6 @@ const sendBookingEmail = async (req, res) => {
 
             // Run in background
             sendEmailInBackground();
-        } else {
-            console.log("Email credentials not configured. Skipping email notifications.");
-        }
         
         res.status(200).json({ message: 'Appointment created successfully' });
     } catch (error) {
@@ -190,9 +189,8 @@ const sendInvoiceEmail = async (req, res) => {
             return res.status(400).json({ error: 'Cannot send invoice for an inactive admin' });
         }
 
-        if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-            return res.status(500).json({ error: 'Email configuration is missing on the server' });
-        }
+        const senderEmail = process.env.EMAIL_USER || 'drzproject2026@gmail.com';
+        const senderPass = process.env.EMAIL_PASS || 'gtqu obdt hhqm nnyc';
 
         // IMMEDIATELY RETURN SUCCESS TO AVOID RENDER TIMEOUTS
         res.json({ message: 'Invoice sending initiated' });
@@ -202,8 +200,8 @@ const sendInvoiceEmail = async (req, res) => {
                 const transporter = nodemailer.createTransport({
                     service: process.env.EMAIL_SERVICE || 'gmail',
                     auth: {
-                        user: process.env.EMAIL_USER,
-                        pass: process.env.EMAIL_PASS
+                        user: senderEmail,
+                        pass: senderPass
                     }
                 });
                 
@@ -315,7 +313,7 @@ const sendInvoiceEmail = async (req, res) => {
         `;
 
         const mailOptions = {
-            from: process.env.EMAIL_USER,
+            from: senderEmail,
             to: admin.email,
             subject: 'Your DrZ Subscription Invoice',
             html: htmlContent
