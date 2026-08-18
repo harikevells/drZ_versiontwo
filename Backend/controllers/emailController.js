@@ -316,7 +316,10 @@ const sendInvoiceEmail = async (req, res) => {
             html: htmlContent
         };
 
-        const options = { format: 'A4' };
+        const options = { 
+            format: 'A4',
+            args: ['--no-sandbox', '--disable-setuid-sandbox']
+        };
         const file = { content: htmlContent };
         
         try {
