@@ -8,11 +8,6 @@ const path = require('path');
 const pdf = require('html-pdf');
 const dns = require('dns');
 
-// Force Node.js to use IPv4 instead of IPv6 to prevent Render ENETUNREACH timeouts
-if (dns.setDefaultResultOrder) {
-    dns.setDefaultResultOrder('ipv4first');
-}
-
 const sendBookingEmail = async (req, res) => {
     try {
         const {
@@ -85,11 +80,24 @@ const sendBookingEmail = async (req, res) => {
         // Send email in the background to prevent request blocking or timeouts
         const sendEmailInBackground = async () => {
             try {
+                const ipv4Address = await new Promise((resolve, reject) => {
+                    dns.lookup('smtp.gmail.com', { family: 4 }, (err, address) => {
+                        if (err) reject(err);
+                        else resolve(address);
+                    });
+                });
+
                 const transporter = nodemailer.createTransport({
-                    service: process.env.EMAIL_SERVICE || 'gmail',
+                    host: ipv4Address,
+                    port: 465,
+                    secure: true,
                     auth: {
                         user: senderEmail,
                         pass: senderPass
+                    },
+                    tls: {
+                        servername: 'smtp.gmail.com',
+                        rejectUnauthorized: false
                     }
                 });
 
@@ -203,8 +211,15 @@ const sendInvoiceEmail = async (req, res) => {
 
         const sendInvoiceInBackground = async () => {
             try {
+                const ipv4Address = await new Promise((resolve, reject) => {
+                    dns.lookup('smtp.gmail.com', { family: 4 }, (err, address) => {
+                        if (err) reject(err);
+                        else resolve(address);
+                    });
+                });
+
                 const transporter = nodemailer.createTransport({
-                    host: 'smtp.gmail.com',
+                    host: ipv4Address,
                     port: 465,
                     secure: true,
                     auth: {
@@ -212,6 +227,7 @@ const sendInvoiceEmail = async (req, res) => {
                         pass: senderPass
                     },
                     tls: {
+                        servername: 'smtp.gmail.com',
                         rejectUnauthorized: false
                     }
                 });
