@@ -257,12 +257,12 @@ const Layout = () => {
             {lockReason}
           </p>
           <button 
-            onClick={handleLogout}
+            onClick={() => navigate('/subscription')}
             style={{ padding: '12px 32px', backgroundColor: '#3b82f6', color: '#fff', border: 'none', borderRadius: '8px', fontSize: '16px', fontWeight: '600', cursor: 'pointer', transition: 'background-color 0.2s' }}
             onMouseOver={(e) => e.target.style.backgroundColor = '#2563eb'}
             onMouseOut={(e) => e.target.style.backgroundColor = '#3b82f6'}
           >
-            Return to Login
+            View Plan
           </button>
         </div>
       )}

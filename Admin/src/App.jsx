@@ -8,6 +8,7 @@ import PatientAppointments from './pages/PatientAppointments';
 import Notification from './pages/Notification';
 import MedicalCamp from './pages/MedicalCamp';
 import Dashboard from './pages/Dashboard/Dashboard';
+import Subscription from './pages/Subscription';
 
 const ProtectedRoute = ({ element }) => {
   const token = sessionStorage.getItem('token');
@@ -52,6 +53,7 @@ function App() {
     <Router>
       <Routes>
         <Route path="/login" element={<PublicRoute element={<Login />} />} />
+        <Route path="/subscription" element={<Subscription />} />
 
         <Route path="/" element={<ProtectedRoute element={<Layout />} />}>
           <Route index element={<Navigate to="/dashboard" replace />} />

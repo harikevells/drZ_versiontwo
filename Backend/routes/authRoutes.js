@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { login, doctorLogin, patientRegister, patientLogin, updateFcmToken, adminRegister, getAdmins, updateAdminStatus, updateAdmin, deleteAdmin, checkAdminStatus, checkDoctorStatus, updateAdminSubscription } = require('../controllers/authController');
+const { sendInvoiceEmail } = require('../controllers/emailController');
 const protect = require('../middleware/authMiddleware');
 
 router.post('/login', login);
@@ -13,6 +14,7 @@ router.get('/admin/status', protect, checkAdminStatus);
 router.get('/doctor/status', protect, checkDoctorStatus);
 router.put('/admins/:id/subscription', updateAdminSubscription);
 router.put('/admins/:id', updateAdmin);
+router.post('/admins/:id/invoice', sendInvoiceEmail);
 router.delete('/admins/:id', deleteAdmin);
 router.put('/admins/:id/status', updateAdminStatus);
 router.put('/fcm-token', protect, updateFcmToken);

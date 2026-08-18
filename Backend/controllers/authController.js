@@ -144,7 +144,7 @@ const updateFcmToken = async (req, res) => {
     }
 };
 const adminRegister = async (req, res) => {
-    const { name, email, password, accessStartDate, accessStartTime, accessEndDate, accessEndTime } = req.body;
+    const { name, email, password, mobileNumber, address, accessStartDate, accessStartTime, accessEndDate, accessEndTime } = req.body;
     try {
         const existing = await User.findOne({ email });
         if (existing) {
@@ -158,6 +158,8 @@ const adminRegister = async (req, res) => {
             name,
             email,
             password,
+            mobileNumber,
+            address,
             uniqueId,
             role: 'admin',
             accessStartDate,
@@ -195,13 +197,15 @@ const updateAdminStatus = async (req, res) => {
 
 const updateAdmin = async (req, res) => {
     try {
-        const { name, email, password, accessStartDate, accessStartTime, accessEndDate, accessEndTime } = req.body;
+        const { name, email, password, mobileNumber, address, accessStartDate, accessStartTime, accessEndDate, accessEndTime } = req.body;
         const admin = await User.findById(req.params.id);
         if (!admin) return res.status(404).json({ error: 'Admin not found' });
 
         if (name) admin.name = name;
         if (email) admin.email = email;
         if (password) admin.password = password;
+        if (mobileNumber) admin.mobileNumber = mobileNumber;
+        if (address) admin.address = address;
         if (accessStartDate) admin.accessStartDate = accessStartDate;
         if (accessStartTime) admin.accessStartTime = accessStartTime;
         if (accessEndDate) admin.accessEndDate = accessEndDate;

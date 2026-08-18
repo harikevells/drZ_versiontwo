@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FaEdit, FaTrash, FaCrown } from 'react-icons/fa';
+import { FaEdit, FaTrash, FaCrown, FaEnvelope } from 'react-icons/fa';
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -110,6 +110,23 @@ const Dashboard = () => {
     }
   };
 
+  const handleSendInvoice = async (adminId) => {
+    try {
+      const response = await fetch(`https://drz-versiontwo.onrender.com/api/auth/admins/${adminId}/invoice`, {
+        method: 'POST',
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        alert(data.error || 'Failed to send invoice');
+      } else {
+        alert("Invoice sent successfully to the admin's email!");
+      }
+    } catch (error) {
+      console.error('Error sending invoice:', error);
+      alert('Error sending invoice');
+    }
+  };
+
   const openEditModal = (admin) => {
     setEditingAdmin(admin);
     setEditFormData({
@@ -194,19 +211,39 @@ const Dashboard = () => {
                       </td>
                       <td style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                         <button
+                          onClick={() => handleSendInvoice(admin.id)}
+                          disabled={!admin.isActive}
+                          style={{
+                            background: admin.isActive ? '#eff6ff' : '#f3f4f6',
+                            color: admin.isActive ? '#3b82f6' : '#9ca3af',
+                            border: 'none',
+                            padding: '6px 12px',
+                            borderRadius: '4px',
+                            cursor: admin.isActive ? 'pointer' : 'not-allowed',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '4px',
+                            fontSize: '0.875rem'
+                          }}
+                          title="Send Invoice"
+                        >
+                          <FaEnvelope /> Send
+                        </button>
+                        <button
                           onClick={() => toggleAdminStatus(admin.id, admin.isActive, admin)}
                           style={{
                             background: admin.isActive ? '#fee2e2' : '#d1fae5',
                             color: admin.isActive ? '#991b1b' : '#065f46',
                             border: 'none',
-                            padding: '4px 10px',
+                            padding: '6px 12px',
                             borderRadius: '4px',
                             cursor: 'pointer',
-                            fontSize: '0.8rem',
-                            fontWeight: '600'
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '4px',
+                            fontSize: '0.875rem'
                           }}
-                        >
-                          {admin.isActive ? 'Deactivate' : 'Activate'}
+                        >  {admin.isActive ? 'Deactivate' : 'Activate'}
                         </button>
 
                         <button

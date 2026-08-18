@@ -7,6 +7,8 @@ const CreateAdmin = () => {
     name: '',
     email: '',
     password: '',
+    mobileNumber: '',
+    address: '',
     accessStartDate: '',
     accessStartTime: '',
     accessEndDate: '',
@@ -27,6 +29,7 @@ const CreateAdmin = () => {
 
   const validateForm = () => {
     if (!formData.name || !formData.email || !formData.password || 
+        !formData.mobileNumber || !formData.address ||
         !formData.accessStartDate || !formData.accessStartTime || 
         !formData.accessEndDate || !formData.accessEndTime) {
       return "All fields are required.";
@@ -78,6 +81,8 @@ const CreateAdmin = () => {
         name: '',
         email: '',
         password: '',
+        mobileNumber: '',
+        address: '',
         accessStartDate: '',
         accessStartTime: '',
         accessEndDate: '',
@@ -127,6 +132,30 @@ const CreateAdmin = () => {
                 value={formData.email} 
                 onChange={handleChange} 
                 placeholder="Enter email address"
+              />
+            </div>
+          </div>
+          
+          <div className="form-grid">
+            <div className="form-group">
+              <label>Mobile Number</label>
+              <input 
+                type="text" 
+                name="mobileNumber"
+                value={formData.mobileNumber} 
+                onChange={handleChange} 
+                placeholder="Enter mobile number"
+              />
+            </div>
+            
+            <div className="form-group">
+              <label>Address</label>
+              <input 
+                type="text" 
+                name="address"
+                value={formData.address} 
+                onChange={handleChange} 
+                placeholder="Enter complete address"
               />
             </div>
           </div>

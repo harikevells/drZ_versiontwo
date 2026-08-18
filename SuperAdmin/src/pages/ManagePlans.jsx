@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { FaEdit, FaTrash, FaPlus } from 'react-icons/fa';
+import { FaEdit, FaTrash, FaPlus, FaCrown, FaPaperPlane, FaGem } from 'react-icons/fa';
+import { FiCheck } from 'react-icons/fi';
 
 const ManagePlans = () => {
   const [plans, setPlans] = useState([]);
@@ -145,52 +146,72 @@ const ManagePlans = () => {
         </button>
       </div>
 
-      <div className="card">
-        <div className="table-container">
-          <table>
-            <thead>
-              <tr>
-                <th>Plan Name</th>
-                <th>Price</th>
-                <th>Duration</th>
-                <th>Popular</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {plans.length === 0 ? (
-                <tr>
-                  <td colSpan="5" style={{ textAlign: 'center' }}>No subscription plans found</td>
-                </tr>
-              ) : (
-                plans.map(plan => (
-                  <tr key={plan.id}>
-                    <td style={{ fontWeight: 'bold' }}>{plan.name}</td>
-                    <td>{plan.price}</td>
-                    <td>{plan.durationValue} {plan.durationType}</td>
-                    <td>{plan.isPopular ? '★ Yes' : 'No'}</td>
-                    <td style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                      <button
-                        onClick={() => openEditModal(plan)}
-                        style={{ background: '#eff6ff', color: '#1d4ed8', border: 'none', padding: '6px', borderRadius: '4px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                        title="Edit"
-                      >
-                        <FaEdit size={14} />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(plan.id)}
-                        style={{ background: '#fef2f2', color: '#dc2626', border: 'none', padding: '6px', borderRadius: '4px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                        title="Delete"
-                      >
-                        <FaTrash size={14} />
-                      </button>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '30px', marginTop: '20px' }}>
+        {plans.length === 0 ? (
+          <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '50px', color: '#6b7280', background: '#fff', borderRadius: '12px' }}>
+            No subscription plans found. Click "Create Plan" to get started.
+          </div>
+        ) : (
+          plans.map((plan, index) => {
+            const isPopular = plan.isPopular;
+            let bgTheme, fgTheme, icon;
+            if (isPopular) {
+              bgTheme = '#6366f1'; fgTheme = '#fff'; icon = <FaCrown size={28} />;
+            } else if (index % 3 === 0) {
+              bgTheme = '#f3e8ff'; fgTheme = '#9333ea'; icon = <FaPaperPlane size={24} />;
+            } else {
+              bgTheme = '#ffedd5'; fgTheme = '#ea580c'; icon = <FaGem size={24} />;
+            }
+
+            const dynamicCardStyle = isPopular 
+              ? { ...cardStyle, border: `2px solid ${bgTheme}`, transform: 'scale(1.05)', position: 'relative', boxShadow: '0 20px 25px -5px rgba(99, 102, 241, 0.1)' }
+              : cardStyle;
+
+            return (
+              <div key={plan._id || plan.id} style={dynamicCardStyle}>
+                {isPopular && (
+                  <div style={{ position: 'absolute', top: 0, right: '20px', background: bgTheme, color: fgTheme, padding: '6px 16px', borderBottomLeftRadius: '8px', borderBottomRightRadius: '8px', fontSize: '12px', fontWeight: 'bold', display: 'flex', alignItems: 'center' }}>
+                    ★ Most Popular
+                  </div>
+                )}
+                
+                <div style={iconContainerStyle(isPopular ? bgTheme : bgTheme, isPopular ? fgTheme : fgTheme)}>
+                  {icon}
+                </div>
+                
+                <h3 style={planTitleStyle}>{plan.name}</h3>
+                
+                <div style={priceContainerStyle}>
+                  <span style={priceStyle}>{plan.price}</span>
+                  <span style={periodStyle}>/ {plan.durationValue} {plan.durationType}</span>
+                </div>
+                
+                <ul style={listStyle}>
+                  {(plan.features || []).map((feature, i) => (
+                    <li key={i} style={listItemStyle}>
+                      <FiCheck color={isPopular ? bgTheme : fgTheme} style={{ marginRight: '10px' }} /> {feature}
+                    </li>
+                  ))}
+                </ul>
+                
+                <div style={{ display: 'flex', gap: '15px', marginTop: 'auto', width: '100%' }}>
+                  <button 
+                    onClick={() => openEditModal(plan)}
+                    style={{ flex: 1, padding: '10px', background: '#eff6ff', color: '#1d4ed8', border: 'none', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}
+                  >
+                    <FaEdit style={{ marginRight: '5px' }} /> Edit
+                  </button>
+                  <button 
+                    onClick={() => handleDelete(plan.id)}
+                    style={{ flex: 1, padding: '10px', background: '#fef2f2', color: '#dc2626', border: 'none', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}
+                  >
+                    <FaTrash style={{ marginRight: '5px' }} /> Delete
+                  </button>
+                </div>
+              </div>
+            );
+          })
+        )}
       </div>
 
       {isModalOpen && (
@@ -252,6 +273,71 @@ const ManagePlans = () => {
       )}
     </div>
   );
+};
+
+// Reusable inline styles for the Subscription cards
+const cardStyle = {
+  background: '#fff',
+  borderRadius: '16px',
+  padding: '40px 30px',
+  boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)',
+  display: 'flex',
+  flexDirection: 'column',
+  alignItems: 'center',
+  border: '1px solid #f3f4f6',
+  transition: 'transform 0.3s ease',
+};
+
+const iconContainerStyle = (bg, color) => ({
+  width: '64px',
+  height: '64px',
+  borderRadius: '50%',
+  backgroundColor: bg,
+  color: color,
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  marginBottom: '20px',
+});
+
+const planTitleStyle = {
+  fontSize: '24px',
+  fontWeight: 'bold',
+  color: '#1f2937',
+  marginBottom: '15px',
+};
+
+const priceContainerStyle = {
+  marginBottom: '30px',
+  display: 'flex',
+  alignItems: 'baseline',
+};
+
+const priceStyle = {
+  fontSize: '36px',
+  fontWeight: '800',
+  color: '#111827',
+};
+
+const periodStyle = {
+  fontSize: '16px',
+  color: '#6b7280',
+  marginLeft: '5px',
+};
+
+const listStyle = {
+  listStyle: 'none',
+  padding: 0,
+  margin: '0 0 40px 0',
+  width: '100%',
+};
+
+const listItemStyle = {
+  display: 'flex',
+  alignItems: 'center',
+  color: '#4b5563',
+  marginBottom: '15px',
+  fontSize: '15px',
 };
 
 export default ManagePlans;
