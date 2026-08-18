@@ -249,7 +249,7 @@ const MedicalCamp = () => {
 
             <form className="form-container" onSubmit={handleSubmit}>
                 <div className="form-row">
-                    <div className="input-group">
+                    <div style={{alignItems:'flex-start'}} className="input-group">
                         <label>Title</label>
                         <input
                             type="text"
@@ -259,7 +259,7 @@ const MedicalCamp = () => {
                             required
                         />
                     </div>
-                    <div className="input-group">
+                    <div style={{alignItems:'flex-start'}} className="input-group">
                         <label>Description</label>
                         <input
                             type="text"
@@ -272,7 +272,7 @@ const MedicalCamp = () => {
                 </div>
 
                 <div className="form-row">
-                    <div className="input-group">
+                    <div style={{alignItems:'flex-start'}} className="input-group">
                         <label>Date</label>
                         <div className="date-group">
                             <DatePicker
@@ -292,7 +292,7 @@ const MedicalCamp = () => {
                         </div>
                     </div>
 
-                    <div className="input-group upload-group">
+                    <div style={{alignItems:'flex-start'}} className="input-group upload-group">
                         <label>Image Upload</label>
                         <div className="upload-box">
                             <input
@@ -319,7 +319,7 @@ const MedicalCamp = () => {
                 </div>
 
                 <div className="form-row status-row">
-                    <div className="input-group toggle-group">
+                    <div style={{alignItems:'flex-start'}} className="input-group toggle-group">
                         <label>Active Status</label>
                         <label className="switch">
                             <input

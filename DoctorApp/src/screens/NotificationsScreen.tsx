@@ -15,6 +15,7 @@ export default function NotificationsScreen() {
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [doctorName, setDoctorName] = useState('');
 
   const fetchNotifications = async (showLoading = true) => {
     try {
@@ -23,6 +24,7 @@ export default function NotificationsScreen() {
       if (data) {
         const parsed = JSON.parse(data);
         if (parsed.doctorName) {
+          setDoctorName(parsed.doctorName);
           const response = await axios.get(`${API_URL}/doctor/${parsed.doctorName}`);
           const filteredNotifications = response.data.filter((n: any) => 
             !(n.type === 'followup_scheduled' || n.type === 'followup_reminder' || (n.title || '').toLowerCase().includes('follow-up'))
@@ -52,7 +54,10 @@ export default function NotificationsScreen() {
 
   const handleMarkAsRead = async (id: string) => {
     try {
-      await axios.put(`${API_URL}/${id}/read`);
+      const token = await AsyncStorage.getItem('userToken');
+      await axios.put(`${API_URL}/${id}/read`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
       setNotifications((prev) =>
         prev.map((notif: any) => (notif._id === id || notif.id === id ? { ...notif, isRead: true } : notif))
       );
@@ -100,9 +105,17 @@ export default function NotificationsScreen() {
     const unreadNotifications = notifications.filter((n: any) => !n.isRead);
     if (unreadNotifications.length === 0) return;
 
+    // Optimistic update
     setNotifications((prev) => prev.map((n: any) => ({ ...n, isRead: true })));
     try {
-      await Promise.all(unreadNotifications.map((n: any) => axios.put(`${API_URL}/${n.id || n._id}/read`)));
+      const token = await AsyncStorage.getItem('userToken');
+      const headers = { Authorization: `Bearer ${token}` };
+
+      if (doctorName) {
+        await axios.put(`${API_URL}/readAll/doctor/${doctorName}`, {}, { headers });
+      } else {
+        await Promise.all(unreadNotifications.map((n: any) => axios.put(`${API_URL}/${n.id || n._id}/read`, {}, { headers })));
+      }
     } catch (error) {
       console.error('Error marking all as read:', error);
       fetchNotifications(false);
@@ -162,8 +175,8 @@ export default function NotificationsScreen() {
                       styles.notificationItem,
                       !item.isRead && styles.unreadNotificationItem
                     ]}
-                    onPress={() => {
-                      if (!item.isRead) handleMarkAsRead(item.id || item._id);
+                    onPress={async () => {
+                      if (!item.isRead) await handleMarkAsRead(item.id || item._id);
 
                       if (!titleStr.includes('schedule')) {
                         navigation.navigate('MainTabs', {

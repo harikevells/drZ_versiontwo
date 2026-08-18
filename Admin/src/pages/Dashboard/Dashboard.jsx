@@ -36,6 +36,8 @@ const Dashboard = () => {
       }
     };
     fetchData();
+    const intervalId = setInterval(fetchData, 2000);
+    return () => clearInterval(intervalId);
   }, []);
 
   const today = new Date();

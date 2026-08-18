@@ -97,7 +97,10 @@ export default function HomeScreen() {
 
   const handleStatusUpdate = async (id: string, status: string) => {
     try {
-      await axios.put(`${API_URL}/${id}/status`, { status });
+      const token = await AsyncStorage.getItem('userToken');
+      await axios.put(`${API_URL}/${id}/status`, { status }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
       Alert.alert('Success', `Appointment ${status.toLowerCase()} successfully!`);
       fetchDashboardData(); // Refresh list after update
     } catch (error) {

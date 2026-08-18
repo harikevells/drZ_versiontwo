@@ -151,25 +151,41 @@ export default function AppointmentCreate() {
       const allSchedules = schedulesRes.data || [];
       const liveDoctorsData = doctorsRes.data || [];
 
-      setAllDoctors(liveDoctorsData);
-
-      // Load creator doctor name
+      // Load creator doctor name and adminId
       const stored = await AsyncStorage.getItem('userData');
+      let currentAdminId = '';
       if (stored) {
         const parsed = JSON.parse(stored);
+        currentAdminId = parsed.adminId || '';
         let name = parsed.doctorName || '';
-        if (!name && parsed.email && liveDoctorsData.length > 0) {
+        
+        if (parsed.email && liveDoctorsData.length > 0) {
           const fullProfile = liveDoctorsData.find((d: any) => d.email && d.email.toLowerCase() === parsed.email.toLowerCase());
-          if (fullProfile && fullProfile.doctorName) {
-            name = fullProfile.doctorName;
+          if (fullProfile) {
+            if (!name && fullProfile.doctorName) {
+              name = fullProfile.doctorName;
+            }
+            if (!currentAdminId && fullProfile.adminId) {
+              currentAdminId = fullProfile.adminId;
+            }
           }
         }
         setCreatorDoctorName(name);
       }
 
+      const filteredDoctorsData = currentAdminId 
+
+        ? liveDoctorsData.filter((d: any) => d.adminId === currentAdminId)
+        : liveDoctorsData;
+
+      setAllDoctors(filteredDoctorsData);
+
       // Extract unique patients from previous appointments list
       const patientMap = new Map();
       allAppts.forEach((app: any) => {
+        if (currentAdminId && app.adminId !== currentAdminId) {
+          return;
+        }
         const mobile = app.login_mobile;
         if (mobile && mobile !== 'N/A') {
           const wsParts = (app.whatsapp_number || '').split('|');

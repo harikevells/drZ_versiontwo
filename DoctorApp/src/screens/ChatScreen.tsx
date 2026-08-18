@@ -37,10 +37,12 @@ export default function ChatScreen() {
   }, [isFocused, doctorName]);
 
   const fetchUnreadCount = async (name: string) => {
+    if (!name) return;
     try {
       const response = await axios.get(`${API_BASE_URL}/notifications/doctor/${name}`);
-      const count = response.data.filter((n: any) => !n.isRead).length;
-      setUnreadCount(count);
+      const unread = response.data.filter((n: any) => !n.isRead);
+      const notifications = unread.filter((n: any) => !(n.type === 'followup_scheduled' || n.type === 'followup_reminder' || (n.title || '').toLowerCase().includes('follow-up')));
+      setUnreadCount(notifications.length);
     } catch (error) {
       console.log('Error fetching notification count:', error);
     }

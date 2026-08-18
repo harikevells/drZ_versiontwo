@@ -4,18 +4,22 @@ import { FaEdit, FaTrash } from 'react-icons/fa';
 const Dashboard = () => {
   const [admins, setAdmins] = useState([]);
   const [loading, setLoading] = useState(true);
-  
+
   // Edit Modal State
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingAdmin, setEditingAdmin] = useState(null);
   const [editFormData, setEditFormData] = useState({
-    name: '', email: '', password: '', 
-    accessStartDate: '', accessStartTime: '', 
+    name: '', email: '', password: '',
+    accessStartDate: '', accessStartTime: '',
     accessEndDate: '', accessEndTime: ''
   });
 
   useEffect(() => {
     fetchAdmins();
+    const interval = setInterval(() => {
+      fetchAdmins();
+    }, 2000);
+    return () => clearInterval(interval);
   }, []);
 
   const fetchAdmins = async () => {
@@ -23,11 +27,36 @@ const Dashboard = () => {
       const response = await fetch('https://drz-versiontwo.onrender.com/api/auth/admins');
       if (!response.ok) throw new Error('Failed to fetch admins');
       const data = await response.json();
+
+      const now = new Date();
+
       // map _id to id for compatibility with existing UI code
-      const adminList = data.map(admin => ({
-        ...admin,
-        id: admin._id
-      }));
+      const adminList = data.map(admin => {
+        let isCurrentlyActive = admin.isActive;
+
+        if (admin.accessEndDate && admin.accessEndTime) {
+          const endDateTime = new Date(`${admin.accessEndDate}T${admin.accessEndTime}`);
+
+          // Auto-deactivate if time is expired and still active in DB
+          if (isCurrentlyActive && now > endDateTime) {
+            // Fire and forget update to backend
+            fetch(`https://drz-versiontwo.onrender.com/api/auth/admins/${admin._id}/status`, {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ isActive: false })
+            }).catch(err => console.error("Auto-deactivate failed", err));
+
+            isCurrentlyActive = false; // Optimistically update locally
+          }
+        }
+
+        return {
+          ...admin,
+          isActive: isCurrentlyActive,
+          id: admin._id
+        };
+      });
+
       setAdmins(adminList);
       setLoading(false);
     } catch (error) {
@@ -38,22 +67,20 @@ const Dashboard = () => {
 
   const getAdminStatus = (admin) => {
     if (!admin.isActive) return 'Inactive';
-    
-    const now = new Date();
-    
-    // Create Date objects from the stored strings
-    // Format stored is typically "yyyy-MM-dd" for date and "HH:mm" for time
-    const startDateTime = new Date(`${admin.accessStartDate}T${admin.accessStartTime}`);
-    const endDateTime = new Date(`${admin.accessEndDate}T${admin.accessEndTime}`);
-    
-    if (now >= startDateTime && now <= endDateTime) {
-      return 'Active';
-    } else {
-      return 'Expired';
-    }
+    return 'Active';
   };
 
-  const toggleAdminStatus = async (adminId, currentStatus) => {
+  const toggleAdminStatus = async (adminId, currentStatus, adminData) => {
+    // If trying to activate, check if time is expired
+    if (!currentStatus && adminData.accessEndDate && adminData.accessEndTime) {
+      const now = new Date();
+      const endDateTime = new Date(`${adminData.accessEndDate}T${adminData.accessEndTime}`);
+      if (now > endDateTime) {
+        alert("Cannot activate! The access period for this admin has expired. Please Edit their 'End Date & Time' first.");
+        return;
+      }
+    }
+
     try {
       const response = await fetch(`https://drz-versiontwo.onrender.com/api/auth/admins/${adminId}/status`, {
         method: 'PUT',
@@ -61,7 +88,7 @@ const Dashboard = () => {
         body: JSON.stringify({ isActive: !currentStatus })
       });
       if (!response.ok) throw new Error('Failed to update admin status');
-      fetchAdmins(); 
+      fetchAdmins();
     } catch (error) {
       console.error("Error updating admin status: ", error);
     }
@@ -127,7 +154,7 @@ const Dashboard = () => {
       <div className="page-header">
         <h2>Admin Management Dashboard</h2>
       </div>
-      
+
       <div className="card">
         <div className="table-container">
           <table>
@@ -164,8 +191,8 @@ const Dashboard = () => {
                         </span>
                       </td>
                       <td style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                        <button 
-                          onClick={() => toggleAdminStatus(admin.id, admin.isActive)}
+                        <button
+                          onClick={() => toggleAdminStatus(admin.id, admin.isActive, admin)}
                           style={{
                             background: admin.isActive ? '#fee2e2' : '#d1fae5',
                             color: admin.isActive ? '#991b1b' : '#065f46',
@@ -179,8 +206,8 @@ const Dashboard = () => {
                         >
                           {admin.isActive ? 'Deactivate' : 'Activate'}
                         </button>
-                        
-                        <button 
+
+                        <button
                           onClick={() => openEditModal(admin)}
                           style={{
                             background: '#eff6ff',
@@ -197,8 +224,8 @@ const Dashboard = () => {
                         >
                           <FaEdit size={14} />
                         </button>
-                        
-                        <button 
+
+                        <button
                           onClick={() => handleDelete(admin.id)}
                           style={{
                             background: '#fef2f2',
@@ -224,7 +251,7 @@ const Dashboard = () => {
           </table>
         </div>
       </div>
-      
+
       {/* Edit Admin Modal */}
       {isEditModalOpen && (
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
@@ -235,19 +262,19 @@ const Dashboard = () => {
                 <label style={{ display: 'block', marginBottom: '5px', fontSize: '14px', color: '#4b5563' }}>Name</label>
                 <input type="text" name="name" value={editFormData.name} onChange={handleEditChange} required style={{ width: '100%', padding: '8px 12px', border: '1px solid #e5e7eb', borderRadius: '4px' }} />
               </div>
-              
+
               <div className="form-group" style={{ marginBottom: '15px' }}>
                 <label style={{ display: 'block', marginBottom: '5px', fontSize: '14px', color: '#4b5563' }}>Email</label>
                 <input type="email" name="email" value={editFormData.email} onChange={handleEditChange} required style={{ width: '100%', padding: '8px 12px', border: '1px solid #e5e7eb', borderRadius: '4px' }} />
               </div>
-              
+
               <div className="form-group" style={{ marginBottom: '15px' }}>
                 <label style={{ display: 'block', marginBottom: '5px', fontSize: '14px', color: '#4b5563' }}>Password (Leave blank to keep current)</label>
                 <input type="password" name="password" value={editFormData.password} onChange={handleEditChange} placeholder="Enter new password" style={{ width: '100%', padding: '8px 12px', border: '1px solid #e5e7eb', borderRadius: '4px' }} />
               </div>
-              
+
               <h4 style={{ margin: '15px 0 10px 0', fontSize: '1rem', color: '#1f2937' }}>Access Duration</h4>
-              
+
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '15px' }}>
                 <div>
                   <label style={{ display: 'block', marginBottom: '5px', fontSize: '12px', color: '#4b5563' }}>Start Date</label>
@@ -258,7 +285,7 @@ const Dashboard = () => {
                   <input type="time" name="accessStartTime" value={editFormData.accessStartTime} onChange={handleEditChange} required style={{ width: '100%', padding: '8px 12px', border: '1px solid #e5e7eb', borderRadius: '4px' }} />
                 </div>
               </div>
-              
+
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '20px' }}>
                 <div>
                   <label style={{ display: 'block', marginBottom: '5px', fontSize: '12px', color: '#4b5563' }}>End Date</label>
@@ -269,7 +296,7 @@ const Dashboard = () => {
                   <input type="time" name="accessEndTime" value={editFormData.accessEndTime} onChange={handleEditChange} required style={{ width: '100%', padding: '8px 12px', border: '1px solid #e5e7eb', borderRadius: '4px' }} />
                 </div>
               </div>
-              
+
               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
                 <button type="button" onClick={() => setIsEditModalOpen(false)} style={{ padding: '8px 16px', background: '#f3f4f6', color: '#374151', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: '500' }}>Cancel</button>
                 <button type="submit" style={{ padding: '8px 16px', background: '#3b82f6', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: '500' }}>Save Changes</button>

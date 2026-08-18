@@ -211,30 +211,15 @@ export default function AppointmentScreen({ route }: any) {
   };
 
   const fetchUnreadCount = async (name: string) => {
+    if (!name) return;
     try {
       const response = await axios.get(`${API_BASE_URL}/notifications/doctor/${name}`);
-      let notifCount = 0;
-      let remCount = 0;
-      response.data.forEach((n: any) => {
-        if (!n.isRead) {
-          const type = n.type || '';
-          const title = (n.title || '').toLowerCase();
-          
-          const isFollowUpOrSchedule = 
-            type === 'followup_scheduled' || 
-            type === 'followup_reminder' || 
-            title.includes('follow-up') || 
-            title.includes('schedule');
-            
-          if (isFollowUpOrSchedule) {
-            remCount++;
-          } else {
-            notifCount++;
-          }
-        }
-      });
-      setUnreadCount(notifCount);
-      setReminderCount(remCount);
+      const unread = response.data.filter((n: any) => !n.isRead);
+      const reminders = unread.filter((n: any) => n.type === 'followup_scheduled' || n.type === 'followup_reminder' || (n.title || '').toLowerCase().includes('follow-up'));
+      const notifications = unread.filter((n: any) => !(n.type === 'followup_scheduled' || n.type === 'followup_reminder' || (n.title || '').toLowerCase().includes('follow-up')));
+      
+      setUnreadCount(notifications.length);
+      setReminderCount(reminders.length);
     } catch (error) {
       console.log('Error fetching notification count:', error);
     }
@@ -247,7 +232,10 @@ export default function AppointmentScreen({ route }: any) {
 
   const handleStatusUpdate = async (id: string, status: string, followupDate?: string) => {
     try {
-      await axios.put(`${API_URL}/${id}/status`, { status, followupDate });
+      const token = await AsyncStorage.getItem('userToken');
+      await axios.put(`${API_URL}/${id}/status`, { status, followupDate }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
       Alert.alert('Success', `Appointment ${status.toLowerCase()} successfully!`);
       fetchAppointments(false);
     } catch (error) {

@@ -6,12 +6,18 @@ import HomeScreen from '../screens/HomeScreen';
 import AppointmentScreen from '../screens/AppointmentScreen';
 import MedicalCampNotification from '../screens/MedicalCampNotification';
 import ProfileScreen from '../screens/ProfileScreen';
+import { useDoctorStatus } from '../hooks/useDoctorStatus';
+import LockScreen from '../components/LockScreen';
 
 const Tab = createBottomTabNavigator();
 
 export default function MainTabs() {
+  const { isLocked, lockReason } = useDoctorStatus();
+
   return (
-    <Tab.Navigator
+    <>
+      <LockScreen isVisible={isLocked} reason={lockReason} />
+      <Tab.Navigator
       screenOptions={({ route }) => ({
         headerShown: false,
         tabBarShowLabel: false,
@@ -80,5 +86,6 @@ export default function MainTabs() {
       <Tab.Screen name="Camp" component={MedicalCampNotification} />
       <Tab.Screen name="Profile" component={ProfileScreen} />
     </Tab.Navigator>
+    </>
   );
 }

@@ -50,7 +50,7 @@ const Layout = () => {
     };
 
     checkStatus(); // Initial check
-    const intervalId = setInterval(checkStatus, 60000); // Check every 60 seconds
+    const intervalId = setInterval(checkStatus, 2000); // Check every 2 seconds
 
     return () => clearInterval(intervalId);
   }, []);

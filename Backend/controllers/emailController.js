@@ -18,24 +18,7 @@ const sendBookingEmail = async (req, res) => {
             video_call
         } = req.body;
 
-        const departmentTranslations = {
-            "General": "பொது",
-            "Cardiology": "கார்டியாலஜி",
-            "Pediatrics": "குழந்தைகள் மருத்துவம்",
-            "Neurology": "நரம்பியல்",
-            "Dermatology": "தோல் மருத்துவம்",
-            "Orthopedics": "எலும்பியல்",
-            "Gynecology": "மகப்பேறு மருத்துவம்",
-            "Dental": "பல் மருத்துவம்",
-            "ENT": "காது மூக்கு தொண்டை",
-            "Ophthalmology": "கண் மருத்துவம்",
-            "Psychiatry": "மனநல மருத்துவம்",
-            "Others": "மற்றவை"
-        };
-        const translatedCategory = departmentTranslations[treatment_category] 
-            ? `${treatment_category} / ${departmentTranslations[treatment_category]}`
-            : treatment_category;
-
+        // Removed inline translation so it saves as English in the DB
         // Lookup Doctor to inherit adminId
         const doctorObj = await Doctor.findOne({ doctorName: doctor_name });
         const assignedAdminId = doctorObj && doctorObj.adminId ? doctorObj.adminId : null;
@@ -47,7 +30,7 @@ const sendBookingEmail = async (req, res) => {
             patient_gender,
             whatsapp_number,
             login_mobile,
-            treatment_category: translatedCategory,
+            treatment_category: treatment_category,
             doctor_name,
             appointment_date,
             appointment_time,
@@ -110,7 +93,7 @@ const sendBookingEmail = async (req, res) => {
                             <p><strong>Gender:</strong> ${patient_gender}</p>
                             <p><strong>WhatsApp:</strong> ${whatsapp_number || 'N/A'}</p>
                             <p><strong>Login Mobile:</strong> ${login_mobile}</p>
-                            <p><strong>Category:</strong> ${translatedCategory}</p>
+                            <p><strong>Category:</strong> ${treatment_category}</p>
                             <p><strong>Doctor:</strong> ${doctor_name}</p>
                             <p><strong>Date:</strong> ${appointment_date}</p>
                             <p><strong>Time:</strong> ${appointment_time}</p>

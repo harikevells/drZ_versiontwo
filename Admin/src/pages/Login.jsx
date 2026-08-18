@@ -39,7 +39,15 @@ const Login = () => {
       sessionStorage.setItem('loginTimestamp', new Date().getTime().toString());
       navigate('/dashboard');
     } catch (err) {
-      setError('Invalid username or password');
+      if (err.response && err.response.data && err.response.data.error) {
+        let msg = err.response.data.error;
+        if (msg.includes('deactivated') || msg.includes('subscription has expired')) {
+          msg = 'Your account is expired. Contact your Administrator';
+        }
+        setError(msg);
+      } else {
+        setError('Login failed. Please try again.');
+      }
     }
   };
 

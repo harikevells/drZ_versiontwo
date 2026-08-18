@@ -280,6 +280,8 @@ const PatientAppointments = () => {
 
   useEffect(() => {
     fetchAppointmentsAndDoctors();
+    const intervalId = setInterval(fetchAppointmentsAndDoctors, 2000);
+    return () => clearInterval(intervalId);
   }, []);
 
   const fetchAppointmentsAndDoctors = async () => {

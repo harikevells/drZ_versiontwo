@@ -7,22 +7,22 @@ const login = async (req, res) => {
     const { email, password } = req.body;
     try {
         const user = await User.findOne({ email });
-        if (!user) return res.status(401).json({ error: 'Invalid credentials' });
+        if (!user) return res.status(401).json({ error: 'Email ID not found. Please check and try again.' });
 
         const isMatch = await user.matchPassword(password);
         if (isMatch) {
             if (user.role === 'admin') {
                 if (!user.isActive) {
-                    return res.status(403).json({ error: 'Your account is deactivated. Contact your Super Admin.' });
+                    return res.status(403).json({ error: 'Your account is expired. Contact your Administrator' });
                 }
-                
+
                 if (user.accessStartDate && user.accessStartTime && user.accessEndDate && user.accessEndTime) {
                     const now = new Date();
                     const startDateTime = new Date(`${user.accessStartDate}T${user.accessStartTime}`);
                     const endDateTime = new Date(`${user.accessEndDate}T${user.accessEndTime}`);
-                    
+
                     if (now < startDateTime || now > endDateTime) {
-                        return res.status(403).json({ error: 'Your access period has expired. Contact your Super Admin.' });
+                        return res.status(403).json({ error: 'Your access period has expired. Contact your Administrator.' });
                     }
                 }
             }
@@ -30,7 +30,7 @@ const login = async (req, res) => {
             const token = jwt.sign({ id: user._id, email: user.email, uniqueId: user.uniqueId, role: user.role || 'admin' }, process.env.JWT_SECRET || 'supersecret123', { expiresIn: '1d' });
             res.json({ token, user: { id: user._id, email: user.email, uniqueId: user.uniqueId, role: user.role || 'admin' } });
         } else {
-            res.status(401).json({ error: 'Invalid credentials' });
+            res.status(401).json({ error: 'Incorrect password. Please try again.' });
         }
     } catch (err) {
         res.status(500).json({ error: err.message });
@@ -58,17 +58,17 @@ const doctorLogin = async (req, res) => {
                 if (admin) {
                     if (!admin.isActive) {
                         console.log(`[Doctor Login Failed] Associated Admin is deactivated for email: "${email}"`);
-                        return res.status(403).json({ error: 'Your Hospital Admin account is deactivated. Contact Super Admin.' });
+                        return res.status(403).json({ error: 'Your Hospital Admin account is Expired. Contact Administrator.' });
                     }
-                    
+
                     if (admin.accessStartDate && admin.accessStartTime && admin.accessEndDate && admin.accessEndTime) {
                         const now = new Date();
                         const startDateTime = new Date(`${admin.accessStartDate}T${admin.accessStartTime}`);
                         const endDateTime = new Date(`${admin.accessEndDate}T${admin.accessEndTime}`);
-                        
+
                         if (now < startDateTime || now > endDateTime) {
                             console.log(`[Doctor Login Failed] Associated Admin access expired for email: "${email}"`);
-                            return res.status(403).json({ error: 'Your Hospital Admin access period has expired. Contact Super Admin.' });
+                            return res.status(403).json({ error: 'Your Hospital Admin access period has expired. Contact Administrator.' });
                         }
                     }
                 }
@@ -198,7 +198,7 @@ const updateAdmin = async (req, res) => {
         const { name, email, password, accessStartDate, accessStartTime, accessEndDate, accessEndTime } = req.body;
         const admin = await User.findById(req.params.id);
         if (!admin) return res.status(404).json({ error: 'Admin not found' });
-        
+
         if (name) admin.name = name;
         if (email) admin.email = email;
         if (password) admin.password = password;
@@ -206,7 +206,7 @@ const updateAdmin = async (req, res) => {
         if (accessStartTime) admin.accessStartTime = accessStartTime;
         if (accessEndDate) admin.accessEndDate = accessEndDate;
         if (accessEndTime) admin.accessEndTime = accessEndTime;
-        
+
         await admin.save();
         res.json(admin);
     } catch (err) {
@@ -229,30 +229,66 @@ const checkAdminStatus = async (req, res) => {
         if (!req.user || !req.user.id) {
             return res.status(401).json({ locked: true, reason: 'Unauthorized' });
         }
-        
+
         const admin = await User.findById(req.user.id);
         if (!admin) {
             return res.status(404).json({ locked: true, reason: 'Admin not found' });
         }
-        
+
         if (!admin.isActive) {
-            return res.json({ locked: true, reason: 'Your account is deactivated. Contact your Super Admin.' });
+            return res.json({ locked: true, reason: 'Your account is expired. Contact your Administrator' });
         }
-        
+
         if (admin.accessStartDate && admin.accessStartTime && admin.accessEndDate && admin.accessEndTime) {
             const now = new Date();
             const startDateTime = new Date(`${admin.accessStartDate}T${admin.accessStartTime}`);
             const endDateTime = new Date(`${admin.accessEndDate}T${admin.accessEndTime}`);
-            
+
             if (now < startDateTime || now > endDateTime) {
-                return res.json({ locked: true, reason: 'Your access period has expired. Contact your Super Admin.' });
+                return res.json({ locked: true, reason: 'Your access period has expired. Contact your Administrator.' });
             }
         }
-        
+
         res.json({ locked: false });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
 };
 
-module.exports = { login, doctorLogin, patientRegister, patientLogin, updateFcmToken, adminRegister, getAdmins, updateAdminStatus, updateAdmin, deleteAdmin, checkAdminStatus };
+const checkDoctorStatus = async (req, res) => {
+    try {
+        if (!req.user || !req.user.id || req.user.role !== 'doctor') {
+            return res.status(401).json({ locked: true, reason: 'Unauthorized' });
+        }
+
+        const doctor = await Doctor.findById(req.user.id);
+        if (!doctor) {
+            return res.status(404).json({ locked: true, reason: 'Doctor not found' });
+        }
+
+        if (doctor.adminId) {
+            const admin = await User.findOne({ uniqueId: doctor.adminId });
+            if (admin) {
+                if (!admin.isActive) {
+                    return res.json({ locked: true, reason: 'Your Hospital account is Expired. Contact Administrator.' });
+                }
+
+                if (admin.accessStartDate && admin.accessStartTime && admin.accessEndDate && admin.accessEndTime) {
+                    const now = new Date();
+                    const startDateTime = new Date(`${admin.accessStartDate}T${admin.accessStartTime}`);
+                    const endDateTime = new Date(`${admin.accessEndDate}T${admin.accessEndTime}`);
+
+                    if (now < startDateTime || now > endDateTime) {
+                        return res.json({ locked: true, reason: 'Your Hospital account is Expired. Contact Administrator.' });
+                    }
+                }
+            }
+        }
+
+        res.json({ locked: false });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+};
+
+module.exports = { login, doctorLogin, patientRegister, patientLogin, updateFcmToken, adminRegister, getAdmins, updateAdminStatus, updateAdmin, deleteAdmin, checkAdminStatus, checkDoctorStatus };

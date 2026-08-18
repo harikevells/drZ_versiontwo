@@ -183,7 +183,7 @@ const exportDoctorAppointments = async (req, res) => {
             });
         }
 
-        let csvContent = "Booking ID,Patient Name,Age,Gender,Phone,Category,Appointment Date,Appointment Time,Status,Created At\n";
+        let csvContent = "\uFEFFBooking ID,Patient Name,Age,Gender,Phone,Category,Appointment Date,Appointment Time,Status,Created At\n";
 
         const formatTimeSlot = (timeStr) => {
             if (!timeStr) return '';
@@ -213,15 +213,46 @@ const exportDoctorAppointments = async (req, res) => {
             return `${str} to ${dHrs}.${eMinsStr}${eAmpm}`;
         };
 
+        const departmentTranslations = {
+            "General": "பொது",
+            "Cardiology": "கார்டியாலஜி",
+            "Pediatrics": "குழந்தைகள் மருத்துவம்",
+            "Neurology": "நரம்பியல்",
+            "Dermatology": "தோல் மருத்துவம்",
+            "Orthopedics": "எலும்பியல்",
+            "Gynecology": "மகப்பேறு மருத்துவம்",
+            "Dental": "பல் மருத்துவம்",
+            "ENT": "காது மூக்கு தொண்டை",
+            "Ophthalmology": "கண் மருத்துவம்",
+            "Psychiatry": "மனநல மருத்துவம்",
+            "Others": "மற்றவை"
+        };
+
         filteredAppointments.forEach(app => {
             const bookingId = app.booking_id || app._id || app.id || '';
             const pAge = app.patient_age || app.age || '';
             const pGender = app.patient_gender || app.gender || '';
-            const pPhone = app.whatsapp_number || app.login_mobile || '';
+            let pPhone = app.login_mobile || '';
+            if (!pPhone && app.whatsapp_number) {
+                const waParts = app.whatsapp_number.split('|');
+                if (waParts[0].trim()) {
+                    pPhone = waParts[0].trim();
+                }
+            }
             const pTime = formatTimeSlot(app.appointment_time || '');
             const pDate = app.appointment_date || '';
 
-            csvContent += `"${bookingId}","${app.patient_name || ''}","${pAge}","${pGender}","${pPhone}","${app.treatment_category || ''}","${pDate}","${pTime}","${app.status || ''}","${app.createdAt ? new Date(app.createdAt).toLocaleString() : ''}"\n`;
+            let rawCategory = app.treatment_category || '';
+            let exportCategory = rawCategory;
+            // Only translate if not already containing Tamil '/'
+            if (rawCategory && !rawCategory.includes('/')) {
+                const baseCategory = rawCategory.trim();
+                if (departmentTranslations[baseCategory]) {
+                    exportCategory = `${baseCategory} / ${departmentTranslations[baseCategory]}`;
+                }
+            }
+
+            csvContent += `"${bookingId}","${app.patient_name || ''}","${pAge}","${pGender}","${pPhone}","${exportCategory}","${pDate}","${pTime}","${app.status || ''}","${app.createdAt ? new Date(app.createdAt).toLocaleString() : ''}"\n`;
         });
 
         res.setHeader('Content-Type', 'text/csv');

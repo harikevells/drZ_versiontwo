@@ -74,7 +74,8 @@
     flex: 1;
     border: 1px solid #e0e0e0;
     border-radius: 25px;
-    padding: 15px 40px 15px 20px; /* Extra padding on right for the icon */
+    padding: 15px 40px 15px 20px;
+    /* Extra padding on right for the icon */
     font-size: 14px;
     outline: none;
     width: 100%;
@@ -96,7 +97,8 @@
 .custom-date-input-wrapper .calendar-icon {
     position: absolute;
     right: 15px;
-    pointer-events: none; /* Let clicks pass through to the input */
+    pointer-events: none;
+    /* Let clicks pass through to the input */
     color: #555;
 }
 
@@ -150,7 +152,8 @@
 }
 
 .status-row {
-    margin-top: -100px; /* To pull it up next to the date group since upload box is tall */
+    margin-top: -100px;
+    /* To pull it up next to the date group since upload box is tall */
     width: 50%;
 }
 
@@ -172,7 +175,7 @@
     height: 24px;
 }
 
-.switch input { 
+.switch input {
     opacity: 0;
     width: 0;
     height: 0;
@@ -200,11 +203,11 @@
     transition: .4s;
 }
 
-input:checked + .slider {
+input:checked+.slider {
     background-color: #34C759;
 }
 
-input:checked + .slider:before {
+input:checked+.slider:before {
     transform: translateX(26px);
 }
 
@@ -229,7 +232,8 @@ input:checked + .slider:before {
     color: #5F76FE;
     border: none;
     border-radius: 25px;
-    padding: 12px 0; /* Let width dictate size */
+    padding: 12px 0;
+    /* Let width dictate size */
     font-size: 16px;
     font-weight: 700;
     cursor: pointer;
@@ -301,7 +305,7 @@ input:checked + .slider:before {
     font-weight: 700;
     font-size: 14px;
     padding: 20px 15px;
-    text-align: center;
+    text-align: left;
 }
 
 .custom-table th:first-child {
@@ -350,14 +354,16 @@ input:checked + .slider:before {
     gap: 15px;
 }
 
-.edit-btn, .delete-btn {
+.edit-btn,
+.delete-btn {
     background: none;
     border: none;
     cursor: pointer;
     padding: 0;
 }
 
-.edit-btn svg, .delete-btn svg {
+.edit-btn svg,
+.delete-btn svg {
     transition: stroke 0.3s;
 }
 
@@ -380,6 +386,7 @@ input:checked + .slider:before {
     .form-row {
         flex-direction: column;
     }
+
     .status-row {
         margin-top: 0;
         width: 100%;
