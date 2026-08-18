@@ -198,16 +198,21 @@ const sendInvoiceEmail = async (req, res) => {
         const sendInvoiceInBackground = async () => {
             try {
                 const transporter = nodemailer.createTransport({
-                    service: process.env.EMAIL_SERVICE || 'gmail',
+                    host: 'smtp.gmail.com',
+                    port: 465,
+                    secure: true,
                     auth: {
                         user: senderEmail,
                         pass: senderPass
+                    },
+                    tls: {
+                        rejectUnauthorized: false
                     }
                 });
                 
                 const today = new Date();
                 const invoiceDate = `${today.getDate().toString().padStart(2, '0')}.${(today.getMonth() + 1).toString().padStart(2, '0')}.${today.getFullYear()}`;
-                const amount = "1499"; 
+                const amount = admin.subscriptionAmount || 1499; 
 
         // Read Logo as Base64
         let logoHtml = '<div style="background-color: #372332; color: white; display: inline-block; padding: 15px; border-radius: 5px; font-weight: bold; font-size: 24px; font-family: serif;">KEVELL<br/>CORP</div>';
@@ -229,40 +234,44 @@ const sendInvoiceEmail = async (req, res) => {
                     </div>
                 </div>
 
-                <div style="display: flex; width: 100%;">
-                    <div style="width: 50%; background: #e2e8f0; padding: 20px; box-sizing: border-box;">
-                        <h1 style="margin: 0 0 10px 0; color: #64748b; font-size: 32px; letter-spacing: 2px;">INVOICE</h1>
-                        <p style="margin: 0; font-size: 12px; font-weight: bold; color: #64748b;">DrZ</p>
-                        <p style="margin: 0; font-size: 11px; color: #64748b;">An ISO 9001:2015 Certified Company</p>
-                        <p style="margin: 0; font-size: 11px; color: #64748b;">Government Tax ID : 33AYHPK8929M1ZT</p>
-                        <p style="margin: 0; font-size: 11px; color: #64748b;">4A, Kamala 2nd street,Chinnachokkikulam, Madurai,</p>
-                        <p style="margin: 0; font-size: 11px; color: #64748b;">Tamil Nadu - 625002.</p>
-                    </div>
-                    <div style="width: 50%; background: #94a3b8; padding: 20px; box-sizing: border-box; text-align: right; color: white;">
-                        <p style="margin: 0; font-size: 11px;">Invoice Number:INV-DRZ-${Date.now().toString().slice(-6)}</p>
-                        <p style="margin: 0; font-size: 11px;">Invoice Date:${invoiceDate}</p>
-                        <p style="margin: 0; font-size: 11px;">Quotation Number:QTN-DRZ-${Date.now().toString().slice(-6)}</p>
-                        <p style="margin: 0; font-size: 11px;">Quotation Date:${invoiceDate}</p>
-                        <p style="margin: 0; font-size: 11px;">Dispatch Mode: Manual</p>
-                    </div>
-                </div>
+                <table style="width: 100%; border-collapse: collapse; margin-bottom: 10px;">
+                    <tr>
+                        <td style="width: 50%; background: #e2e8f0; padding: 20px; vertical-align: top;">
+                            <h1 style="margin: 0 0 10px 0; color: #64748b; font-size: 32px; letter-spacing: 2px;">INVOICE</h1>
+                            <p style="margin: 0; font-size: 12px; font-weight: bold; color: #64748b;">DrZ</p>
+                            <p style="margin: 0; font-size: 11px; color: #64748b;">An ISO 9001:2015 Certified Company</p>
+                            <p style="margin: 0; font-size: 11px; color: #64748b;">Government Tax ID : 33AYHPK8929M1ZT</p>
+                            <p style="margin: 0; font-size: 11px; color: #64748b;">4A, Kamala 2nd street,Chinnachokkikulam, Madurai,</p>
+                            <p style="margin: 0; font-size: 11px; color: #64748b;">Tamil Nadu - 625002.</p>
+                        </td>
+                        <td style="width: 50%; background: #94a3b8; padding: 20px; text-align: right; color: white; vertical-align: top;">
+                            <p style="margin: 0; font-size: 11px;">Invoice Number:INV-DRZ-${Date.now().toString().slice(-6)}</p>
+                            <p style="margin: 0; font-size: 11px;">Invoice Date:${invoiceDate}</p>
+                            <p style="margin: 0; font-size: 11px;">Quotation Number:QTN-DRZ-${Date.now().toString().slice(-6)}</p>
+                            <p style="margin: 0; font-size: 11px;">Quotation Date:${invoiceDate}</p>
+                            <p style="margin: 0; font-size: 11px;">Dispatch Mode: Manual</p>
+                        </td>
+                    </tr>
+                </table>
 
-                <div style="display: flex; width: 100%; border: 1px solid #000; margin-top: 10px;">
-                    <div style="width: 50%; border-right: 1px solid #000; padding: 10px; box-sizing: border-box;">
-                        <p style="margin: 0; font-weight: bold; font-size: 12px;">Bill To</p>
-                        <p style="margin: 0; font-weight: bold; font-size: 12px; margin-top: 5px;">${admin.name}</p>
-                        <p style="margin: 0; font-size: 12px;">${admin.mobileNumber || 'N/A'}</p>
-                        <p style="margin: 0; font-size: 12px;">${admin.address || 'Address not provided'}</p>
-                        <p style="margin: 0; font-size: 12px; margin-top: 5px;">GSTIN/UIN: Unregistered</p>
-                    </div>
-                    <div style="width: 50%; padding: 10px; box-sizing: border-box;">
-                        <p style="margin: 0; font-weight: bold; font-size: 12px;">Ship To</p>
-                        <p style="margin: 0; font-weight: bold; font-size: 12px; margin-top: 5px;">${admin.name}</p>
-                        <p style="margin: 0; font-size: 12px;">${admin.mobileNumber || 'N/A'}</p>
-                        <p style="margin: 0; font-size: 12px;">${admin.address || 'Address not provided'}</p>
-                        <p style="margin: 0; font-size: 12px; margin-top: 5px;">GSTIN/UIN: Unregistered</p>
-                    </div>
-                </div>
+                <table style="width: 100%; border-collapse: collapse; margin-top: 10px; border: 1px solid #000;">
+                    <tr>
+                        <td style="width: 50%; border-right: 1px solid #000; padding: 10px; vertical-align: top;">
+                            <p style="margin: 0; font-weight: bold; font-size: 12px;">Bill To</p>
+                            <p style="margin: 0; font-weight: bold; font-size: 12px; margin-top: 5px;">${admin.name}</p>
+                            <p style="margin: 0; font-size: 12px;">${admin.mobileNumber || 'N/A'}</p>
+                            <p style="margin: 0; font-size: 12px;">${admin.address || 'Address not provided'}</p>
+                            <p style="margin: 0; font-size: 12px; margin-top: 5px;">GSTIN/UIN: Unregistered</p>
+                        </td>
+                        <td style="width: 50%; padding: 10px; vertical-align: top;">
+                            <p style="margin: 0; font-weight: bold; font-size: 12px;">Ship To</p>
+                            <p style="margin: 0; font-weight: bold; font-size: 12px; margin-top: 5px;">${admin.name}</p>
+                            <p style="margin: 0; font-size: 12px;">${admin.mobileNumber || 'N/A'}</p>
+                            <p style="margin: 0; font-size: 12px;">${admin.address || 'Address not provided'}</p>
+                            <p style="margin: 0; font-size: 12px; margin-top: 5px;">GSTIN/UIN: Unregistered</p>
+                        </td>
+                    </tr>
+                </table>
 
                 <table style="width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 12px;">
                     <thead>
@@ -292,7 +301,7 @@ const sendInvoiceEmail = async (req, res) => {
                     </tbody>
                 </table>
 
-                <p style="font-weight: bold; font-size: 12px; margin-top: 10px;">(Rupees One Thousand Four Hundred Ninety Nine Only)</p>
+                <p style="font-weight: bold; font-size: 12px; margin-top: 10px;">Amount Paid: INR ${amount}</p>
 
                 <div style="border: 1px solid #e2e8f0; padding: 10px; font-size: 12px; margin-top: 10px; background-color: #f8fafc;">
                     <p style="margin: 0; font-weight: bold;">PAYMENT TERMS & BANKING DETAILS</p>
