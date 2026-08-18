@@ -8,6 +8,7 @@ const emailRoutes = require('./routes/emailRoutes');
 const appointmentRoutes = require('./routes/appointmentRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
 const pushNotificationRoutes = require('./routes/pushNotificationRoutes');
+const subscriptionPlanRoutes = require('./routes/subscriptionPlanRoutes');
 
 const app = express();
 
@@ -34,5 +35,6 @@ app.use('/api/emails', emailRoutes);
 app.use('/api/appointments', appointmentRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/push-notifications', pushNotificationRoutes);
+app.use('/api/subscription-plans', subscriptionPlanRoutes);
 
 module.exports = app;

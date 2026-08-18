@@ -1,5 +1,5 @@
 import { Link, Outlet, useLocation } from 'react-router-dom';
-import { FiUsers, FiUserPlus, FiLogOut } from 'react-icons/fi';
+import { FiUsers, FiUserPlus, FiLogOut, FiCreditCard } from 'react-icons/fi';
 
 const Layout = ({ onLogout }) => {
   const location = useLocation();
@@ -17,6 +17,11 @@ const Layout = ({ onLogout }) => {
           <li>
             <Link to="/create-admin" className={location.pathname === '/create-admin' ? 'active' : ''}>
               <FiUserPlus /> Create Admin
+            </Link>
+          </li>
+          <li>
+            <Link to="/manage-plans" className={location.pathname === '/manage-plans' ? 'active' : ''}>
+              <FiCreditCard /> Subscriptions
             </Link>
           </li>
           <li style={{ marginTop: 'auto', paddingTop: '2rem' }}>

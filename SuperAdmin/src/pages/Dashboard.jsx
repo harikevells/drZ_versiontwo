@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
-import { FaEdit, FaTrash } from 'react-icons/fa';
+import { useNavigate } from 'react-router-dom';
+import { FaEdit, FaTrash, FaCrown } from 'react-icons/fa';
 
 const Dashboard = () => {
+  const navigate = useNavigate();
   const [admins, setAdmins] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -205,6 +207,24 @@ const Dashboard = () => {
                           }}
                         >
                           {admin.isActive ? 'Deactivate' : 'Activate'}
+                        </button>
+
+                        <button
+                          onClick={() => navigate(`/subscription/${admin.id}`)}
+                          style={{
+                            background: '#fef3c7',
+                            color: '#d97706',
+                            border: 'none',
+                            padding: '6px',
+                            borderRadius: '4px',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center'
+                          }}
+                          title="Subscription Plan"
+                        >
+                          <FaCrown size={14} />
                         </button>
 
                         <button

@@ -291,4 +291,52 @@ const checkDoctorStatus = async (req, res) => {
     }
 };
 
-module.exports = { login, doctorLogin, patientRegister, patientLogin, updateFcmToken, adminRegister, getAdmins, updateAdminStatus, updateAdmin, deleteAdmin, checkAdminStatus, checkDoctorStatus };
+const SubscriptionPlan = require('../models/SubscriptionPlan');
+
+const updateAdminSubscription = async (req, res) => {
+    try {
+        const { planId } = req.body;
+        const admin = await User.findById(req.params.id);
+        if (!admin) return res.status(404).json({ error: 'Admin not found' });
+
+        const plan = await SubscriptionPlan.findById(planId);
+        if (!plan) return res.status(404).json({ error: 'Subscription Plan not found' });
+
+        const now = new Date();
+        
+        // Use IST explicitly since the rest of the application seems to rely on local time concepts
+        const istDateStr = new Date().toLocaleString('en-US', { timeZone: 'Asia/Kolkata' });
+        let endDate = new Date(istDateStr);
+
+        const durationType = plan.durationType ? plan.durationType.toLowerCase() : 'days';
+        const durationValue = parseInt(plan.durationValue) || 30;
+
+        if (durationType === 'days') {
+            endDate.setDate(endDate.getDate() + durationValue);
+        } else if (durationType === 'months') {
+            endDate.setMonth(endDate.getMonth() + durationValue);
+        } else if (durationType === 'years') {
+            endDate.setFullYear(endDate.getFullYear() + durationValue);
+        } else {
+            return res.status(400).json({ error: 'Invalid plan duration type' });
+        }
+
+        const startStr = new Date(istDateStr).toISOString().split('T')[0];
+        const startTimeStr = new Date(istDateStr).toTimeString().split(' ')[0].substring(0, 5);
+        const endStr = endDate.toISOString().split('T')[0];
+        const endTimeStr = "23:59"; // End of day
+
+        admin.accessStartDate = startStr;
+        admin.accessStartTime = startTimeStr;
+        admin.accessEndDate = endStr;
+        admin.accessEndTime = endTimeStr;
+        admin.isActive = true;
+
+        await admin.save();
+        res.json({ message: 'Subscription updated successfully', admin });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+};
+
+module.exports = { login, doctorLogin, patientRegister, patientLogin, updateFcmToken, adminRegister, getAdmins, updateAdminStatus, updateAdmin, deleteAdmin, checkAdminStatus, checkDoctorStatus, updateAdminSubscription };
