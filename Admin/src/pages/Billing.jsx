@@ -48,6 +48,54 @@ const Billing = () => {
     window.open(url, '_blank');
   };
 
+  const handleStatusChange = async (id, newStatus) => {
+    try {
+      const token = sessionStorage.getItem('token');
+      const config = { 
+        method: 'PUT',
+        headers: { 
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}` 
+        },
+        body: JSON.stringify({ paymentStatus: newStatus })
+      };
+      const res = await fetch(`${API_BASE_URL}/appointments/${id}/payment`, config);
+      if (res.ok) {
+        setAppointments(appointments.map(appt => 
+          (appt.id === id || appt._id === id) ? { ...appt, paymentStatus: newStatus } : appt
+        ));
+      } else {
+        console.error('Failed to update status');
+      }
+    } catch (error) {
+      console.error('Error updating payment status:', error);
+    }
+  };
+
+  const handlePaymentTypeChange = async (id, newType) => {
+    try {
+      const token = sessionStorage.getItem('token');
+      const config = { 
+        method: 'PUT',
+        headers: { 
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}` 
+        },
+        body: JSON.stringify({ paymentType: newType })
+      };
+      const res = await fetch(`${API_BASE_URL}/appointments/${id}/payment`, config);
+      if (res.ok) {
+        setAppointments(appointments.map(appt => 
+          (appt.id === id || appt._id === id) ? { ...appt, paymentType: newType } : appt
+        ));
+      } else {
+        console.error('Failed to update payment type');
+      }
+    } catch (error) {
+      console.error('Error updating payment type:', error);
+    }
+  };
+
   const filteredAppointments = appointments.filter(appt => {
     const search = searchTerm.toLowerCase().trim();
     if (!search) return true;
@@ -96,6 +144,8 @@ const Billing = () => {
                   <th>Doctor Name</th>
                   <th>Date</th>
                   <th>Amount (INR)</th>
+                  <th>Payment Type</th>
+                  <th>Payment Status</th>
                   <th>Actions</th>
                 </tr>
               </thead>
@@ -113,6 +163,27 @@ const Billing = () => {
                       <td>{appt.appointment_date}</td>
                       <td className="amount-cell">₹{amount}</td>
                       <td>
+                        <select 
+                          className={`status-select ${String(appt.paymentType || 'Offline').toLowerCase()}`}
+                          value={appt.paymentType || 'Offline'}
+                          onChange={(e) => handlePaymentTypeChange(id, e.target.value)}
+                        >
+                          <option value="Online">Online</option>
+                          <option value="Offline">Offline</option>
+                        </select>
+                      </td>
+                      <td>
+                        <select 
+                          className={`status-select ${String(appt.paymentStatus || 'Pending').toLowerCase()}`}
+                          value={appt.paymentStatus || 'Pending'}
+                          onChange={(e) => handleStatusChange(id, e.target.value)}
+                        >
+                          <option value="Pending">Pending</option>
+                          <option value="Paid">Paid</option>
+                          <option value="Refunds">Refunds</option>
+                        </select>
+                      </td>
+                      <td>
                         <div className="action-buttons">
                           <button className="btn-print" onClick={() => handlePrint(id)} title="Print Invoice">
                             <FiPrinter /> Print
@@ -126,7 +197,7 @@ const Billing = () => {
                   );
                 }) : (
                   <tr>
-                    <td colSpan="6" className="text-center">No billing records found</td>
+                    <td colSpan="8" className="text-center">No billing records found</td>
                   </tr>
                 )}
               </tbody>

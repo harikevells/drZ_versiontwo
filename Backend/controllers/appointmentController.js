@@ -43,13 +43,15 @@ const getDoctorDashboard = async (req, res) => {
 const updateAppointmentStatus = async (req, res) => {
     try {
         const { id } = req.params;
-        const { status, appointment_date, appointment_time, followupDate, consultingFee } = req.body;
+        const { status, appointment_date, appointment_time, followupDate, consultingFee, paymentType, paymentStatus } = req.body;
 
         let updateData = { status };
         if (appointment_date) updateData.appointment_date = appointment_date;
         if (appointment_time) updateData.appointment_time = appointment_time;
         if (followupDate && status === 'Completed') updateData.followup_date = followupDate;
         if (consultingFee !== undefined && status === 'Completed') updateData.consultingFee = consultingFee;
+        if (paymentType && status === 'Completed') updateData.paymentType = paymentType;
+        if (paymentStatus && status === 'Completed') updateData.paymentStatus = paymentStatus;
 
         const appointment = await Appointment.findByIdAndUpdate(id, updateData, { new: true });
         if (!appointment) return res.status(404).json({ error: 'Appointment not found' });
@@ -327,4 +329,22 @@ const processFollowupReminders = async (req, res) => {
     }
 };
 
-module.exports = { getDoctorDashboard, updateAppointmentStatus, getAllDoctorAppointments, getBookedTimingsByDate, exportDoctorAppointments, processFollowupReminders };
+const updatePaymentDetails = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { paymentStatus, paymentType } = req.body;
+
+        const updateData = {};
+        if (paymentStatus) updateData.paymentStatus = paymentStatus;
+        if (paymentType) updateData.paymentType = paymentType;
+
+        const appointment = await Appointment.findByIdAndUpdate(id, updateData, { new: true });
+        if (!appointment) return res.status(404).json({ error: 'Appointment not found' });
+
+        res.json({ message: 'Payment status updated successfully', appointment });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+};
+
+module.exports = { getDoctorDashboard, updateAppointmentStatus, getAllDoctorAppointments, getBookedTimingsByDate, exportDoctorAppointments, processFollowupReminders, updatePaymentDetails };

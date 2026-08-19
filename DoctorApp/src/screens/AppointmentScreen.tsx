@@ -231,10 +231,10 @@ export default function AppointmentScreen({ route }: any) {
     fetchAppointments(false);
   };
 
-  const handleStatusUpdate = async (id: string, status: string, followupDate?: string, consultingFee?: string) => {
+  const handleStatusUpdate = async (id: string, status: string, followupDate?: string, consultingFee?: string, paymentType?: string, paymentStatus?: string) => {
     try {
       const token = await AsyncStorage.getItem('userToken');
-      await axios.put(`${API_URL}/${id}/status`, { status, followupDate, consultingFee }, {
+      await axios.put(`${API_URL}/${id}/status`, { status, followupDate, consultingFee, paymentType, paymentStatus }, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
@@ -677,9 +677,9 @@ export default function AppointmentScreen({ route }: any) {
       <CompleteModal
         visible={completeVisible}
         onClose={() => setCompleteVisible(false)}
-        onComplete={(followupDate?: string, consultingFee?: string) => {
+        onComplete={(followupDate?: string, consultingFee?: string, paymentType?: string, paymentStatus?: string) => {
           setCompleteVisible(false);
-          handleStatusUpdate(selectedPatient?.id || selectedPatient?._id, 'Completed', followupDate, consultingFee);
+          handleStatusUpdate(selectedPatient?.id || selectedPatient?._id, 'Completed', followupDate, consultingFee, paymentType, paymentStatus);
         }}
         patientName={selectedPatient?.patient_name}
       />
