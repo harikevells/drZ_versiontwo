@@ -233,7 +233,7 @@ const generateBillingPDF = async (req, res) => {
                 return res.status(500).json({ error: 'Failed to generate PDF' });
             }
             res.setHeader('Content-Type', 'application/pdf');
-            res.setHeader('Content-Disposition', \`inline; filename=Billing-\${id}.pdf\`);
+            res.setHeader('Content-Disposition', `inline; filename=Billing-${id}.pdf`);
             res.send(buffer);
         });
 
