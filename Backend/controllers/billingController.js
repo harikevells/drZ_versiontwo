@@ -51,7 +51,7 @@ const generateBillingPDF = async (req, res) => {
                     font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
                     color: #333;
                     margin: 0;
-                    padding: 30px;
+                    padding: 15px; /* Reduced padding */
                 }
                 .color-blue { color: #0d47a1; }
                 .color-light-blue { color: #1565c0; }
@@ -60,73 +60,73 @@ const generateBillingPDF = async (req, res) => {
                 
                 table { width: 100%; border-collapse: collapse; }
                 
-                .layout-table { border: none; margin-bottom: 20px; }
+                .layout-table { border: none; margin-bottom: 10px; }
                 .layout-table td { border: none; vertical-align: top; padding: 0; }
                 
-                .header-title {
+                .header-title-container {
                     text-align: center;
-                    font-size: 28px;
+                    margin-bottom: 10px;
+                }
+                .header-title {
+                    font-size: 24px;
                     font-weight: bold;
                     color: #1a237e;
                     letter-spacing: 4px;
+                    display: inline-block;
                 }
                 .booking-id-box {
                     border: 1px solid #e2e8f0;
-                    border-radius: 8px;
-                    padding: 10px;
+                    border-radius: 6px;
+                    padding: 8px;
                     text-align: center;
+                    display: inline-block;
                 }
                 .patient-info-table td {
-                    padding: 6px 0;
-                    font-size: 13px;
+                    padding: 4px 0;
+                    font-size: 12px;
                 }
                 .patient-info-table .label {
                     color: #333;
-                    width: 120px;
+                    width: 110px;
                 }
                 .summary-box {
                     border: 1px solid #e2e8f0;
-                    border-radius: 8px;
-                    margin-bottom: 20px;
+                    border-radius: 6px;
+                    margin-bottom: 15px;
                     overflow: hidden;
                 }
                 .summary-table td {
-                    padding: 20px;
+                    padding: 12px;
                     width: 50%;
                     vertical-align: middle;
                 }
                 .summary-left { border-right: 1px solid #e2e8f0; }
                 .amount-large {
-                    font-size: 28px;
+                    font-size: 22px;
                     font-weight: bold;
                     color: #1565c0;
+                }
+                .circle-icon, .circle-icon-light {
+                    border-radius: 50%;
+                    width: 36px;
+                    height: 36px;
+                    display: inline-block;
+                    text-align: center;
+                    line-height: 36px;
+                    vertical-align: middle;
                 }
                 .circle-icon {
                     background-color: #1565c0;
                     color: white;
-                    border-radius: 50%;
-                    width: 44px;
-                    height: 44px;
-                    display: inline-block;
-                    text-align: center;
-                    line-height: 44px;
-                    vertical-align: middle;
                 }
                 .circle-icon-light {
                     background-color: #eef2ff;
                     color: #1565c0;
-                    border-radius: 50%;
-                    width: 44px;
-                    height: 44px;
-                    display: inline-block;
-                    text-align: center;
-                    line-height: 44px;
-                    vertical-align: middle;
                 }
                 .thank-you-section {
                     text-align: center;
-                    margin-top: 40px;
-                    font-size: 13px;
+                    margin-top: 20px;
+                    font-size: 12px;
                     color: #333;
                     position: relative;
                 }
@@ -141,7 +141,7 @@ const generateBillingPDF = async (req, res) => {
                 .thank-you-content {
                     background-color: white;
                     display: inline-block;
-                    padding: 0 15px;
+                    padding: 0 10px;
                     position: relative;
                     z-index: 2;
                     font-weight: 500;
@@ -150,23 +150,23 @@ const generateBillingPDF = async (req, res) => {
                     color: white;
                     background-color: #1565c0;
                     border-radius: 50%;
-                    width: 24px;
-                    height: 24px;
+                    width: 20px;
+                    height: 20px;
                     display: inline-block;
                     text-align: center;
-                    line-height: 24px;
-                    margin: 0 10px;
+                    line-height: 20px;
+                    margin: 0 8px;
                 }
                 .footer-bottom {
                     background-color: #f8fafc;
                     border-radius: 4px;
-                    margin-top: 30px;
-                    padding: 15px;
+                    margin-top: 15px;
+                    padding: 10px;
                 }
                 .footer-table td {
                     width: 50%;
                     text-align: center;
-                    font-size: 13px;
+                    font-size: 12px;
                     color: #1a237e;
                     font-weight: 600;
                 }
@@ -176,38 +176,41 @@ const generateBillingPDF = async (req, res) => {
             </style>
         </head>
         <body>
+            <!-- BILLING Header at the very top -->
+            <div class="header-title-container">
+                <div class="header-title">BILLING</div>
+                <div>
+                    <svg width="80" height="12" viewBox="0 0 100 15" fill="none" stroke="#1565c0" stroke-width="1.5">
+                        <path d="M 0 10 L 40 10 L 45 2 L 55 14 L 60 10 L 100 10" />
+                    </svg>
+                </div>
+            </div>
+
+            <!-- Logo and Booking ID below header -->
             <table class="layout-table">
                 <tr>
-                    <td style="width: 30%;">
+                    <td style="width: 50%; vertical-align: middle;">
                         ${logoHtml}
                     </td>
-                    <td style="width: 40%; text-align: center; vertical-align: middle;">
-                        <div class="header-title">BILLING</div>
-                        <div style="margin-top: 5px;">
-                            <svg width="100" height="15" viewBox="0 0 100 15" fill="none" stroke="#1565c0" stroke-width="1.5">
-                                <path d="M 0 10 L 40 10 L 45 2 L 55 14 L 60 10 L 100 10" />
-                            </svg>
-                        </div>
-                    </td>
-                    <td style="width: 30%; text-align: right; vertical-align: middle;">
+                    <td style="width: 50%; text-align: right; vertical-align: middle;">
                         <div class="booking-id-box">
-                            <div style="font-size: 11px; color: #666; margin-bottom: 5px;">Booking ID</div>
-                            <div style="font-size: 16px; font-weight: bold; color: #1565c0;">${bookingId}</div>
+                            <div style="font-size: 10px; color: #666; margin-bottom: 3px;">Booking ID</div>
+                            <div style="font-size: 14px; font-weight: bold; color: #1565c0;">${bookingId}</div>
                         </div>
                     </td>
                 </tr>
             </table>
 
-            <table class="layout-table" style="margin-top: 30px; margin-bottom: 30px;">
+            <!-- Address and Patient Info -->
+            <table class="layout-table" style="margin-top: 15px; margin-bottom: 15px;">
                 <tr>
-                    <!-- Address & Contact -->
-                    <td style="width: 48%; padding-right: 20px; border-right: 1px solid #e2e8f0;">
+                    <td style="width: 48%; padding-right: 15px; border-right: 1px solid #e2e8f0;">
                         <table class="layout-table">
                             <tr>
-                                <td style="width: 30px; padding-top: 3px;">
-                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1565c0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                                <td style="width: 24px; padding-top: 2px;">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1565c0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
                                 </td>
-                                <td style="font-size: 13px; color: #333; line-height: 1.6;">
+                                <td style="font-size: 11px; color: #333; line-height: 1.5;">
                                     1ST FLOOR, HAKEEM AJMAL, 22, MADHAVAN<br/>
                                     ENCLAVE,<br/>
                                     Hakim Ajmal Khan Rd, near Seventhday School,<br/>
@@ -215,46 +218,45 @@ const generateBillingPDF = async (req, res) => {
                                 </td>
                             </tr>
                             <tr>
-                                <td style="padding-top: 20px;">
-                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1565c0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+                                <td style="padding-top: 12px;">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1565c0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
                                 </td>
-                                <td style="font-size: 14px; padding-top: 22px; font-weight: 500;">
+                                <td style="font-size: 12px; padding-top: 13px; font-weight: 500;">
                                     Ph : 97891 51180
                                 </td>
                             </tr>
                         </table>
                     </td>
                     
-                    <!-- Patient Info -->
                     <td style="width: 4%;">&nbsp;</td>
                     <td style="width: 48%;">
                         <table class="layout-table patient-info-table">
                             <tr>
-                                <td style="width: 30px;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1565c0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg></td>
+                                <td style="width: 24px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1565c0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg></td>
                                 <td class="label">Patient Name</td>
-                                <td style="width: 15px;">:</td>
+                                <td style="width: 10px;">:</td>
                                 <td style="font-weight: bold; color: #111;">${patientName}</td>
                             </tr>
                             <tr>
-                                <td><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1565c0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="14" r="5"></circle><line x1="13.5" y1="10.5" x2="19" y2="5"></line><polyline points="15 5 19 5 19 9"></polyline></svg></td>
+                                <td><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1565c0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="14" r="5"></circle><line x1="13.5" y1="10.5" x2="19" y2="5"></line><polyline points="15 5 19 5 19 9"></polyline></svg></td>
                                 <td class="label">Age / Gender</td>
                                 <td>:</td>
                                 <td style="font-weight: bold; color: #111;">${ageGender}</td>
                             </tr>
                             <tr>
-                                <td><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1565c0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg></td>
+                                <td><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1565c0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg></td>
                                 <td class="label">Treatment</td>
                                 <td>:</td>
                                 <td style="font-weight: bold; color: #111;">${treatment}</td>
                             </tr>
                             <tr>
-                                <td><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1565c0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg></td>
+                                <td><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1565c0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg></td>
                                 <td class="label">Date</td>
                                 <td>:</td>
                                 <td style="font-weight: bold; color: #111;">${date}</td>
                             </tr>
                             <tr>
-                                <td><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1565c0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg></td>
+                                <td><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1565c0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg></td>
                                 <td class="label">Time</td>
                                 <td>:</td>
                                 <td style="font-weight: bold; color: #111;">${time}</td>
@@ -265,15 +267,15 @@ const generateBillingPDF = async (req, res) => {
             </table>
 
             <!-- Billing Table -->
-            <div style="border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; margin-bottom: 25px;">
+            <div style="border: 1px solid #e2e8f0; border-radius: 6px; overflow: hidden; margin-bottom: 15px;">
                 <table style="width: 100%; border-collapse: collapse;">
                     <tr>
-                        <th style="background-color: #eef2ff; color: #1a237e; padding: 18px 25px; text-align: left; font-size: 14px;">Consulting Doctor</th>
-                        <th style="background-color: #eef2ff; color: #1a237e; padding: 18px 25px; text-align: center; font-size: 14px;">Amount (INR)</th>
+                        <th style="background-color: #eef2ff; color: #1a237e; padding: 12px 15px; text-align: left; font-size: 12px;">Consulting Doctor</th>
+                        <th style="background-color: #eef2ff; color: #1a237e; padding: 12px 15px; text-align: center; font-size: 12px;">Amount (INR)</th>
                     </tr>
                     <tr>
-                        <td style="padding: 25px; font-weight: 600; font-size: 16px; border-bottom: none; color: #111;">Dr. ${doctorName}</td>
-                        <td style="padding: 25px; font-weight: 600; font-size: 16px; text-align: center; border-bottom: none; color: #111;">${amount}</td>
+                        <td style="padding: 15px; font-weight: 600; font-size: 14px; border-bottom: none; color: #111;">Dr. ${doctorName}</td>
+                        <td style="padding: 15px; font-weight: 600; font-size: 14px; text-align: center; border-bottom: none; color: #111;">${amount}</td>
                     </tr>
                 </table>
             </div>
@@ -285,20 +287,20 @@ const generateBillingPDF = async (req, res) => {
                         <td class="summary-left">
                             <table class="layout-table" style="margin-bottom: 0;">
                                 <tr>
-                                    <td style="width: 70px; vertical-align: middle;">
+                                    <td style="width: 50px; vertical-align: middle;">
                                         <div class="circle-icon">
-                                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-top: -3px;"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"></path><path d="M3 5v14a2 2 0 0 0 2 2h16v-5H5v-4h16V7"></path></svg>
+                                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-top: -3px;"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"></path><path d="M3 5v14a2 2 0 0 0 2 2h16v-5H5v-4h16V7"></path></svg>
                                         </div>
                                     </td>
                                     <td style="vertical-align: middle;">
-                                        <div style="font-size: 13px; color: #1a237e; font-weight: 600; margin-bottom: 5px;">Received Amount</div>
+                                        <div style="font-size: 11px; color: #1a237e; font-weight: 600; margin-bottom: 2px;">Received Amount</div>
                                         <div class="amount-large">₹${amount}</div>
                                     </td>
                                 </tr>
                             </table>
                         </td>
                         <td style="text-align: center;">
-                            <div style="font-size: 14px; font-weight: bold; display: inline-block; margin-right: 30px; vertical-align: middle;">Total Amount (INR)</div>
+                            <div style="font-size: 12px; font-weight: bold; display: inline-block; margin-right: 15px; vertical-align: middle;">Total Amount (INR)</div>
                             <div class="amount-large" style="display: inline-block; vertical-align: middle;">₹${amount}</div>
                         </td>
                     </tr>
@@ -312,14 +314,14 @@ const generateBillingPDF = async (req, res) => {
                         <td class="summary-left">
                             <table class="layout-table" style="margin-bottom: 0;">
                                 <tr>
-                                    <td style="width: 70px; vertical-align: middle;">
+                                    <td style="width: 50px; vertical-align: middle;">
                                         <div class="circle-icon-light">
-                                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-top: -3px;"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-top: -3px;"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
                                         </div>
                                     </td>
                                     <td style="vertical-align: middle;">
-                                        <div style="font-size: 13px; color: #475569; margin-bottom: 5px;">Follow up Date</div>
-                                        <div style="font-size: 16px; font-weight: 600; color: #111;">${followupDate}</div>
+                                        <div style="font-size: 11px; color: #475569; margin-bottom: 2px;">Follow up Date</div>
+                                        <div style="font-size: 14px; font-weight: 600; color: #111;">${followupDate}</div>
                                     </td>
                                 </tr>
                             </table>
@@ -327,14 +329,14 @@ const generateBillingPDF = async (req, res) => {
                         <td>
                             <table class="layout-table" style="margin-bottom: 0;">
                                 <tr>
-                                    <td style="width: 70px; vertical-align: middle;">
+                                    <td style="width: 50px; vertical-align: middle;">
                                         <div class="circle-icon-light">
-                                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-top: -3px;"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-top: -3px;"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
                                         </div>
                                     </td>
                                     <td style="vertical-align: middle;">
-                                        <div style="font-size: 13px; color: #475569; margin-bottom: 5px;">Consulting Doctor</div>
-                                        <div style="font-size: 16px; font-weight: 600; color: #111;">Dr. ${doctorName}</div>
+                                        <div style="font-size: 11px; color: #475569; margin-bottom: 2px;">Consulting Doctor</div>
+                                        <div style="font-size: 14px; font-weight: 600; color: #111;">Dr. ${doctorName}</div>
                                     </td>
                                 </tr>
                             </table>
@@ -349,7 +351,7 @@ const generateBillingPDF = async (req, res) => {
                 <div class="thank-you-content">
                     Thank you for choosing DrZ. 
                     <div class="heart-icon">
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" stroke="none" style="vertical-align: middle; margin-top: -2px;"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+                        <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" stroke="none" style="vertical-align: middle; margin-top: -2px;"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
                     </div>
                     Your health is our priority.
                 </div>
@@ -360,11 +362,11 @@ const generateBillingPDF = async (req, res) => {
                 <table class="layout-table footer-table" style="margin-bottom: 0;">
                     <tr>
                         <td class="footer-left-td">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 8px; margin-top: -2px;"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 5px; margin-top: -2px;"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
                             97891 51180
                         </td>
                         <td>
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 8px; margin-top: -2px;"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 5px; margin-top: -2px;"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
                             www.drzhealth.com
                         </td>
                     </tr>
