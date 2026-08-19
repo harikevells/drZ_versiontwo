@@ -133,7 +133,7 @@ const generateBillingPDF = async (req, res) => {
                 }
                 .summary-left { border-right: 1px solid #e2e8f0; }
                 .amount-large {
-                    font-size: 20px;
+                    font-size: 16px;
                     font-weight: bold;
                     color: #1565c0;
                 }
@@ -323,16 +323,16 @@ const generateBillingPDF = async (req, res) => {
                                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-top: -3px;"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"></path><path d="M3 5v14a2 2 0 0 0 2 2h16v-5H5v-4h16V7"></path></svg>
                                         </div>
                                     </td>
-                                    <td style="vertical-align: middle; text-align: left; padding-left: 5px;">
-                                        <span style="font-size: 12px; color: #1a237e; font-weight: 600; vertical-align: middle;">Received Amount : </span>
+                                    <td style="vertical-align: middle; text-align: left; padding-left: 5px; white-space: nowrap;">
+                                        <span style="font-size: 10px; color: #1a237e; font-weight: 600; vertical-align: middle;">Received Amount : </span>
                                         <span class="amount-large" style="vertical-align: middle;">₹${amount}</span>
                                     </td>
                                 </tr>
                             </table>
                         </td>
-                        <td style="text-align: center;">
-                            <div style="font-size: 12px; font-weight: bold; display: inline-block; margin-right: 15px; vertical-align: middle;">Total Amount (INR)</div>
-                            <div class="amount-large" style="display: inline-block; vertical-align: middle;">₹${amount}</div>
+                        <td style="text-align: center; white-space: nowrap;">
+                            <span style="font-size: 10px; font-weight: bold; margin-right: 5px; vertical-align: middle;">Total Amount (INR) :</span>
+                            <span class="amount-large" style="vertical-align: middle;">₹${amount}</span>
                         </td>
                     </tr>
                 </table>
