@@ -21,7 +21,7 @@ const login = async (req, res) => {
                     const startDateTime = new Date(`${user.accessStartDate}T${user.accessStartTime}`);
                     const endDateTime = new Date(`${user.accessEndDate}T${user.accessEndTime}`);
 
-                    if (now < startDateTime || now > endDateTime) {
+                    if (now > endDateTime) {
                         return res.status(403).json({ error: 'Your access period has expired. Contact your Administrator.' });
                     }
                 }
@@ -66,7 +66,7 @@ const doctorLogin = async (req, res) => {
                         const startDateTime = new Date(`${admin.accessStartDate}T${admin.accessStartTime}`);
                         const endDateTime = new Date(`${admin.accessEndDate}T${admin.accessEndTime}`);
 
-                        if (now < startDateTime || now > endDateTime) {
+                        if (now > endDateTime) {
                             console.log(`[Doctor Login Failed] Associated Admin access expired for email: "${email}"`);
                             return res.status(403).json({ error: 'Your Hospital Admin access period has expired. Contact Administrator.' });
                         }
@@ -248,7 +248,7 @@ const checkAdminStatus = async (req, res) => {
             const startDateTime = new Date(`${admin.accessStartDate}T${admin.accessStartTime}`);
             const endDateTime = new Date(`${admin.accessEndDate}T${admin.accessEndTime}`);
 
-            if (now < startDateTime || now > endDateTime) {
+            if (now > endDateTime) {
                 return res.json({ locked: true, reason: 'Your access period has expired. Contact your Administrator.' });
             }
         }
@@ -282,7 +282,7 @@ const checkDoctorStatus = async (req, res) => {
                     const startDateTime = new Date(`${admin.accessStartDate}T${admin.accessStartTime}`);
                     const endDateTime = new Date(`${admin.accessEndDate}T${admin.accessEndTime}`);
 
-                    if (now < startDateTime || now > endDateTime) {
+                    if (now > endDateTime) {
                         return res.json({ locked: true, reason: 'Your Hospital account is Expired. Contact Administrator.' });
                     }
                 }
