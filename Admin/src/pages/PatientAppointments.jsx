@@ -1331,6 +1331,21 @@ const PatientAppointments = () => {
                     {selectedAppointment.followup_date ? selectedAppointment.followup_date : 'N/A'}
                   </span>
                 </div>
+                <div className="detail-row">
+                  <span className="detail-label">Consulting Fee</span>
+                  <span className="detail-value">
+                    {selectedAppointment.consultingFee && parseFloat(selectedAppointment.consultingFee) > 0 ? `₹${selectedAppointment.consultingFee}` : 'N/A'}
+                  </span>
+                </div>
+                <div className="detail-row">
+                  <span className="detail-label">Payment Type</span>
+                  <span className="detail-value">{selectedAppointment.paymentType || 'Offline'}</span>
+                </div>
+                <div className="detail-row">
+                  <span className="detail-label">Payment Status</span>
+                  <span className="detail-value">{selectedAppointment.paymentStatus || 'Pending'}</span>
+                </div>
+
 
                 <div style={{ marginTop: '20px', borderTop: '1px solid #e5e7eb', paddingTop: '15px' }}>
                   {(() => {

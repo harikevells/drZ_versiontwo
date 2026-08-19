@@ -163,3 +163,7 @@
 
 .status-select.online { background-color: #e0e7ff; color: #4338ca; border-color: #c7d2fe; }
 .status-select.offline { background-color: #f1f5f9; color: #475569; border-color: #cbd5e1; }
+
+.data-table th, .data-table td {
+  text-align: center !important;
+}

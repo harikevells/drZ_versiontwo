@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { API_BASE_URL } from '../config';
 import { FiPrinter, FiDownload, FiSearch } from 'react-icons/fi';
 import Pagination from '../components/Pagination';
+import './DoctorManagement.css';
 import './Billing.css';
 
 const Billing = () => {
@@ -9,7 +10,7 @@ const Billing = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
+  const itemsPerPage = 5;
 
   useEffect(() => {
     fetchBillingData();
@@ -22,8 +23,8 @@ const Billing = () => {
       const res = await fetch(`${API_BASE_URL}/emails/all-appointments`, config);
       if (res.ok) {
         const data = await res.json();
-        // Only show completed appointments that theoretically should have a billing
-        const completed = data.filter(a => String(a.status).toLowerCase() === 'completed');
+        // Only show completed appointments that theoretically should have a billing and consultingFee > 0
+        const completed = data.filter(a => String(a.status).toLowerCase() === 'completed' && a.consultingFee && parseFloat(a.consultingFee) > 0);
         setAppointments(completed);
       }
     } catch (error) {
@@ -112,31 +113,26 @@ const Billing = () => {
   );
 
   return (
-    <div className="billing-container">
-      <div className="billing-header">
-        <h2>Billing Details</h2>
-        <div className="billing-actions">
-          <div className="search-box">
-            <FiSearch className="search-icon" />
-            <input
-              type="text"
-              placeholder="Search by Patient, Doctor or ID..."
-              value={searchTerm}
-              onChange={(e) => {
-                setSearchTerm(e.target.value);
-                setCurrentPage(1);
-              }}
-            />
-          </div>
-        </div>
+    <div className="page-container">
+      <div className="list-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', gap: '15px' }}>
+        <h2 className="list-title">Billing Details</h2>
+        <input 
+          type="text" 
+          placeholder="Search by Patient, Doctor or ID..." 
+          value={searchTerm} 
+          onChange={(e) => {
+            setSearchTerm(e.target.value);
+            setCurrentPage(1);
+          }} 
+          style={{ padding: '8px 16px', border: '1px solid #e5e7eb', borderRadius: '6px', fontSize: '14px', width: '250px', outline: 'none' }}
+        />
       </div>
 
-      <div className="billing-table-wrapper">
+      <div className="table-container">
         {loading ? (
-          <p className="loading-text">Loading billing details...</p>
+          <p className="loading-text" style={{textAlign: 'center', padding: '20px'}}>Loading billing details...</p>
         ) : (
-          <>
-            <table className="billing-table">
+          <table className="data-table">
               <thead>
                 <tr>
                   <th>Booking ID</th>
@@ -154,6 +150,7 @@ const Billing = () => {
                   const id = appt.id || appt._id;
                   const displayId = id.slice(-6).toUpperCase();
                   const amount = appt.consultingFee || '0';
+                  const isPending = (appt.paymentStatus || 'Pending').toLowerCase() === 'pending';
                   
                   return (
                     <tr key={id}>
@@ -183,12 +180,24 @@ const Billing = () => {
                           <option value="Refunds">Refunds</option>
                         </select>
                       </td>
-                      <td>
+                      <td style={{display:'flex',justifyContent:"center", alignItems:'center'}}>
                         <div className="action-buttons">
-                          <button className="btn-print" onClick={() => handlePrint(id)} title="Print Invoice">
+                          <button 
+                            className="btn-print" 
+                            onClick={() => handlePrint(id)} 
+                            title={isPending ? "Payment Pending" : "Print Invoice"}
+                            disabled={isPending}
+                            style={isPending ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
+                          >
                             <FiPrinter /> Print
                           </button>
-                          <button className="btn-download" onClick={() => handleDownload(id)} title="Download PDF">
+                          <button 
+                            className="btn-download" 
+                            onClick={() => handleDownload(id)} 
+                            title={isPending ? "Payment Pending" : "Download PDF"}
+                            disabled={isPending}
+                            style={isPending ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
+                          >
                             <FiDownload /> Download
                           </button>
                         </div>
@@ -202,19 +211,18 @@ const Billing = () => {
                 )}
               </tbody>
             </table>
-            
-            {totalPages > 1 && (
-              <Pagination
-                currentPage={currentPage}
-                totalPages={totalPages}
-                onPageChange={setCurrentPage}
-                totalItems={filteredAppointments.length}
-                itemsPerPage={itemsPerPage}
-              />
-            )}
-          </>
         )}
       </div>
+
+      {!loading && (
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={setCurrentPage}
+          totalItems={filteredAppointments.length}
+          itemsPerPage={itemsPerPage}
+        />
+      )}
     </div>
   );
 };
