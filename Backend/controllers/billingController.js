@@ -290,7 +290,7 @@ const generateBillingPDF = async (req, res) => {
                                 <td><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1565c0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg></td>
                                 <td class="label">Time</td>
                                 <td>:</td>
-                                <td style="font-weight: bold; color: #111;">${time}</td>
+                                <td style="font-weight: bold; color: #111; white-space: nowrap;">${time}</td>
                             </tr>
                         </table>
                     </td>
@@ -324,8 +324,8 @@ const generateBillingPDF = async (req, res) => {
                                         </div>
                                     </td>
                                     <td style="vertical-align: middle; text-align: left; padding-left: 5px;">
-                                        <div style="font-size: 10px; color: #1a237e; font-weight: 600; margin-bottom: 2px;">Received Amount</div>
-                                        <div class="amount-large">₹${amount}</div>
+                                        <span style="font-size: 12px; color: #1a237e; font-weight: 600; vertical-align: middle;">Received Amount : </span>
+                                        <span class="amount-large" style="vertical-align: middle;">₹${amount}</span>
                                     </td>
                                 </tr>
                             </table>
@@ -376,38 +376,45 @@ const generateBillingPDF = async (req, res) => {
                 </table>
             </div>
 
-            <!-- Thank you -->
-            <div class="thank-you-section">
-                <div class="thank-you-line"></div>
-                <div class="thank-you-content">
-                    Thank you for choosing DrZ. 
-                    <div class="heart-icon">
-                        <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" stroke="none" style="vertical-align: middle; margin-top: -2px;"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+            <!-- Thank you and Footer Bottom -->
+            <div id="pageFooter">
+                <div style="text-align: center; margin-top: 10px; font-size: 12px; color: #333; position: relative;">
+                    <div style="border-top: 1px dashed #cbd5e1; position: absolute; top: 50%; left: 0; right: 0; z-index: 1;"></div>
+                    <div style="background-color: white; display: inline-block; padding: 0 10px; position: relative; z-index: 2; font-weight: 500;">
+                        Thank you for choosing DrZ. 
+                        <div style="color: white; background-color: #1565c0; border-radius: 50%; width: 20px; height: 20px; display: inline-block; text-align: center; line-height: 20px; margin: 0 8px;">
+                            <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" stroke="none" style="vertical-align: middle; margin-top: -2px;"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+                        </div>
+                        Your health is our priority.
                     </div>
-                    Your health is our priority.
                 </div>
-            </div>
 
-            <!-- Footer Bottom -->
-            <div class="footer-bottom">
-                <table class="layout-table footer-table" style="margin-bottom: 0;">
-                    <tr>
-                        <td class="footer-left-td">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 5px; margin-top: -2px;"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
-                            97891 51180
-                        </td>
-                        <td>
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 5px; margin-top: -2px;"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
-                            www.drzhealth.com
-                        </td>
-                    </tr>
-                </table>
+                <div style="background-color: #f8fafc; border-radius: 4px; margin-top: 15px; padding: 10px;">
+                    <table style="width: 100%; border-collapse: collapse; border: none; margin-bottom: 0;">
+                        <tr>
+                            <td style="width: 50%; text-align: center; font-size: 12px; color: #1a237e; font-weight: 600; border-right: 1px solid #cbd5e1;">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 5px; margin-top: -2px;"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+                                97891 51180
+                            </td>
+                            <td style="width: 50%; text-align: center; font-size: 12px; color: #1a237e; font-weight: 600;">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 5px; margin-top: -2px;"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+                                www.drzhealth.com
+                            </td>
+                        </tr>
+                    </table>
+                </div>
             </div>
         </body>
         </html>
         `;
 
-        const options = { format: 'A4', border: { top: '0.5in', right: '0.5in', bottom: '0.5in', left: '0.5in' } };
+        const options = { 
+            format: 'A4', 
+            border: { top: '0.5in', right: '0.5in', bottom: '0.5in', left: '0.5in' },
+            footer: {
+                height: '80px'
+            }
+        };
         
         pdf.create(htmlContent, options).toBuffer((err, buffer) => {
             if (err) {
