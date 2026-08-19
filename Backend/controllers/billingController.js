@@ -350,9 +350,9 @@ const generateBillingPDF = async (req, res) => {
                                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-top: -3px;"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
                                         </div>
                                     </td>
-                                    <td style="vertical-align: middle; text-align: left; padding-left: 5px;">
-                                        <div style="font-size: 10px; color: #475569; margin-bottom: 2px;">Follow up Date</div>
-                                        <div style="font-size: 13px; font-weight: 600; color: #111;">${followupDate}</div>
+                                    <td style="vertical-align: middle; text-align: left; padding-left: 5px; white-space: nowrap;">
+                                        <span style="font-size: 10px; color: #475569; vertical-align: middle;">Follow up Date : </span>
+                                        <span style="font-size: 13px; font-weight: 600; color: #111; vertical-align: middle;">${followupDate}</span>
                                     </td>
                                 </tr>
                             </table>
@@ -365,9 +365,9 @@ const generateBillingPDF = async (req, res) => {
                                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-top: -3px;"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
                                         </div>
                                     </td>
-                                    <td style="vertical-align: middle; text-align: left; padding-left: 5px;">
-                                        <div style="font-size: 10px; color: #475569; margin-bottom: 2px;">Consulting Doctor</div>
-                                        <div style="font-size: 13px; font-weight: 600; color: #111;">Dr. ${doctorName}</div>
+                                    <td style="vertical-align: middle; text-align: left; padding-left: 5px; white-space: nowrap;">
+                                        <span style="font-size: 10px; color: #475569; vertical-align: middle;">Consulting Doctor : </span>
+                                        <span style="font-size: 13px; font-weight: 600; color: #111; vertical-align: middle;">Dr. ${doctorName}</span>
                                     </td>
                                 </tr>
                             </table>
