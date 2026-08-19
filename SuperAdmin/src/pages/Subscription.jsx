@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { FiCheck, FiArrowLeft } from 'react-icons/fi';
 import { FaCrown, FaPaperPlane, FaGem } from 'react-icons/fa';
+import config from '../config';
 
 const Subscription = () => {
   const { adminId } = useParams();
@@ -14,7 +15,7 @@ const Subscription = () => {
     // Optionally fetch admin details if needed
     const fetchAdmin = async () => {
       try {
-        const response = await fetch('https://drz-versiontwo.onrender.com/api/auth/admins');
+        const response = await fetch(`${config.API_BASE_URL}/auth/admins`);
         const data = await response.json();
         const admin = data.find(a => a._id === adminId || a.id === adminId);
         if (admin) setAdminName(admin.name);
@@ -25,7 +26,7 @@ const Subscription = () => {
 
     const fetchPlans = async () => {
       try {
-        const response = await fetch('https://drz-versiontwo.onrender.com/api/subscription-plans');
+        const response = await fetch(`${config.API_BASE_URL}/subscription-plans`);
         if (response.ok) {
           const data = await response.json();
           setPlans(data);
@@ -44,7 +45,7 @@ const Subscription = () => {
     
     setLoading(true);
     try {
-      const response = await fetch(`https://drz-versiontwo.onrender.com/api/auth/admins/${adminId}/subscription`, {
+      const response = await fetch(`${config.API_BASE_URL}/auth/admins/${adminId}/subscription`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ planId: plan._id || plan.id })

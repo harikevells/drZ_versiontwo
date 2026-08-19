@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import config from '../config';
 
 const CreateAdmin = () => {
   const navigate = useNavigate();
@@ -62,7 +63,7 @@ const CreateAdmin = () => {
 
     setLoading(true);
     try {
-      const response = await fetch('https://drz-versiontwo.onrender.com/api/auth/admin/register', {
+      const response = await fetch(`${config.API_BASE_URL}/auth/admin/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData)

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { FaEdit, FaTrash, FaPlus, FaCrown, FaPaperPlane, FaGem } from 'react-icons/fa';
+import config from '../config';
 import { FiCheck } from 'react-icons/fi';
 
 const ManagePlans = () => {
@@ -25,7 +26,7 @@ const ManagePlans = () => {
 
   const fetchPlans = async () => {
     try {
-      const response = await fetch('https://drz-versiontwo.onrender.com/api/subscription-plans');
+      const response = await fetch(`${config.API_BASE_URL}/subscription-plans`);
       if (!response.ok) throw new Error('Failed to fetch plans');
       const data = await response.json();
       
@@ -45,7 +46,7 @@ const ManagePlans = () => {
   const handleDelete = async (planId) => {
     if (!window.confirm("Are you sure you want to delete this subscription plan?")) return;
     try {
-      const response = await fetch(`https://drz-versiontwo.onrender.com/api/subscription-plans/${planId}`, {
+      const response = await fetch(`${config.API_BASE_URL}/subscription-plans/${planId}`, {
         method: 'DELETE'
       });
       if (!response.ok) throw new Error('Failed to delete plan');
@@ -109,8 +110,8 @@ const ManagePlans = () => {
 
     try {
       const url = isEditing 
-        ? `https://drz-versiontwo.onrender.com/api/subscription-plans/${formData.id}`
-        : `https://drz-versiontwo.onrender.com/api/subscription-plans`;
+        ? `${config.API_BASE_URL}/subscription-plans/${formData.id}`
+        : `${config.API_BASE_URL}/subscription-plans`;
       
       const method = isEditing ? 'PUT' : 'POST';
 

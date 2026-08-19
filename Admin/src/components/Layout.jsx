@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import { API_BASE_URL } from '../config';
-import { FaUserMd, FaCalendarCheck, FaBell, FaSignOutAlt, FaUserInjured, FaThLarge, FaSearch, FaCalendarAlt, FaCog, FaMoon, FaLock } from 'react-icons/fa';
+import { FaUserMd, FaCalendarCheck, FaBell, FaSignOutAlt, FaUserInjured, FaThLarge, FaSearch, FaCalendarAlt, FaCog, FaMoon, FaLock, FaFileInvoice } from 'react-icons/fa';
 import './Layout.css';
 import logoImage from '../assets/Adminlogo.svg';
 import adminImage from '../assets/adminimage.png';
@@ -157,6 +157,10 @@ const Layout = () => {
           <NavLink to="/medical-camp" className={({ isActive }) => isActive ? "nav-item active" : "nav-item"}>
             <FaBell className="nav-icon" />
             <span>Push Notification</span>
+          </NavLink>
+          <NavLink to="/billing" className={({ isActive }) => isActive ? "nav-item active" : "nav-item"}>
+            <FaFileInvoice className="nav-icon" />
+            <span>Billing</span>
           </NavLink>
         </nav>
       </aside>

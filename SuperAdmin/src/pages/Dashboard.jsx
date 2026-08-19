@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FaEdit, FaTrash, FaCrown, FaEnvelope } from 'react-icons/fa';
+import config from '../config';
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -26,7 +27,7 @@ const Dashboard = () => {
 
   const fetchAdmins = async () => {
     try {
-      const response = await fetch('https://drz-versiontwo.onrender.com/api/auth/admins');
+      const response = await fetch(`${config.API_BASE_URL}/auth/admins`);
       if (!response.ok) throw new Error('Failed to fetch admins');
       const data = await response.json();
 
@@ -42,7 +43,7 @@ const Dashboard = () => {
           // Auto-deactivate if time is expired and still active in DB
           if (isCurrentlyActive && now > endDateTime) {
             // Fire and forget update to backend
-            fetch(`https://drz-versiontwo.onrender.com/api/auth/admins/${admin._id}/status`, {
+            fetch(`${config.API_BASE_URL}/auth/admins/${admin._id}/status`, {
               method: 'PUT',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ isActive: false })
@@ -84,7 +85,7 @@ const Dashboard = () => {
     }
 
     try {
-      const response = await fetch(`https://drz-versiontwo.onrender.com/api/auth/admins/${adminId}/status`, {
+      const response = await fetch(`${config.API_BASE_URL}/auth/admins/${adminId}/status`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ isActive: !currentStatus })
@@ -99,7 +100,7 @@ const Dashboard = () => {
   const handleDelete = async (adminId) => {
     if (!window.confirm("Are you sure you want to permanently delete this admin?")) return;
     try {
-      const response = await fetch(`https://drz-versiontwo.onrender.com/api/auth/admins/${adminId}`, {
+      const response = await fetch(`${config.API_BASE_URL}/auth/admins/${adminId}`, {
         method: 'DELETE'
       });
       if (!response.ok) throw new Error('Failed to delete admin');
@@ -112,7 +113,7 @@ const Dashboard = () => {
 
   const handleSendInvoice = async (adminId) => {
     try {
-      const response = await fetch(`https://drz-versiontwo.onrender.com/api/auth/admins/${adminId}/invoice`, {
+      const response = await fetch(`${config.API_BASE_URL}/auth/admins/${adminId}/invoice`, {
         method: 'POST',
       });
       const data = await response.json();
@@ -149,7 +150,7 @@ const Dashboard = () => {
   const handleEditSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await fetch(`https://drz-versiontwo.onrender.com/api/auth/admins/${editingAdmin.id}`, {
+      const response = await fetch(`${config.API_BASE_URL}/auth/admins/${editingAdmin.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(editFormData)

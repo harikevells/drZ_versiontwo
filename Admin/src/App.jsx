@@ -9,6 +9,7 @@ import Notification from './pages/Notification';
 import MedicalCamp from './pages/MedicalCamp';
 import Dashboard from './pages/Dashboard/Dashboard';
 import Subscription from './pages/Subscription';
+import Billing from './pages/Billing';
 
 const ProtectedRoute = ({ element }) => {
   const token = sessionStorage.getItem('token');
@@ -63,6 +64,7 @@ function App() {
           <Route path="patient" element={<PatientAppointments />} />
           <Route path="notifications" element={<Notification />} />
           <Route path="medical-camp" element={<MedicalCamp />} />
+          <Route path="billing" element={<Billing />} />
         </Route>
       </Routes>
     </Router>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, FlatList, ActivityIndicator, Alert, TouchableOpacity, ScrollView, RefreshControl, TextInput, Modal, Animated } from 'react-native';
+import { View, Text, StyleSheet, FlatList, ActivityIndicator, Alert, TouchableOpacity, ScrollView, RefreshControl, TextInput, Modal, Animated, Linking } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import Header from '../components/Header';
@@ -49,6 +49,7 @@ export default function AppointmentScreen({ route }: any) {
   const [appliedFromDate, setAppliedFromDate] = useState('');
   const [appliedToDate, setAppliedToDate] = useState('');
   const [showCalendar, setShowCalendar] = useState<'from' | 'to' | null>(null);
+  const [showDownloadSuccess, setShowDownloadSuccess] = useState(false);
 
   const flatListRef = React.useRef<FlatList>(null);
   const blinkAnim = React.useRef(new Animated.Value(0)).current;
@@ -230,13 +231,21 @@ export default function AppointmentScreen({ route }: any) {
     fetchAppointments(false);
   };
 
-  const handleStatusUpdate = async (id: string, status: string, followupDate?: string) => {
+  const handleStatusUpdate = async (id: string, status: string, followupDate?: string, consultingFee?: string) => {
     try {
       const token = await AsyncStorage.getItem('userToken');
-      await axios.put(`${API_URL}/${id}/status`, { status, followupDate }, {
+      await axios.put(`${API_URL}/${id}/status`, { status, followupDate, consultingFee }, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      Alert.alert('Success', `Appointment ${status.toLowerCase()} successfully!`);
+      
+      if (status === 'Completed') {
+        const pdfUrl = `${API_URL}/${id}/billing-pdf`;
+        Alert.alert('Success', `Appointment completed successfully! Opening PDF...`);
+        Linking.openURL(pdfUrl).catch(err => console.error("Couldn't open PDF", err));
+      } else {
+        Alert.alert('Success', `Appointment ${status.toLowerCase()} successfully!`);
+      }
+      
       fetchAppointments(false);
     } catch (error) {
       console.error('Error updating status:', error);
@@ -313,12 +322,15 @@ export default function AppointmentScreen({ route }: any) {
       url += `?${params.join('&')}`;
     }
 
-    import('react-native').then(({ Linking }) => {
-      Linking.openURL(url).catch(err => {
+    Linking.openURL(url)
+      .then(() => {
+        setShowDownloadSuccess(true);
+        setTimeout(() => setShowDownloadSuccess(false), 2000);
+      })
+      .catch(err => {
         console.error("Couldn't open download URL", err);
         Alert.alert('Error', 'Failed to start download.');
       });
-    });
   };
 
   const onDayPress = (day: any) => {
@@ -665,9 +677,9 @@ export default function AppointmentScreen({ route }: any) {
       <CompleteModal
         visible={completeVisible}
         onClose={() => setCompleteVisible(false)}
-        onComplete={(followupDate?: string) => {
+        onComplete={(followupDate?: string, consultingFee?: string) => {
           setCompleteVisible(false);
-          handleStatusUpdate(selectedPatient?.id || selectedPatient?._id, 'Completed', followupDate);
+          handleStatusUpdate(selectedPatient?.id || selectedPatient?._id, 'Completed', followupDate, consultingFee);
         }}
         patientName={selectedPatient?.patient_name}
       />
@@ -688,6 +700,12 @@ export default function AppointmentScreen({ route }: any) {
       >
         <Ionicons name="add" size={30} color="#FFF" />
       </TouchableOpacity>
+
+      {showDownloadSuccess ? (
+        <View style={styles.downloadSuccessPopup}>
+          <Text style={styles.downloadSuccessText}>Downloaded successfully</Text>
+        </View>
+      ) : null}
     </View>
   );
 }
@@ -1001,5 +1019,21 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 6 },
     shadowRadius: 4,
     zIndex: 999,
+  },
+  downloadSuccessPopup: {
+    position: 'absolute',
+    bottom: 100,
+    alignSelf: 'center',
+    backgroundColor: 'rgba(0,0,0,0.8)',
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 25,
+    zIndex: 1000,
+    elevation: 10,
+  },
+  downloadSuccessText: {
+    color: '#FFF',
+    fontSize: 14,
+    fontWeight: 'bold',
   }
 });

@@ -6,26 +6,29 @@ import { Calendar } from 'react-native-calendars';
 interface Props {
   visible: boolean;
   onClose: () => void;
-  onComplete: (followupDate?: string) => void;
+  onComplete: (followupDate?: string, consultingFee?: string) => void;
   patientName?: string;
 }
 
 export default function CompleteModal({ visible, onClose, onComplete, patientName }: Props) {
   const [showFollowup, setShowFollowup] = useState(false);
   const [followupDate, setFollowupDate] = useState('');
+  const [consultingFee, setConsultingFee] = useState('');
   const [showCalendar, setShowCalendar] = useState(false);
 
   const handleClose = () => {
     setShowFollowup(false);
     setFollowupDate('');
+    setConsultingFee('');
     setShowCalendar(false);
     onClose();
   };
 
   const handleComplete = () => {
-    onComplete(showFollowup ? followupDate : undefined);
+    onComplete(showFollowup ? followupDate : undefined, consultingFee);
     setShowFollowup(false);
     setFollowupDate('');
+    setConsultingFee('');
     setShowCalendar(false);
   };
 
@@ -64,6 +67,17 @@ export default function CompleteModal({ visible, onClose, onComplete, patientNam
               </TouchableOpacity>
             </View>
           )}
+
+          <View style={styles.inputContainer}>
+            <TextInput
+              style={styles.dateInput}
+              placeholder="Consulting Fee (e.g. 500)"
+              value={consultingFee}
+              onChangeText={setConsultingFee}
+              keyboardType="numeric"
+              placeholderTextColor="#999"
+            />
+          </View>
 
           {showCalendar && (
             <View style={styles.calendarWrapper}>
