@@ -51,175 +51,324 @@ const generateBillingPDF = async (req, res) => {
                     font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
                     color: #333;
                     margin: 0;
-                    padding: 20px;
+                    padding: 30px;
                 }
+                .color-blue { color: #0d47a1; }
+                .color-light-blue { color: #1565c0; }
+                .color-grey { color: #666; }
+                .bg-light { background-color: #f8fafc; }
+                
+                table { width: 100%; border-collapse: collapse; }
+                
+                .layout-table { border: none; margin-bottom: 20px; }
+                .layout-table td { border: none; vertical-align: top; padding: 0; }
+                
                 .header-title {
                     text-align: center;
-                    font-size: 18px;
+                    font-size: 28px;
                     font-weight: bold;
-                    letter-spacing: 2px;
-                    color: #0d6c7e;
-                    text-transform: uppercase;
+                    color: #1a237e;
+                    letter-spacing: 4px;
+                }
+                .booking-id-box {
+                    border: 1px solid #e2e8f0;
+                    border-radius: 8px;
+                    padding: 10px;
+                    text-align: center;
+                }
+                .patient-info-table td {
+                    padding: 6px 0;
+                    font-size: 13px;
+                }
+                .patient-info-table .label {
+                    color: #333;
+                    width: 120px;
+                }
+                .summary-box {
+                    border: 1px solid #e2e8f0;
+                    border-radius: 8px;
                     margin-bottom: 20px;
+                    overflow: hidden;
                 }
-                .header-title span {
-                    border-bottom: 2px solid #0d6c7e;
-                    padding-bottom: 5px;
-                }
-                .header-container {
-                    display: flex;
-                    justify-content: space-between;
-                    margin-bottom: 30px;
-                }
-                .logo-section {
+                .summary-table td {
+                    padding: 20px;
                     width: 50%;
+                    vertical-align: middle;
                 }
-                .address-text {
-                    font-size: 10px;
-                    color: #666;
-                    margin-top: 10px;
-                    line-height: 1.4;
-                }
-                .info-section {
-                    width: 45%;
-                    text-align: right;
-                    font-size: 11px;
-                }
-                .booking-badge {
-                    background-color: #e6f7fa;
-                    color: #0d6c7e;
-                    padding: 5px 10px;
-                    border-radius: 15px;
-                    display: inline-block;
+                .summary-left { border-right: 1px solid #e2e8f0; }
+                .amount-large {
+                    font-size: 28px;
                     font-weight: bold;
-                    margin-bottom: 15px;
+                    color: #1565c0;
                 }
-                .info-row {
-                    margin-bottom: 5px;
-                }
-                .info-label {
-                    color: #888;
-                }
-                .info-value {
-                    font-weight: bold;
-                }
-                .consulting-doctor {
-                    margin-top: 20px;
-                    font-size: 11px;
-                }
-                .icon-circle {
-                    background-color: #0d6c7e;
+                .circle-icon {
+                    background-color: #1565c0;
                     color: white;
                     border-radius: 50%;
+                    width: 44px;
+                    height: 44px;
                     display: inline-block;
-                    width: 16px;
-                    height: 16px;
                     text-align: center;
-                    line-height: 16px;
-                    margin-right: 5px;
+                    line-height: 44px;
+                    vertical-align: middle;
                 }
-                table {
-                    width: 100%;
-                    border-collapse: collapse;
-                    margin-top: 30px;
-                    font-size: 12px;
-                }
-                th {
-                    background-color: #f1f5f9;
-                    border-bottom: 2px solid #cbd5e1;
-                    padding: 10px;
-                    text-align: left;
-                    color: #475569;
-                }
-                td {
-                    border-bottom: 1px solid #e2e8f0;
-                    padding: 10px;
-                }
-                .text-right {
-                    text-align: right;
-                }
-                .text-center {
+                .circle-icon-light {
+                    background-color: #eef2ff;
+                    color: #1565c0;
+                    border-radius: 50%;
+                    width: 44px;
+                    height: 44px;
+                    display: inline-block;
                     text-align: center;
+                    line-height: 44px;
+                    vertical-align: middle;
                 }
-                .footer-container {
+                .thank-you-section {
+                    text-align: center;
                     margin-top: 40px;
-                    display: table;
-                    width: 100%;
+                    font-size: 13px;
+                    color: #333;
+                    position: relative;
                 }
-                .footer-left {
-                    display: table-cell;
+                .thank-you-line {
+                    border-top: 1px dashed #cbd5e1;
+                    position: absolute;
+                    top: 50%;
+                    left: 0;
+                    right: 0;
+                    z-index: 1;
+                }
+                .thank-you-content {
+                    background-color: white;
+                    display: inline-block;
+                    padding: 0 15px;
+                    position: relative;
+                    z-index: 2;
+                    font-weight: 500;
+                }
+                .heart-icon {
+                    color: white;
+                    background-color: #1565c0;
+                    border-radius: 50%;
+                    width: 24px;
+                    height: 24px;
+                    display: inline-block;
+                    text-align: center;
+                    line-height: 24px;
+                    margin: 0 10px;
+                }
+                .footer-bottom {
+                    background-color: #f8fafc;
+                    border-radius: 4px;
+                    margin-top: 30px;
+                    padding: 15px;
+                }
+                .footer-table td {
                     width: 50%;
-                    font-size: 11px;
+                    text-align: center;
+                    font-size: 13px;
+                    color: #1a237e;
+                    font-weight: 600;
                 }
-                .footer-right {
-                    display: table-cell;
-                    width: 50%;
-                    text-align: right;
-                    font-size: 11px;
-                    font-weight: bold;
-                }
-                .received-amount {
-                    margin-top: 20px;
-                    font-size: 12px;
-                    font-weight: bold;
-                    color: #0d6c7e;
+                .footer-left-td {
+                    border-right: 1px solid #cbd5e1;
                 }
             </style>
         </head>
         <body>
-            <div class="header-title">
-                <span>BILLING</span>
-            </div>
-            <div class="header-container" style="display: table; width: 100%;">
-                <div class="logo-section" style="display: table-cell; width: 50%; vertical-align: top;">
-                    ${logoHtml}
-                    <div class="address-text">
-                        1ST FLOOR, HAKEEM AJMAL, 22, MADHAVAN ENCLAVE,<br/>
-                        Hakim Ajmal Khan Rd, near Seventhday School,<br/>
-                        Chinna Chokkikulam, Madurai, Tamil Nadu 625002<br/><br/>
-                        Ph : 97891 51180
-                    </div>
-                </div>
-                <div class="info-section" style="display: table-cell; width: 50%; vertical-align: top; text-align: right;">
-                    <div class="booking-badge">Booking ID: ${bookingId}</div>
-                    <div class="info-row"><span class="info-label">Patient:</span> <span class="info-value">${patientName}</span></div>
-                    <div class="info-row"><span class="info-label">Age/Gender:</span> <span class="info-value">${ageGender}</span></div>
-                    <div class="info-row"><span class="info-label">Treatment:</span> <span class="info-value">${treatment}</span></div>
-                    <div class="info-row"><span class="info-label">Date:</span> <span class="info-value">${date}</span></div>
-                    <div class="info-row"><span class="info-label">Time:</span> <span class="info-value">${time}</span></div>
-                </div>
-            </div>
-
-            <table>
-                <thead>
-                    <tr>
-                        <th>Consulting Doctor Name</th>
-                        <th class="text-right">Amount (INR)</th>
-                        <th class="text-center">GST : CGST 0, SGST 0</th>
-                        <th class="text-right">Sub Total (INR)</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td>Dr. ${doctorName}</td>
-                        <td class="text-right">${amount}</td>
-                        <td class="text-center">0</td>
-                        <td class="text-right">${amount}</td>
-                    </tr>
-                </tbody>
+            <table class="layout-table">
+                <tr>
+                    <td style="width: 30%;">
+                        ${logoHtml}
+                    </td>
+                    <td style="width: 40%; text-align: center; vertical-align: middle;">
+                        <div class="header-title">BILLING</div>
+                        <div style="margin-top: 5px;">
+                            <svg width="100" height="15" viewBox="0 0 100 15" fill="none" stroke="#1565c0" stroke-width="1.5">
+                                <path d="M 0 10 L 40 10 L 45 2 L 55 14 L 60 10 L 100 10" />
+                            </svg>
+                        </div>
+                    </td>
+                    <td style="width: 30%; text-align: right; vertical-align: middle;">
+                        <div class="booking-id-box">
+                            <div style="font-size: 11px; color: #666; margin-bottom: 5px;">Booking ID</div>
+                            <div style="font-size: 16px; font-weight: bold; color: #1565c0;">${bookingId}</div>
+                        </div>
+                    </td>
+                </tr>
             </table>
 
-            <div class="received-amount">
-                Received amount : INR ${amount}
+            <table class="layout-table" style="margin-top: 30px; margin-bottom: 30px;">
+                <tr>
+                    <!-- Address & Contact -->
+                    <td style="width: 48%; padding-right: 20px; border-right: 1px solid #e2e8f0;">
+                        <table class="layout-table">
+                            <tr>
+                                <td style="width: 30px; padding-top: 3px;">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1565c0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                                </td>
+                                <td style="font-size: 13px; color: #333; line-height: 1.6;">
+                                    1ST FLOOR, HAKEEM AJMAL, 22, MADHAVAN<br/>
+                                    ENCLAVE,<br/>
+                                    Hakim Ajmal Khan Rd, near Seventhday School,<br/>
+                                    Chinna Chokkikulam, Madurai, Tamil Nadu 625002
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="padding-top: 20px;">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1565c0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+                                </td>
+                                <td style="font-size: 14px; padding-top: 22px; font-weight: 500;">
+                                    Ph : 97891 51180
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                    
+                    <!-- Patient Info -->
+                    <td style="width: 4%;">&nbsp;</td>
+                    <td style="width: 48%;">
+                        <table class="layout-table patient-info-table">
+                            <tr>
+                                <td style="width: 30px;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1565c0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg></td>
+                                <td class="label">Patient Name</td>
+                                <td style="width: 15px;">:</td>
+                                <td style="font-weight: bold; color: #111;">${patientName}</td>
+                            </tr>
+                            <tr>
+                                <td><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1565c0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="14" r="5"></circle><line x1="13.5" y1="10.5" x2="19" y2="5"></line><polyline points="15 5 19 5 19 9"></polyline></svg></td>
+                                <td class="label">Age / Gender</td>
+                                <td>:</td>
+                                <td style="font-weight: bold; color: #111;">${ageGender}</td>
+                            </tr>
+                            <tr>
+                                <td><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1565c0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg></td>
+                                <td class="label">Treatment</td>
+                                <td>:</td>
+                                <td style="font-weight: bold; color: #111;">${treatment}</td>
+                            </tr>
+                            <tr>
+                                <td><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1565c0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg></td>
+                                <td class="label">Date</td>
+                                <td>:</td>
+                                <td style="font-weight: bold; color: #111;">${date}</td>
+                            </tr>
+                            <tr>
+                                <td><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1565c0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg></td>
+                                <td class="label">Time</td>
+                                <td>:</td>
+                                <td style="font-weight: bold; color: #111;">${time}</td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+            </table>
+
+            <!-- Billing Table -->
+            <div style="border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; margin-bottom: 25px;">
+                <table style="width: 100%; border-collapse: collapse;">
+                    <tr>
+                        <th style="background-color: #eef2ff; color: #1a237e; padding: 18px 25px; text-align: left; font-size: 14px;">Consulting Doctor</th>
+                        <th style="background-color: #eef2ff; color: #1a237e; padding: 18px 25px; text-align: center; font-size: 14px;">Amount (INR)</th>
+                    </tr>
+                    <tr>
+                        <td style="padding: 25px; font-weight: 600; font-size: 16px; border-bottom: none; color: #111;">Dr. ${doctorName}</td>
+                        <td style="padding: 25px; font-weight: 600; font-size: 16px; text-align: center; border-bottom: none; color: #111;">${amount}</td>
+                    </tr>
+                </table>
             </div>
 
-            <div class="footer-container">
-                <div class="footer-left">
-                    <span class="icon-circle" style="background-color: transparent; color: #333; border: 1px solid #333;">📅</span> Followup : <strong>${followupDate}</strong>
+            <!-- Received Amount / Total Amount -->
+            <div class="summary-box">
+                <table class="layout-table summary-table" style="margin-bottom: 0;">
+                    <tr>
+                        <td class="summary-left">
+                            <table class="layout-table" style="margin-bottom: 0;">
+                                <tr>
+                                    <td style="width: 70px; vertical-align: middle;">
+                                        <div class="circle-icon">
+                                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-top: -3px;"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"></path><path d="M3 5v14a2 2 0 0 0 2 2h16v-5H5v-4h16V7"></path></svg>
+                                        </div>
+                                    </td>
+                                    <td style="vertical-align: middle;">
+                                        <div style="font-size: 13px; color: #1a237e; font-weight: 600; margin-bottom: 5px;">Received Amount</div>
+                                        <div class="amount-large">₹${amount}</div>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                        <td style="text-align: center;">
+                            <div style="font-size: 14px; font-weight: bold; display: inline-block; margin-right: 30px; vertical-align: middle;">Total Amount (INR)</div>
+                            <div class="amount-large" style="display: inline-block; vertical-align: middle;">₹${amount}</div>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+
+            <!-- Follow up Box -->
+            <div class="summary-box">
+                <table class="layout-table summary-table" style="margin-bottom: 0;">
+                    <tr>
+                        <td class="summary-left">
+                            <table class="layout-table" style="margin-bottom: 0;">
+                                <tr>
+                                    <td style="width: 70px; vertical-align: middle;">
+                                        <div class="circle-icon-light">
+                                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-top: -3px;"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                                        </div>
+                                    </td>
+                                    <td style="vertical-align: middle;">
+                                        <div style="font-size: 13px; color: #475569; margin-bottom: 5px;">Follow up Date</div>
+                                        <div style="font-size: 16px; font-weight: 600; color: #111;">${followupDate}</div>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                        <td>
+                            <table class="layout-table" style="margin-bottom: 0;">
+                                <tr>
+                                    <td style="width: 70px; vertical-align: middle;">
+                                        <div class="circle-icon-light">
+                                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-top: -3px;"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                                        </div>
+                                    </td>
+                                    <td style="vertical-align: middle;">
+                                        <div style="font-size: 13px; color: #475569; margin-bottom: 5px;">Consulting Doctor</div>
+                                        <div style="font-size: 16px; font-weight: 600; color: #111;">Dr. ${doctorName}</div>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+
+            <!-- Thank you -->
+            <div class="thank-you-section">
+                <div class="thank-you-line"></div>
+                <div class="thank-you-content">
+                    Thank you for choosing DrZ. 
+                    <div class="heart-icon">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" stroke="none" style="vertical-align: middle; margin-top: -2px;"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+                    </div>
+                    Your health is our priority.
                 </div>
-                <div class="footer-right">
-                    Consulting Doctor: Dr. ${doctorName}
-                </div>
+            </div>
+
+            <!-- Footer Bottom -->
+            <div class="footer-bottom">
+                <table class="layout-table footer-table" style="margin-bottom: 0;">
+                    <tr>
+                        <td class="footer-left-td">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 8px; margin-top: -2px;"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+                            97891 51180
+                        </td>
+                        <td>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 8px; margin-top: -2px;"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+                            www.drzhealth.com
+                        </td>
+                    </tr>
+                </table>
             </div>
         </body>
         </html>
