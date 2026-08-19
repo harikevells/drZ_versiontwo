@@ -1,12 +1,15 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FaEdit, FaTrash, FaCrown, FaEnvelope } from 'react-icons/fa';
+import { FaEdit, FaTrash, FaCrown, FaEnvelope, FaPowerOff, FaUsers, FaShieldAlt, FaCalendarAlt, FaBuilding, FaListUl, FaSearch, FaPlus } from 'react-icons/fa';
 import config from '../config';
 
 const Dashboard = () => {
   const navigate = useNavigate();
   const [admins, setAdmins] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
 
   // Edit Modal State
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -165,141 +168,210 @@ const Dashboard = () => {
     }
   };
 
+  const totalAdmins = admins.length;
+  const activeAdmins = admins.filter(a => a.isActive).length;
+
+  const getExpiringSoonCount = () => {
+    const now = new Date();
+    const nextWeek = new Date();
+    nextWeek.setDate(now.getDate() + 7);
+    return admins.filter(a => {
+      if (!a.isActive || !a.accessEndDate) return false;
+      const endDate = new Date(`${a.accessEndDate}T${a.accessEndTime || '00:00'}`);
+      return endDate > now && endDate <= nextWeek;
+    }).length;
+  };
+
+  const expiringSoonCount = getExpiringSoonCount();
+  const superAdminsCount = 1;
+
+  const filteredAdmins = admins.filter(admin => {
+    const search = searchTerm.toLowerCase();
+    return (admin.name || '').toLowerCase().includes(search) ||
+      (admin.email || '').toLowerCase().includes(search);
+  });
+
+  const totalPages = Math.ceil(filteredAdmins.length / itemsPerPage);
+  const paginatedAdmins = filteredAdmins.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
   if (loading) {
-    return <div>Loading...</div>;
+    return <div style={{ padding: '2rem' }}>Loading...</div>;
   }
 
   return (
     <div>
-      <div className="page-header">
-        <h2>Admin Management Dashboard</h2>
+      <div className="stats-grid">
+        <div className="stat-card">
+          <div className="stat-icon blue">
+            <FaUsers />
+          </div>
+          <div className="stat-content">
+            <span className="stat-label">Total Admins</span>
+            <span className="stat-value">{totalAdmins}</span>
+            <span className="stat-desc">Active hospitals</span>
+          </div>
+        </div>
+
+        <div className="stat-card">
+          <div className="stat-icon green">
+            <FaShieldAlt />
+          </div>
+          <div className="stat-content">
+            <span className="stat-label">Active Admins</span>
+            <span className="stat-value">{activeAdmins}</span>
+            <span className="stat-desc">Currently active</span>
+          </div>
+        </div>
+
+        <div className="stat-card">
+          <div className="stat-icon purple">
+            <FaCalendarAlt />
+          </div>
+          <div className="stat-content">
+            <span className="stat-label">Expiring Soon</span>
+            <span className="stat-value">{expiringSoonCount}</span>
+            <span className="stat-desc">In next 7 days</span>
+          </div>
+        </div>
+
+        <div className="stat-card">
+          <div className="stat-icon orange">
+            <FaCrown />
+          </div>
+          <div className="stat-content">
+            <span className="stat-label">Super Admins</span>
+            <span className="stat-value">{superAdminsCount}</span>
+            <span className="stat-desc">System owner</span>
+          </div>
+        </div>
       </div>
 
-      <div className="card">
+      <div className="table-card">
+        <div className="table-header">
+          <div className="table-title">
+            <FaListUl color="#5F76FE" /> Admin List
+          </div>
+          <div className="table-actions">
+            <div style={{ position: 'relative' }}>
+              <FaSearch style={{ position: 'absolute', left: '12px', top: '12px', color: '#a3aed0' }} />
+              <input
+                type="text"
+                className="search-input"
+                placeholder="Search hospital or email..."
+                style={{ paddingLeft: '35px' }}
+                value={searchTerm}
+                onChange={(e) => {
+                  setSearchTerm(e.target.value);
+                  setCurrentPage(1);
+                }}
+              />
+            </div>
+            <button className="btn-primary" onClick={() => navigate('/create-admin')}>
+              <FaPlus /> Add New Admin
+            </button>
+          </div>
+        </div>
+
         <div className="table-container">
           <table>
             <thead>
               <tr>
-                <th>Name</th>
-                <th>Email</th>
+                <th>Hospital Name</th>
+                <th>Email Address</th>
                 <th>Access Period</th>
                 <th>Status</th>
                 <th>Actions</th>
               </tr>
             </thead>
             <tbody>
-              {admins.length === 0 ? (
+              {paginatedAdmins.length === 0 ? (
                 <tr>
-                  <td colSpan="5" style={{ textAlign: 'center' }}>No admins found</td>
+                  <td colSpan="5" style={{ textAlign: 'center', padding: '3rem' }}>No admins found</td>
                 </tr>
               ) : (
-                admins.map(admin => {
+                paginatedAdmins.map((admin, index) => {
                   const status = getAdminStatus(admin);
+                  // Generating a color based on index for the hospital icon
+                  const iconColors = ['#eff6ff', '#d1fae5', '#f3e8ff', '#fff7ed'];
+                  const textColors = ['#3b82f6', '#10b981', '#8b5cf6', '#f97316'];
+                  const colorIdx = index % 4;
+
                   return (
                     <tr key={admin.id}>
-                      <td>{admin.name}</td>
-                      <td>{admin.email}</td>
                       <td>
-                        <div style={{ fontSize: '0.875rem' }}>
-                          <div>{admin.accessStartDate} {admin.accessStartTime}</div>
-                          <div>to {admin.accessEndDate} {admin.accessEndTime}</div>
+                        <div className="hospital-cell">
+                          <div className="hospital-icon" style={{ background: iconColors[colorIdx], color: textColors[colorIdx] }}>
+                            <FaBuilding />
+                          </div>
+                          <span className="hospital-name">{admin.name}</span>
+                        </div>
+                      </td>
+                      <td style={{ color: '#64748b' }}>{admin.email}</td>
+                      <td>
+                        <div style={{ fontSize: '13px', color: '#64748b', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <FaCalendarAlt color="#cbd5e1" /> {admin.accessStartDate} {admin.accessStartTime}
+                          </div>
+                          <div style={{ paddingLeft: '20px' }}>
+                            to {admin.accessEndDate} {admin.accessEndTime}
+                          </div>
                         </div>
                       </td>
                       <td>
-                        <span className={`status-badge ${status === 'Active' ? 'status-active' : 'status-expired'}`}>
-                          {status}
+                        <span className={`status-pill ${status === 'Active' ? 'status-active' : 'status-expired'}`}>
+                          <div className="status-dot"></div> {status}
                         </span>
                       </td>
-                      <td style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                        <button
-                          onClick={() => handleSendInvoice(admin.id)}
-                          disabled={!admin.isActive}
-                          style={{
-                            background: admin.isActive ? '#eff6ff' : '#f3f4f6',
-                            color: admin.isActive ? '#3b82f6' : '#9ca3af',
-                            border: 'none',
-                            padding: '6px 12px',
-                            borderRadius: '4px',
-                            cursor: admin.isActive ? 'pointer' : 'not-allowed',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '4px',
-                            fontSize: '0.875rem'
-                          }}
-                          title="Send Invoice"
-                        >
-                          <FaEnvelope /> Send
-                        </button>
-                        <button
-                          onClick={() => toggleAdminStatus(admin.id, admin.isActive, admin)}
-                          style={{
-                            background: admin.isActive ? '#fee2e2' : '#d1fae5',
-                            color: admin.isActive ? '#991b1b' : '#065f46',
-                            border: 'none',
-                            padding: '6px 12px',
-                            borderRadius: '4px',
-                            cursor: 'pointer',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '4px',
-                            fontSize: '0.875rem'
-                          }}
-                        >  {admin.isActive ? 'Deactivate' : 'Activate'}
-                        </button>
+                      <td>
+                        <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                          <button
+                            className="action-btn send"
+                            onClick={() => handleSendInvoice(admin.id)}
+                            disabled={!admin.isActive}
+                            style={{ opacity: admin.isActive ? 1 : 0.5, cursor: admin.isActive ? 'pointer' : 'not-allowed' }}
+                            title="Send Invoice"
+                          >
+                            <FaEnvelope /> Send
+                          </button>
 
-                        <button
-                          onClick={() => navigate(`/subscription/${admin.id}`)}
-                          style={{
-                            background: '#fef3c7',
-                            color: '#d97706',
-                            border: 'none',
-                            padding: '6px',
-                            borderRadius: '4px',
-                            cursor: 'pointer',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center'
-                          }}
-                          title="Subscription Plan"
-                        >
-                          <FaCrown size={14} />
-                        </button>
+                          <button
+                            className="action-btn deactivate"
+                            onClick={() => toggleAdminStatus(admin.id, admin.isActive, admin)}
+                            style={{
+                              background: admin.isActive ? '#fef2f2' : '#d1fae5',
+                              color: admin.isActive ? '#ef4444' : '#10b981',
+                            }}
+                          >
+                            <FaPowerOff /> {admin.isActive ? 'Deactivate' : 'Activate'}
+                          </button>
 
-                        <button
-                          onClick={() => openEditModal(admin)}
-                          style={{
-                            background: '#eff6ff',
-                            color: '#1d4ed8',
-                            border: 'none',
-                            padding: '6px',
-                            borderRadius: '4px',
-                            cursor: 'pointer',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center'
-                          }}
-                          title="Edit"
-                        >
-                          <FaEdit size={14} />
-                        </button>
+                          <button
+                            className="action-icon-btn crown"
+                            onClick={() => navigate(`/subscription/${admin.id}`)}
+                            title="Subscription Plan"
+                          >
+                            <FaCrown />
+                          </button>
 
-                        <button
-                          onClick={() => handleDelete(admin.id)}
-                          style={{
-                            background: '#fef2f2',
-                            color: '#dc2626',
-                            border: 'none',
-                            padding: '6px',
-                            borderRadius: '4px',
-                            cursor: 'pointer',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center'
-                          }}
-                          title="Delete"
-                        >
-                          <FaTrash size={14} />
-                        </button>
+                          <button
+                            className="action-icon-btn edit"
+                            onClick={() => openEditModal(admin)}
+                            title="Edit"
+                          >
+                            <FaEdit />
+                          </button>
+
+                          <button
+                            className="action-icon-btn delete"
+                            onClick={() => handleDelete(admin.id)}
+                            title="Delete"
+                          >
+                            <FaTrash />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   );
@@ -308,56 +380,89 @@ const Dashboard = () => {
             </tbody>
           </table>
         </div>
+
+        {totalPages > 0 && (
+          <div className="pagination-footer">
+            <span>Showing {(currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, filteredAdmins.length)} of {filteredAdmins.length} entries</span>
+            <div className="pagination-controls">
+              <button
+                className="page-btn"
+                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                disabled={currentPage === 1}
+                style={{ opacity: currentPage === 1 ? 0.5 : 1 }}
+              >
+                &lt;
+              </button>
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map(num => (
+                <button
+                  key={num}
+                  className={`page-btn ${currentPage === num ? 'active' : ''}`}
+                  onClick={() => setCurrentPage(num)}
+                >
+                  {num}
+                </button>
+              ))}
+              <button
+                className="page-btn"
+                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                disabled={currentPage === totalPages}
+                style={{ opacity: currentPage === totalPages ? 0.5 : 1 }}
+              >
+                &gt;
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Edit Admin Modal */}
       {isEditModalOpen && (
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
-          <div style={{ background: '#fff', padding: '24px', borderRadius: '8px', width: '90%', maxWidth: '500px', maxHeight: '90vh', overflowY: 'auto' }}>
-            <h3 style={{ marginTop: 0, marginBottom: '20px', fontSize: '1.25rem', color: '#1f2937' }}>Edit Admin</h3>
+          <div style={{ background: '#fff', padding: '24px', borderRadius: '16px', width: '90%', maxWidth: '500px', maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 10px 30px rgba(0,0,0,0.1)' }}>
+            <h3 style={{ marginTop: 0, marginBottom: '20px', fontSize: '1.25rem', color: '#1f2937', fontWeight: '700' }}>Edit Admin</h3>
             <form onSubmit={handleEditSubmit}>
               <div className="form-group" style={{ marginBottom: '15px' }}>
-                <label style={{ display: 'block', marginBottom: '5px', fontSize: '14px', color: '#4b5563' }}>Name</label>
-                <input type="text" name="name" value={editFormData.name} onChange={handleEditChange} required style={{ width: '100%', padding: '8px 12px', border: '1px solid #e5e7eb', borderRadius: '4px' }} />
+                <label style={{ display: 'block', marginBottom: '5px', fontSize: '14px', color: '#4b5563', fontWeight: '500' }}>Name</label>
+                <input type="text" name="name" value={editFormData.name} onChange={handleEditChange} required style={{ width: '100%', padding: '10px 14px', border: '1px solid #e2e8f0', borderRadius: '8px', outline: 'none' }} />
               </div>
 
               <div className="form-group" style={{ marginBottom: '15px' }}>
-                <label style={{ display: 'block', marginBottom: '5px', fontSize: '14px', color: '#4b5563' }}>Email</label>
-                <input type="email" name="email" value={editFormData.email} onChange={handleEditChange} required style={{ width: '100%', padding: '8px 12px', border: '1px solid #e5e7eb', borderRadius: '4px' }} />
+                <label style={{ display: 'block', marginBottom: '5px', fontSize: '14px', color: '#4b5563', fontWeight: '500' }}>Email</label>
+                <input type="email" name="email" value={editFormData.email} onChange={handleEditChange} required style={{ width: '100%', padding: '10px 14px', border: '1px solid #e2e8f0', borderRadius: '8px', outline: 'none' }} />
               </div>
 
               <div className="form-group" style={{ marginBottom: '15px' }}>
-                <label style={{ display: 'block', marginBottom: '5px', fontSize: '14px', color: '#4b5563' }}>Password (Leave blank to keep current)</label>
-                <input type="password" name="password" value={editFormData.password} onChange={handleEditChange} placeholder="Enter new password" style={{ width: '100%', padding: '8px 12px', border: '1px solid #e5e7eb', borderRadius: '4px' }} />
+                <label style={{ display: 'block', marginBottom: '5px', fontSize: '14px', color: '#4b5563', fontWeight: '500' }}>Password (Leave blank to keep current)</label>
+                <input type="password" name="password" value={editFormData.password} onChange={handleEditChange} placeholder="Enter new password" style={{ width: '100%', padding: '10px 14px', border: '1px solid #e2e8f0', borderRadius: '8px', outline: 'none' }} />
               </div>
 
-              <h4 style={{ margin: '15px 0 10px 0', fontSize: '1rem', color: '#1f2937' }}>Access Duration</h4>
+              <h4 style={{ margin: '15px 0 10px 0', fontSize: '1rem', color: '#1f2937', fontWeight: '600' }}>Access Duration</h4>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '15px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px', marginBottom: '15px' }}>
                 <div>
-                  <label style={{ display: 'block', marginBottom: '5px', fontSize: '12px', color: '#4b5563' }}>Start Date</label>
-                  <input type="date" name="accessStartDate" value={editFormData.accessStartDate} onChange={handleEditChange} required style={{ width: '100%', padding: '8px 12px', border: '1px solid #e5e7eb', borderRadius: '4px' }} />
+                  <label style={{ display: 'block', marginBottom: '5px', fontSize: '12px', color: '#4b5563', fontWeight: '500' }}>Start Date</label>
+                  <input type="date" name="accessStartDate" value={editFormData.accessStartDate} onChange={handleEditChange} required style={{ width: '100%', padding: '10px 14px', border: '1px solid #e2e8f0', borderRadius: '8px', outline: 'none' }} />
                 </div>
                 <div>
-                  <label style={{ display: 'block', marginBottom: '5px', fontSize: '12px', color: '#4b5563' }}>Start Time</label>
-                  <input type="time" name="accessStartTime" value={editFormData.accessStartTime} onChange={handleEditChange} required style={{ width: '100%', padding: '8px 12px', border: '1px solid #e5e7eb', borderRadius: '4px' }} />
-                </div>
-              </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '20px' }}>
-                <div>
-                  <label style={{ display: 'block', marginBottom: '5px', fontSize: '12px', color: '#4b5563' }}>End Date</label>
-                  <input type="date" name="accessEndDate" value={editFormData.accessEndDate} onChange={handleEditChange} required style={{ width: '100%', padding: '8px 12px', border: '1px solid #e5e7eb', borderRadius: '4px' }} />
-                </div>
-                <div>
-                  <label style={{ display: 'block', marginBottom: '5px', fontSize: '12px', color: '#4b5563' }}>End Time</label>
-                  <input type="time" name="accessEndTime" value={editFormData.accessEndTime} onChange={handleEditChange} required style={{ width: '100%', padding: '8px 12px', border: '1px solid #e5e7eb', borderRadius: '4px' }} />
+                  <label style={{ display: 'block', marginBottom: '5px', fontSize: '12px', color: '#4b5563', fontWeight: '500' }}>Start Time</label>
+                  <input type="time" name="accessStartTime" value={editFormData.accessStartTime} onChange={handleEditChange} required style={{ width: '100%', padding: '10px 14px', border: '1px solid #e2e8f0', borderRadius: '8px', outline: 'none' }} />
                 </div>
               </div>
 
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
-                <button type="button" onClick={() => setIsEditModalOpen(false)} style={{ padding: '8px 16px', background: '#f3f4f6', color: '#374151', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: '500' }}>Cancel</button>
-                <button type="submit" style={{ padding: '8px 16px', background: '#3b82f6', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: '500' }}>Save Changes</button>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px', marginBottom: '25px' }}>
+                <div>
+                  <label style={{ display: 'block', marginBottom: '5px', fontSize: '12px', color: '#4b5563', fontWeight: '500' }}>End Date</label>
+                  <input type="date" name="accessEndDate" value={editFormData.accessEndDate} onChange={handleEditChange} required style={{ width: '100%', padding: '10px 14px', border: '1px solid #e2e8f0', borderRadius: '8px', outline: 'none' }} />
+                </div>
+                <div>
+                  <label style={{ display: 'block', marginBottom: '5px', fontSize: '12px', color: '#4b5563', fontWeight: '500' }}>End Time</label>
+                  <input type="time" name="accessEndTime" value={editFormData.accessEndTime} onChange={handleEditChange} required style={{ width: '100%', padding: '10px 14px', border: '1px solid #e2e8f0', borderRadius: '8px', outline: 'none' }} />
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
+                <button type="button" onClick={() => setIsEditModalOpen(false)} style={{ padding: '10px 20px', background: '#f8fafc', color: '#475569', border: '1px solid #e2e8f0', borderRadius: '8px', cursor: 'pointer', fontWeight: '600' }}>Cancel</button>
+                <button type="submit" style={{ padding: '10px 20px', background: 'linear-gradient(135deg, #5F76FE, #8195ff)', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: '600' }}>Save Changes</button>
               </div>
             </form>
           </div>

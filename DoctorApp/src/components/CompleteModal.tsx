@@ -85,7 +85,7 @@ export default function CompleteModal({ visible, onClose, onComplete, patientNam
             />
           </View>
 
-          <Text style={styles.sectionLabel}>Payment Type</Text>
+          {/* <Text style={styles.sectionLabel}>Payment Type</Text>
           <View style={styles.rowContainer}>
             {['Online', 'Offline'].map(type => (
               <TouchableOpacity
@@ -109,7 +109,7 @@ export default function CompleteModal({ visible, onClose, onComplete, patientNam
                 <Text style={[styles.toggleBtnText, paymentStatus === status && styles.toggleBtnTextActive]}>{status}</Text>
               </TouchableOpacity>
             ))}
-          </View>
+          </View> */}
 
           {showCalendar && (
             <View style={styles.calendarWrapper}>

@@ -1,6 +1,8 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
+import { FiUser, FiMail, FiPhone, FiMapPin, FiLock, FiEye, FiEyeOff, FiCalendar, FiClock } from 'react-icons/fi';
 import config from '../config';
+import './Createadmin.css';
 
 const CreateAdmin = () => {
   const navigate = useNavigate();
@@ -19,6 +21,7 @@ const CreateAdmin = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -104,130 +107,207 @@ const CreateAdmin = () => {
 
   return (
     <div>
-      <div className="page-header">
-        <h2>Create Admin</h2>
+      <div className="page-header" style={{ marginBottom: '0' }}>
+        <h2 style={{ marginBottom: '8px' }}>Create Admin</h2>
+      </div>
+      <div className="page-breadcrumb">
+        <Link to="/">Dashboard</Link> &gt; <span>Create Admin</span>
       </div>
 
-      <div className="card" style={{ maxWidth: '800px' }}>
+      <div className="create-admin-card">
         {error && <div className="error-message">{error}</div>}
         {success && <div className="success-message">{success}</div>}
         
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} autoComplete="off">
+          {/* Section 1: Admin Details */}
+          <div className="section-header">
+            <div className="section-icon-large">
+              <FiUser />
+            </div>
+            <div className="section-title">
+              <h3>Admin Details</h3>
+              <p>Enter the basic information of the admin.</p>
+            </div>
+          </div>
+
           <div className="form-grid">
             <div className="form-group">
               <label>Admin Name</label>
-              <input 
-                type="text" 
-                name="name"
-                value={formData.name} 
-                onChange={handleChange} 
-                placeholder="Enter full name"
-              />
+              <div className="input-wrapper">
+                <div className="input-icon-box">
+                  <FiUser />
+                </div>
+                <input 
+                  type="text" 
+                  name="name"
+                  value={formData.name} 
+                  onChange={handleChange} 
+                  placeholder="Enter full name"
+                />
+              </div>
             </div>
             
             <div className="form-group">
               <label>Admin Email</label>
-              <input 
-                type="email" 
-                name="email"
-                value={formData.email} 
-                onChange={handleChange} 
-                placeholder="Enter email address"
-              />
+              <div className="input-wrapper">
+                <div className="input-icon-box">
+                  <FiMail />
+                </div>
+                <input 
+                  type="email" 
+                  name="email"
+                  value={formData.email} 
+                  onChange={handleChange} 
+                  placeholder="Enter email address"
+                  autoComplete="new-email"
+                />
+              </div>
             </div>
           </div>
           
-          <div className="form-grid">
+          <div className="form-grid-3">
             <div className="form-group">
               <label>Mobile Number</label>
-              <input 
-                type="text" 
-                name="mobileNumber"
-                value={formData.mobileNumber} 
-                onChange={handleChange} 
-                placeholder="Enter mobile number"
-              />
+              <div className="input-wrapper">
+                <div className="input-icon-box">
+                  <FiPhone />
+                </div>
+                <input 
+                  type="text" 
+                  name="mobileNumber"
+                  value={formData.mobileNumber} 
+                  onChange={handleChange} 
+                  placeholder="Enter mobile number"
+                />
+              </div>
             </div>
             
             <div className="form-group">
               <label>Address</label>
-              <input 
-                type="text" 
-                name="address"
-                value={formData.address} 
-                onChange={handleChange} 
-                placeholder="Enter complete address"
-              />
+              <div className="input-wrapper">
+                <div className="input-icon-box">
+                  <FiMapPin />
+                </div>
+                <input 
+                  type="text" 
+                  name="address"
+                  value={formData.address} 
+                  onChange={handleChange} 
+                  placeholder="Enter complete address"
+                />
+              </div>
+            </div>
+
+            <div className="form-group">
+              <label>Admin Password</label>
+              <div className="input-wrapper">
+                <div className="input-icon-box">
+                  <FiLock />
+                </div>
+                <input 
+                  type={showPassword ? 'text' : 'password'}
+                  name="password"
+                  value={formData.password} 
+                  onChange={handleChange} 
+                  placeholder="Create a password"
+                  autoComplete="new-password"
+                />
+                <div 
+                  className="toggle-password" 
+                  onClick={() => setShowPassword(!showPassword)}
+                >
+                  {showPassword ? <FiEye /> : <FiEyeOff />}
+                </div>
+              </div>
             </div>
           </div>
-          
-          <div className="form-group" style={{ maxWidth: 'calc(50% - 0.75rem)' }}>
-            <label>Admin Password</label>
-            <input 
-              type="password" 
-              name="password"
-              value={formData.password} 
-              onChange={handleChange} 
-              placeholder="Create a password"
-            />
-          </div>
 
-          <h3 style={{ marginTop: '2rem', marginBottom: '1rem', fontSize: '1.1rem' }}>Access Duration</h3>
+          <div className="divider-dashed"></div>
+
+          {/* Section 2: Access Duration */}
+          <div className="section-header">
+            <div className="section-icon-large">
+              <FiCalendar />
+            </div>
+            <div className="section-title">
+              <h3>Access Duration</h3>
+              <p>Set the access start and end date & time.</p>
+            </div>
+          </div>
           
           <div className="form-grid">
             <div className="form-group">
               <label>Access Start Date</label>
-              <input 
-                type="date" 
-                name="accessStartDate"
-                value={formData.accessStartDate} 
-                onChange={handleChange} 
-              />
+              <div className="input-wrapper">
+                <div className="input-icon-box">
+                  <FiCalendar />
+                </div>
+                <input 
+                  type="date" 
+                  name="accessStartDate"
+                  value={formData.accessStartDate} 
+                  onChange={handleChange} 
+                />
+              </div>
             </div>
             
             <div className="form-group">
               <label>Access Start Time</label>
-              <input 
-                type="time" 
-                name="accessStartTime"
-                value={formData.accessStartTime} 
-                onChange={handleChange} 
-              />
+              <div className="input-wrapper">
+                <div className="input-icon-box">
+                  <FiClock />
+                </div>
+                <input 
+                  type="time" 
+                  name="accessStartTime"
+                  value={formData.accessStartTime} 
+                  onChange={handleChange} 
+                />
+              </div>
             </div>
             
             <div className="form-group">
               <label>Access End Date</label>
-              <input 
-                type="date" 
-                name="accessEndDate"
-                value={formData.accessEndDate} 
-                onChange={handleChange} 
-              />
+              <div className="input-wrapper">
+                <div className="input-icon-box">
+                  <FiCalendar />
+                </div>
+                <input 
+                  type="date" 
+                  name="accessEndDate"
+                  value={formData.accessEndDate} 
+                  onChange={handleChange} 
+                />
+              </div>
             </div>
             
             <div className="form-group">
               <label>Access End Time</label>
-              <input 
-                type="time" 
-                name="accessEndTime"
-                value={formData.accessEndTime} 
-                onChange={handleChange} 
-              />
+              <div className="input-wrapper">
+                <div className="input-icon-box">
+                  <FiClock />
+                </div>
+                <input 
+                  type="time" 
+                  name="accessEndTime"
+                  value={formData.accessEndTime} 
+                  onChange={handleChange} 
+                />
+              </div>
             </div>
           </div>
 
-          <div style={{ marginTop: '2rem', textAlign: 'right' }}>
+          <div className="form-actions">
             <button 
               type="button" 
-              style={{ marginRight: '1rem', background: 'transparent', border: '1px solid #e2e8f0', padding: '0.75rem 1.5rem', borderRadius: '8px', cursor: 'pointer' }}
+              className="btn-cancel"
               onClick={() => navigate('/')}
             >
               Cancel
             </button>
             <button 
               type="submit" 
-              className="btn-primary" 
-              style={{ width: 'auto' }}
+              className="btn-submit"
               disabled={loading}
             >
               {loading ? 'Creating...' : 'Register Admin'}
