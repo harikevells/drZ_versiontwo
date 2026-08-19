@@ -5,28 +5,6 @@ const Appointment = require('../models/Appointment');
 const Doctor = require('../models/Doctor');
 const User = require('../models/User');
 
-const tamilTranslations = {
-  'General': 'பொது மருத்துவம்',
-  'General Care': 'பொது நலம்',
-  'Cardiology': 'இருதயவியல்',
-  'Neurology': 'நரம்பியல்',
-  'Orthopedics': 'எலும்பியல்',
-  'Pediatrics': 'குழந்தை மருத்துவம்',
-  'Dermatology': 'தோல் மருத்துவம்',
-  'General Surgery': 'பொது அறுவை சிகிச்சை',
-  'Psychiatry': 'மனநல மருத்துவம்',
-  'Gynecology': 'மகளிர் மருத்துவம்',
-  'Oncology': 'புற்றுநோயியல்',
-  'Ophthalmology': 'கண் மருத்துவம்',
-  'Urology': 'சிறுநீரகவியல்',
-  'ENT': 'காது மூக்கு தொண்டை',
-  'Dentistry': 'பல் மருத்துவம்',
-  'Radiology': 'கதிரியக்கவியல்',
-  'General Physician': 'பொது மருத்துவர்',
-  'Physiotherapy': 'இயன்முறை மருத்துவம்',
-  'Multi Speciality': 'பல்துறை சிறப்பு'
-};
-
 const generateBillingPDF = async (req, res) => {
     try {
         const { id } = req.params;
@@ -58,14 +36,7 @@ const generateBillingPDF = async (req, res) => {
         const patientName = appointment.patient_name || 'N/A';
         const ageGender = `${appointment.patient_age || '--'} / ${appointment.patient_gender || '--'}`;
         
-        let rawTreatment = appointment.treatment_category || 'N/A';
-        let treatment = rawTreatment;
-        if (rawTreatment && !rawTreatment.includes('/')) {
-            const translation = tamilTranslations[rawTreatment.trim()];
-            if (translation) {
-                treatment = `${rawTreatment} / ${translation}`;
-            }
-        }
+        const treatment = appointment.treatment_category || 'N/A';
         
         const date = appointment.appointment_date || 'N/A';
         const time = appointment.appointment_time || 'N/A';
@@ -77,10 +48,9 @@ const generateBillingPDF = async (req, res) => {
         <html>
         <head>
             <meta charset="utf-8">
-            <link href="https://fonts.googleapis.com/css?family=Noto+Sans+Tamil:400,600,700&display=swap" rel="stylesheet">
             <style>
                 body {
-                    font-family: 'Noto Sans Tamil', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+                    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
                     color: #333;
                     margin: 0;
                     padding: 15px; /* Reduced padding */
@@ -346,12 +316,12 @@ const generateBillingPDF = async (req, res) => {
                         <td class="summary-left">
                             <table class="layout-table" style="margin-bottom: 0;">
                                 <tr>
-                                    <td style="width: 40px; vertical-align: middle;">
+                                    <td style="width: 34px; vertical-align: middle;">
                                         <div class="circle-icon-light">
                                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-top: -3px;"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
                                         </div>
                                     </td>
-                                    <td style="vertical-align: middle; text-align: left; padding-left: 8px;">
+                                    <td style="vertical-align: middle; text-align: left; padding-left: 0px;">
                                         <div style="font-size: 11px; color: #475569; margin-bottom: 2px;">Follow up Date</div>
                                         <div style="font-size: 16px; font-weight: bold; color: #111;">${followupDate}</div>
                                     </td>
@@ -361,12 +331,12 @@ const generateBillingPDF = async (req, res) => {
                         <td>
                             <table class="layout-table" style="margin-bottom: 0;">
                                 <tr>
-                                    <td style="width: 40px; vertical-align: middle;">
+                                    <td style="width: 34px; vertical-align: middle;">
                                         <div class="circle-icon-light">
                                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-top: -3px;"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
                                         </div>
                                     </td>
-                                    <td style="vertical-align: middle; text-align: left; padding-left: 8px;">
+                                    <td style="vertical-align: middle; text-align: left; padding-left: 0px;">
                                         <div style="font-size: 11px; color: #475569; margin-bottom: 2px;">Consulting Doctor</div>
                                         <div style="font-size: 16px; font-weight: bold; color: #111;">Dr. ${doctorName}</div>
                                     </td>
