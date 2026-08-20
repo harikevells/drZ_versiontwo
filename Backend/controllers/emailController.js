@@ -36,33 +36,36 @@ const sendBookingEmail = async (req, res) => {
         let existingPatientId = null;
 
         allAppointments.forEach(appt => {
-            // Check max appointmentId
-            if (appt.appointmentId && appt.appointmentId.startsWith('drzappt')) {
-                const numStr = appt.appointmentId.replace('drzappt', '');
-                const num = parseInt(numStr, 10);
-                if (!isNaN(num) && num > maxApptIdNum) {
-                    maxApptIdNum = num;
+            // Only consider appointments under the same admin for ID generation
+            if (appt.adminId === assignedAdminId) {
+                // Check max appointmentId
+                if (appt.appointmentId && appt.appointmentId.startsWith('drzappt')) {
+                    const numStr = appt.appointmentId.replace('drzappt', '');
+                    const num = parseInt(numStr, 10);
+                    if (!isNaN(num) && num > maxApptIdNum) {
+                        maxApptIdNum = num;
+                    }
                 }
-            }
 
-            // Check max patientId
-            if (appt.patientId && appt.patientId.startsWith('drzpat')) {
-                const numStr = appt.patientId.replace('drzpat', '');
-                const num = parseInt(numStr, 10);
-                if (!isNaN(num) && num > maxPatIdNum) {
-                    maxPatIdNum = num;
+                // Check max patientId
+                if (appt.patientId && appt.patientId.startsWith('drzpat')) {
+                    const numStr = appt.patientId.replace('drzpat', '');
+                    const num = parseInt(numStr, 10);
+                    if (!isNaN(num) && num > maxPatIdNum) {
+                        maxPatIdNum = num;
+                    }
                 }
-            }
 
-            // Check if patient already exists (case-insensitive name comparison for robustness)
-            if (
-                appt.login_mobile === login_mobile && 
-                appt.patient_name && 
-                patient_name && 
-                appt.patient_name.toLowerCase().trim() === patient_name.toLowerCase().trim()
-            ) {
-                if (appt.patientId) {
-                    existingPatientId = appt.patientId;
+                // Check if patient already exists (case-insensitive name comparison for robustness)
+                if (
+                    appt.login_mobile === login_mobile && 
+                    appt.patient_name && 
+                    patient_name && 
+                    appt.patient_name.toLowerCase().trim() === patient_name.toLowerCase().trim()
+                ) {
+                    if (appt.patientId) {
+                        existingPatientId = appt.patientId;
+                    }
                 }
             }
         });

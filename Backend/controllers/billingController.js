@@ -42,15 +42,18 @@ const generateBillingPDF = async (req, res) => {
         const time = appointment.appointment_time || 'N/A';
         const followupDate = appointment.followupDate || appointment.followup_date || 'N/A';
         const bookingId = appointment.booking_id || `#Appmt${id.substring(id.length - 4)}`;
+        const appointmentId = appointment.appointmentId || bookingId;
+        const patientId = appointment.patientId || 'N/A';
 
         const htmlContent = `
         <!DOCTYPE html>
         <html>
         <head>
             <meta charset="utf-8">
+            <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Tamil:wght@400;500;600;700&display=swap" rel="stylesheet">
             <style>
                 body {
-                    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+                    font-family: 'Noto Sans Tamil', 'Latha', 'Arial Unicode MS', 'Helvetica Neue', Helvetica, Arial, sans-serif;
                     color: #333;
                     margin: 0;
                     padding: 15px; /* Reduced padding */
@@ -196,8 +199,8 @@ const generateBillingPDF = async (req, res) => {
                     </td>
                     <td style="width: 50%; text-align: right; vertical-align: middle;">
                         <div class="booking-id-box">
-                            <div style="font-size: 10px; color: #666; margin-bottom: 3px;">Booking ID</div>
-                            <div style="font-size: 14px; font-weight: bold; color: #1565c0;">${bookingId}</div>
+                            <div style="font-size: 10px; color: #666; margin-bottom: 3px;">Appointment ID</div>
+                            <div style="font-size: 14px; font-weight: bold; color: #1565c0;">${appointmentId}</div>
                         </div>
                     </td>
                 </tr>
@@ -238,6 +241,12 @@ const generateBillingPDF = async (req, res) => {
                                 <td class="label">Patient Name</td>
                                 <td style="width: 10px;">:</td>
                                 <td style="font-weight: bold; color: #111;">${patientName}</td>
+                            </tr>
+                            <tr>
+                                <td style="width: 24px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1565c0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg></td>
+                                <td class="label">Patient ID</td>
+                                <td>:</td>
+                                <td style="font-weight: bold; color: #111;">${patientId}</td>
                             </tr>
                             <tr>
                                 <td><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1565c0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="14" r="5"></circle><line x1="13.5" y1="10.5" x2="19" y2="5"></line><polyline points="15 5 19 5 19 9"></polyline></svg></td>
