@@ -187,7 +187,7 @@ const exportDoctorAppointments = async (req, res) => {
             });
         }
 
-        let csvContent = "\uFEFFAppointment ID,Patient ID,Patient Name,Age,Gender,Phone,Category,Appointment Date,Appointment Time,Status,Created At,Remarks\n";
+        let csvContent = "Appointment ID,Patient ID,Patient Name,Age,Gender,Phone,Category,Appointment Date,Appointment Time,Status,Created At,Remarks\n";
 
         const formatTimeSlot = (timeStr) => {
             if (!timeStr) return '';
