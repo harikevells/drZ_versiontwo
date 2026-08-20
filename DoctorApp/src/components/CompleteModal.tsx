@@ -6,7 +6,7 @@ import { Calendar } from 'react-native-calendars';
 interface Props {
   visible: boolean;
   onClose: () => void;
-  onComplete: (followupDate?: string, consultingFee?: string, paymentType?: string, paymentStatus?: string) => void;
+  onComplete: (followupDate?: string, consultingFee?: string, paymentType?: string, paymentStatus?: string, remarks?: string) => void;
   patientName?: string;
 }
 
@@ -14,6 +14,7 @@ export default function CompleteModal({ visible, onClose, onComplete, patientNam
   const [showFollowup, setShowFollowup] = useState(false);
   const [followupDate, setFollowupDate] = useState('');
   const [consultingFee, setConsultingFee] = useState('');
+  const [remarks, setRemarks] = useState('');
   const [paymentType, setPaymentType] = useState('Offline');
   const [paymentStatus, setPaymentStatus] = useState('Pending');
   const [showCalendar, setShowCalendar] = useState(false);
@@ -22,6 +23,7 @@ export default function CompleteModal({ visible, onClose, onComplete, patientNam
     setShowFollowup(false);
     setFollowupDate('');
     setConsultingFee('');
+    setRemarks('');
     setPaymentType('Offline');
     setPaymentStatus('Pending');
     setShowCalendar(false);
@@ -29,10 +31,11 @@ export default function CompleteModal({ visible, onClose, onComplete, patientNam
   };
 
   const handleComplete = () => {
-    onComplete(showFollowup ? followupDate : undefined, consultingFee, paymentType, paymentStatus);
+    onComplete(showFollowup ? followupDate : undefined, consultingFee, paymentType, paymentStatus, remarks);
     setShowFollowup(false);
     setFollowupDate('');
     setConsultingFee('');
+    setRemarks('');
     setPaymentType('Offline');
     setPaymentStatus('Pending');
     setShowCalendar(false);
@@ -81,6 +84,16 @@ export default function CompleteModal({ visible, onClose, onComplete, patientNam
               value={consultingFee}
               onChangeText={setConsultingFee}
               keyboardType="numeric"
+              placeholderTextColor="#999"
+            />
+          </View>
+
+          <View style={styles.inputContainer}>
+            <TextInput
+              style={styles.dateInput}
+              placeholder="Remarks (Optional)"
+              value={remarks}
+              onChangeText={setRemarks}
               placeholderTextColor="#999"
             />
           </View>

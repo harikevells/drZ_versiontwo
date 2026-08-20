@@ -231,10 +231,10 @@ export default function AppointmentScreen({ route }: any) {
     fetchAppointments(false);
   };
 
-  const handleStatusUpdate = async (id: string, status: string, followupDate?: string, consultingFee?: string, paymentType?: string, paymentStatus?: string) => {
+  const handleStatusUpdate = async (id: string, status: string, followupDate?: string, consultingFee?: string, paymentType?: string, paymentStatus?: string, remarks?: string) => {
     try {
       const token = await AsyncStorage.getItem('userToken');
-      await axios.put(`${API_URL}/${id}/status`, { status, followupDate, consultingFee, paymentType, paymentStatus }, {
+      await axios.put(`${API_URL}/${id}/status`, { status, followupDate, consultingFee, paymentType, paymentStatus, remarks }, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
@@ -677,9 +677,9 @@ export default function AppointmentScreen({ route }: any) {
       <CompleteModal
         visible={completeVisible}
         onClose={() => setCompleteVisible(false)}
-        onComplete={(followupDate?: string, consultingFee?: string, paymentType?: string, paymentStatus?: string) => {
+        onComplete={(followupDate?: string, consultingFee?: string, paymentType?: string, paymentStatus?: string, remarks?: string) => {
           setCompleteVisible(false);
-          handleStatusUpdate(selectedPatient?.id || selectedPatient?._id, 'Completed', followupDate, consultingFee, paymentType, paymentStatus);
+          handleStatusUpdate(selectedPatient?.id || selectedPatient?._id, 'Completed', followupDate, consultingFee, paymentType, paymentStatus, remarks);
         }}
         patientName={selectedPatient?.patient_name}
       />

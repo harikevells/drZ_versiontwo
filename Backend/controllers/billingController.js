@@ -44,6 +44,7 @@ const generateBillingPDF = async (req, res) => {
         const bookingId = appointment.booking_id || `#Appmt${id.substring(id.length - 4)}`;
         const appointmentId = appointment.appointmentId || bookingId;
         const patientId = appointment.patientId || 'N/A';
+        const remarks = appointment.remarks || '';
 
         const htmlContent = `
         <!DOCTYPE html>
@@ -355,6 +356,13 @@ const generateBillingPDF = async (req, res) => {
                     </tr>
                 </table>
             </div>
+
+            ${remarks ? `
+            <div style="margin-top: 15px; padding: 15px; border-radius: 6px; background-color: #f9fafb; border: 1px solid #e2e8f0;">
+                <div style="font-size: 12px; font-weight: bold; color: #475569; margin-bottom: 5px;">Remarks:</div>
+                <div style="font-size: 14px; color: #333; line-height: 1.4;">${remarks}</div>
+            </div>
+            ` : ''}
 
             <!-- Thank you and Footer Bottom -->
             <div id="pageFooter">

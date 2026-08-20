@@ -43,15 +43,16 @@ const getDoctorDashboard = async (req, res) => {
 const updateAppointmentStatus = async (req, res) => {
     try {
         const { id } = req.params;
-        const { status, appointment_date, appointment_time, followupDate, consultingFee, paymentType, paymentStatus } = req.body;
+        const { status, appointment_date, appointment_time, followupDate, consultingFee, paymentType, paymentStatus, remarks } = req.body;
 
         let updateData = { status };
         if (appointment_date) updateData.appointment_date = appointment_date;
         if (appointment_time) updateData.appointment_time = appointment_time;
-        if (followupDate && status === 'Completed') updateData.followup_date = followupDate;
+        if (followupDate !== undefined && status === 'Completed') updateData.followup_date = followupDate;
         if (consultingFee !== undefined && status === 'Completed') updateData.consultingFee = consultingFee;
         if (paymentType && status === 'Completed') updateData.paymentType = paymentType;
         if (paymentStatus && status === 'Completed') updateData.paymentStatus = paymentStatus;
+        if (remarks !== undefined) updateData.remarks = remarks;
 
         const appointment = await Appointment.findByIdAndUpdate(id, updateData, { new: true });
         if (!appointment) return res.status(404).json({ error: 'Appointment not found' });
@@ -186,7 +187,7 @@ const exportDoctorAppointments = async (req, res) => {
             });
         }
 
-        let csvContent = "\uFEFFBooking ID,Patient Name,Age,Gender,Phone,Category,Appointment Date,Appointment Time,Status,Created At\n";
+        let csvContent = "\uFEFFAppointment ID,Patient ID,Patient Name,Age,Gender,Phone,Category,Appointment Date,Appointment Time,Status,Created At,Remarks\n";
 
         const formatTimeSlot = (timeStr) => {
             if (!timeStr) return '';
@@ -216,23 +217,10 @@ const exportDoctorAppointments = async (req, res) => {
             return `${str} to ${dHrs}.${eMinsStr}${eAmpm}`;
         };
 
-        const departmentTranslations = {
-            "General": "பொது",
-            "Cardiology": "கார்டியாலஜி",
-            "Pediatrics": "குழந்தைகள் மருத்துவம்",
-            "Neurology": "நரம்பியல்",
-            "Dermatology": "தோல் மருத்துவம்",
-            "Orthopedics": "எலும்பியல்",
-            "Gynecology": "மகப்பேறு மருத்துவம்",
-            "Dental": "பல் மருத்துவம்",
-            "ENT": "காது மூக்கு தொண்டை",
-            "Ophthalmology": "கண் மருத்துவம்",
-            "Psychiatry": "மனநல மருத்துவம்",
-            "Others": "மற்றவை"
-        };
-
         filteredAppointments.forEach(app => {
             const bookingId = app.booking_id || app._id || app.id || '';
+            const apptId = app.appointmentId || bookingId;
+            const patId = app.patientId || 'N/A';
             const pAge = app.patient_age || app.age || '';
             const pGender = app.patient_gender || app.gender || '';
             let pPhone = app.login_mobile || '';
@@ -247,15 +235,17 @@ const exportDoctorAppointments = async (req, res) => {
 
             let rawCategory = app.treatment_category || '';
             let exportCategory = rawCategory;
-            // Only translate if not already containing Tamil '/'
-            if (rawCategory && !rawCategory.includes('/')) {
-                const baseCategory = rawCategory.trim();
-                if (departmentTranslations[baseCategory]) {
-                    exportCategory = `${baseCategory} / ${departmentTranslations[baseCategory]}`;
-                }
+            
+            // Extract only the English part if it contains Tamil
+            if (rawCategory.includes('/')) {
+                exportCategory = rawCategory.split('/')[0].trim();
+            } else {
+                exportCategory = rawCategory.trim();
             }
+            
+            const remarks = app.remarks ? app.remarks.replace(/"/g, '""') : '';
 
-            csvContent += `"${bookingId}","${app.patient_name || ''}","${pAge}","${pGender}","${pPhone}","${exportCategory}","${pDate}","${pTime}","${app.status || ''}","${app.createdAt ? new Date(app.createdAt).toLocaleString() : ''}"\n`;
+            csvContent += `"${apptId}","${patId}","${app.patient_name || ''}","${pAge}","${pGender}","${pPhone}","${exportCategory}","${pDate}","${pTime}","${app.status || ''}","${app.createdAt ? new Date(app.createdAt).toLocaleString() : ''}","${remarks}"\n`;
         });
 
         res.setHeader('Content-Type', 'text/csv');
