@@ -721,7 +721,8 @@ const PatientAppointments = () => {
                 <table className="appointments-table">
                   <thead>
                     <tr>
-                      <th>Booking ID</th>
+                      <th>Appointment ID</th>
+                      <th>Patient ID</th>
                       <th>Patient Name</th>
                       <th>Doctor Name</th>
                       <th>Appointment Date</th>
@@ -733,7 +734,8 @@ const PatientAppointments = () => {
                   <tbody>
                     {paginatedAppointments.length > 0 ? paginatedAppointments.map((appt) => (
                       <tr key={appt.id || appt._id}>
-                        <td>{(appt.id || appt._id).slice(-6).toUpperCase()}</td>
+                        <td>{appt.appointmentId ? appt.appointmentId : (appt.id || appt._id).slice(-6).toUpperCase()}</td>
+                        <td>{appt.patientId ? appt.patientId : 'N/A'}</td>
                         <td>{appt.patient_name}</td>
                         <td>{removeTamil(appt.doctor_name)}</td>
                         <td>{appt.appointment_date ? appt.appointment_date.replace(/\s+/g, '') : ''}</td>
@@ -751,7 +753,7 @@ const PatientAppointments = () => {
                       </tr>
                     )) : (
                       <tr>
-                        <td colSpan="7" className="text-center">No appointments found</td>
+                        <td colSpan="8" className="text-center">No appointments found</td>
                       </tr>
                     )}
                   </tbody>

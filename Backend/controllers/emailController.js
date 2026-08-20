@@ -28,8 +28,60 @@ const sendBookingEmail = async (req, res) => {
         const doctorObj = await Doctor.findOne({ doctorName: doctor_name });
         const assignedAdminId = doctorObj && doctorObj.adminId ? doctorObj.adminId : null;
 
+        // Retrieve all appointments to calculate IDs
+        const allAppointments = await Appointment.find();
+
+        let maxApptIdNum = 0;
+        let maxPatIdNum = 0;
+        let existingPatientId = null;
+
+        allAppointments.forEach(appt => {
+            // Check max appointmentId
+            if (appt.appointmentId && appt.appointmentId.startsWith('drzappt')) {
+                const numStr = appt.appointmentId.replace('drzappt', '');
+                const num = parseInt(numStr, 10);
+                if (!isNaN(num) && num > maxApptIdNum) {
+                    maxApptIdNum = num;
+                }
+            }
+
+            // Check max patientId
+            if (appt.patientId && appt.patientId.startsWith('drzpat')) {
+                const numStr = appt.patientId.replace('drzpat', '');
+                const num = parseInt(numStr, 10);
+                if (!isNaN(num) && num > maxPatIdNum) {
+                    maxPatIdNum = num;
+                }
+            }
+
+            // Check if patient already exists (case-insensitive name comparison for robustness)
+            if (
+                appt.login_mobile === login_mobile && 
+                appt.patient_name && 
+                patient_name && 
+                appt.patient_name.toLowerCase().trim() === patient_name.toLowerCase().trim()
+            ) {
+                if (appt.patientId) {
+                    existingPatientId = appt.patientId;
+                }
+            }
+        });
+
+        const newApptIdNum = maxApptIdNum + 1;
+        const generatedAppointmentId = `drzappt${String(newApptIdNum).padStart(3, '0')}`;
+
+        let generatedPatientId;
+        if (existingPatientId) {
+            generatedPatientId = existingPatientId;
+        } else {
+            const newPatIdNum = maxPatIdNum + 1;
+            generatedPatientId = `drzpat${String(newPatIdNum).padStart(3, '0')}`;
+        }
+
         // Save appointment to MongoDB
         const newAppointment = new Appointment({
+            appointmentId: generatedAppointmentId,
+            patientId: generatedPatientId,
             patient_name,
             patient_age,
             patient_gender,
