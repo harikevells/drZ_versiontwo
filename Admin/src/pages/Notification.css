@@ -239,3 +239,40 @@
   height: 8px;
   border-radius: 50%;
 }
+
+/* Responsive adjustments */
+@media (max-width: 1024px) {
+  .notifications-header-section {
+    flex-direction: column;
+    gap: 20px;
+  }
+  
+  .notifications-header-right {
+    width: 100%;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+  }
+}
+
+@media (max-width: 768px) {
+  .notif-card {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .notif-icon-box {
+    margin-bottom: 15px;
+  }
+
+  .notif-right-panel {
+    flex-direction: row;
+    width: 100%;
+    height: auto;
+    margin-top: 15px;
+    align-items: center;
+  }
+
+  .notif-time-row {
+    margin-top: 0;
+  }
+}

@@ -4,8 +4,8 @@ import './Dashboard.css';
 
 const CustomPieLabel = ({ cx, cy, total }) => (
   <text x={cx} y={cy} textAnchor="middle" dominantBaseline="central">
-    <tspan x={cx} dy="-0.5em" fontSize="24" fontWeight="bold" fill="#1f2937">{total}</tspan>
-    <tspan x={cx} dy="1.5em" fontSize="14" fill="#6b7280">Total</tspan>
+    <tspan x={cx} dy="-0.5em" fontSize="20" fontWeight="bold" fill="#1f2937">{total}</tspan>
+    <tspan x={cx} dy="1.5em" fontSize="12" fill="#6b7280">Total</tspan>
   </text>
 );
 
@@ -23,8 +23,8 @@ const StatusChart = ({ data, total }) => {
                 data={data}
                 cx="50%"
                 cy="50%"
-                innerRadius={65}
-                outerRadius={90}
+                innerRadius={45}
+                outerRadius={65}
                 paddingAngle={2}
                 dataKey="value"
                 stroke="none"

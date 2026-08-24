@@ -141,7 +141,7 @@ const PatientAppointments = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [dateFilter, setDateFilter] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 6;
+  const itemsPerPage = 5;
 
   // Create Appointment Form & Data States
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -256,20 +256,21 @@ const PatientAppointments = () => {
 
     const search = searchTerm.toLowerCase().trim();
     if (!search) return true;
-
-    const patientName = String(appt.patient_name || '').toLowerCase();
-    const docNameClean = String(removeTamil(appt.doctor_name)).toLowerCase();
-    const docNameRaw = String(appt.doctor_name || '').toLowerCase();
-    const bookingId = String(appt.id || appt._id || '').toLowerCase();
-    const status = String(appt.status || 'Pending').toLowerCase();
-
-    return (
-      patientName.includes(search) ||
-      docNameClean.includes(search) ||
-      docNameRaw.includes(search) ||
-      bookingId.includes(search) ||
-      status.includes(search)
-    );
+    
+    const fieldsToSearch = [
+      appt.appointmentId,
+      appt.patientId,
+      appt.patient_name,
+      removeTamil(appt.doctor_name),
+      appt.doctor_name,
+      appt.appointment_date,
+      appt.appointment_time,
+      appt.status,
+      appt.id,
+      appt._id
+    ];
+    
+    return fieldsToSearch.some(field => String(field || '').toLowerCase().includes(search));
   });
 
   const totalPages = Math.ceil(filteredAppointments.length / itemsPerPage);
@@ -668,6 +669,16 @@ const PatientAppointments = () => {
     setSelectedAppointment(null);
   };
 
+  const metrics = appointments.reduce((acc, appt) => {
+    const status = String(appt.status || 'Pending').toLowerCase();
+    acc.total += 1;
+    if (status === 'pending') acc.pending += 1;
+    else if (status === 'approved' || status === 'confirmed') acc.approved += 1;
+    else if (status === 'completed' || status === 'complete') acc.completed += 1;
+    else if (status === 'cancelled' || status === 'cancel') acc.cancelled += 1;
+    return acc;
+  }, { total: 0, pending: 0, approved: 0, completed: 0, cancelled: 0 });
+
   return (
     <div className="patient-appointments-container">
       {!isCreateModalOpen ? (
@@ -710,6 +721,29 @@ const PatientAppointments = () => {
               >
                 <FaPlus style={{ fontSize: '12px' }} /> Create Appointment
               </button>
+            </div>
+          </div>
+
+          <div className="appointment-metrics-container">
+            <div className="appointment-metric-box">
+              <div className="appt-metric-title">Total Appointments</div>
+              <div className="appt-metric-amount">{metrics.total}</div>
+            </div>
+            <div className="appointment-metric-box pending">
+              <div className="appt-metric-title">Pending</div>
+              <div className="appt-metric-amount">{metrics.pending}</div>
+            </div>
+            <div className="appointment-metric-box approved">
+              <div className="appt-metric-title">Approved</div>
+              <div className="appt-metric-amount">{metrics.approved}</div>
+            </div>
+            <div className="appointment-metric-box completed">
+              <div className="appt-metric-title">Completed</div>
+              <div className="appt-metric-amount">{metrics.completed}</div>
+            </div>
+            <div className="appointment-metric-box cancelled">
+              <div className="appt-metric-title">Cancelled</div>
+              <div className="appt-metric-amount">{metrics.cancelled}</div>
             </div>
           </div>
 

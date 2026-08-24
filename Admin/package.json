@@ -46,12 +46,13 @@
     "files": [
       "build/**/*",
       "public/electron.cjs",
-      "public/logo.png",
+      "public/Applogoicon.png",
       "package.json"
     ],
     "win": {
       "target": "nsis",
-      "icon": "src/assets/logo.png"
+      "icon": "public/Applogoicon.png",
+      "artifactName": "drzversion2.8.${ext}"
     }
   }
 }

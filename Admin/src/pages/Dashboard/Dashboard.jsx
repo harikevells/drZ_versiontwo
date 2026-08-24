@@ -52,7 +52,13 @@ const Dashboard = () => {
 
   const uniquePatients = new Set();
   appointments.forEach(a => {
-    if (a.login_mobile && a.login_mobile !== 'N/A') uniquePatients.add(a.login_mobile);
+    if (a.patientId && a.patientId !== 'N/A') {
+      uniquePatients.add(a.patientId);
+    } else {
+      const mobile = a.login_mobile || 'no-mobile';
+      const name = a.patient_name || 'no-name';
+      uniquePatients.add(`${mobile}-${name}`.toLowerCase());
+    }
   });
   const totalPatients = uniquePatients.size;
 

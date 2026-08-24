@@ -123,7 +123,8 @@
 
 /* Topbar */
 .topbar {
-  background-color: #ffffff; /* Soft blue background matching mockup */
+  background-color: #ffffff;
+  /* Soft blue background matching mockup */
   padding: 20px 40px;
   display: flex;
   justify-content: space-between;
@@ -168,7 +169,8 @@
   padding: 8px 16px;
   width: 250px;
   margin-right: 15px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08); /* Added box shadow */
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  /* Added box shadow */
 }
 
 .header-search-input {
@@ -206,7 +208,8 @@
   justify-content: center;
   color: #0b1a30;
   font-size: 16px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08); /* Added box shadow */
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  /* Added box shadow */
 }
 
 .date-text {
@@ -239,7 +242,8 @@
   font-size: 16px;
   transition: all 0.2s ease;
   position: relative;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08); /* Added box shadow */
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  /* Added box shadow */
 }
 
 .icon-btn:hover {

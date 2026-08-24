@@ -418,3 +418,48 @@
   width: 32px;
   color: #9ca3af;
 }
+
+/* Responsive Styles for Dashboard */
+@media (max-width: 1200px) {
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 992px) {
+  .charts-row {
+    flex-direction: column;
+  }
+  .overview-chart, .status-chart {
+    flex: none;
+    width: 100%;
+  }
+}
+
+@media (max-width: 768px) {
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+  .chart-body {
+    flex-direction: column;
+    height: auto !important;
+    align-items: center;
+  }
+  .donut-container {
+    width: 100% !important;
+    height: 250px !important;
+  }
+  .donut-legend {
+    width: 100%;
+    align-items: center;
+    margin-top: 20px;
+  }
+  .view-full-report {
+    position: relative;
+    bottom: auto;
+    right: auto;
+    margin-top: 20px;
+    text-align: center;
+    width: 100%;
+  }
+}

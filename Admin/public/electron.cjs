@@ -8,7 +8,8 @@ function createWindow() {
     height: 950,
     minWidth: 1600,
     minHeight: 950,
-    icon: path.join(__dirname, 'logo.png'),
+    title: 'DrZ Admin',
+    icon: path.join(__dirname, 'Applogoicon.png'),
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: false,

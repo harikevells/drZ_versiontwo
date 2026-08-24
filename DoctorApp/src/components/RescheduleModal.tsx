@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, Modal, TouchableOpacity, TextInput, Alert, Acti
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import axios from 'axios';
 import { Calendar } from 'react-native-calendars';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 interface Props {
   visible: boolean;
@@ -149,16 +150,19 @@ export default function RescheduleModal({ visible, onClose, patientId, doctorNam
     }
     
     try {
+      const token = await AsyncStorage.getItem('userToken');
       await axios.put(`${API_URL}/${patientId}/status`, { 
         status: 'Rescheduled',
         appointment_date: date,
         appointment_time: selectedTime
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
       });
       Alert.alert('Success', 'Appointment rescheduled successfully!');
       onClose();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error rescheduling:', error);
-      Alert.alert('Error', 'Failed to reschedule appointment.');
+      Alert.alert('Error', `Failed to reschedule appointment: ${error?.response?.data?.error || error.message}`);
     }
   };
 

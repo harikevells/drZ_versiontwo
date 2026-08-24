@@ -14,6 +14,62 @@
   font-weight: 600;
 }
 
+.appointment-metrics-container {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 20px;
+  margin-bottom: 25px;
+}
+
+.appointment-metric-box {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  border: 1px solid #f1f5f9;
+  border-left: 4px solid #4f7cf6;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.appointment-metric-box:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+.appointment-metric-box.pending {
+  border-left-color: #f59e0b;
+}
+
+.appointment-metric-box.approved {
+  border-left-color: #3b82f6;
+}
+
+.appointment-metric-box.completed {
+  border-left-color: #10b981;
+}
+
+.appointment-metric-box.cancelled {
+  border-left-color: #ef4444;
+}
+
+.appt-metric-title {
+  color: #64748b;
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 8px;
+}
+
+.appt-metric-amount {
+  color: #1e293b;
+  font-size: 24px;
+  font-weight: 700;
+}
+
 .table-container {
   background-color: #ffffff;
   border-radius: 8px;
@@ -47,6 +103,7 @@
   padding: 16px 20px;
   border-bottom: 1px solid #e5e7eb;
   text-align: center;
+  white-space: nowrap;
 }
 
 .appointments-table td {
@@ -55,6 +112,7 @@
   color: #4b5563;
   border-bottom: 1px solid #f3f4f6;
   text-align: center;
+  white-space: nowrap;
 }
 
 .appointments-table tr:hover {
@@ -257,9 +315,9 @@
   background-color: #586ff5;
   border-radius: 50%;
   transform: translate(-50%, -50%);
-  box-shadow: 0 0 0 3px rgba(88, 111, 245, 0.2), 
-              0 60px 0 0 #586ff5, 
-              0 60px 0 3px rgba(88, 111, 245, 0.2);
+  box-shadow: 0 0 0 3px rgba(88, 111, 245, 0.2),
+    0 60px 0 0 #586ff5,
+    0 60px 0 3px rgba(88, 111, 245, 0.2);
 }
 
 .modal-body-grid {
@@ -582,10 +640,12 @@
     gap: 20px;
     padding: 20px;
   }
+
   .modal-content .modal-body-grid::before,
   .modal-content .modal-body-grid::after {
     display: none;
   }
+
   .create-appointment-modal .modal-body-grid,
   .create-appointment-inline-container .modal-body-grid {
     grid-template-columns: 1fr;
