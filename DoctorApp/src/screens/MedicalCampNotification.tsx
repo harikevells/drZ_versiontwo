@@ -38,8 +38,10 @@ export default function MedicalCampNotification() {
     const fetchCamps = async () => {
         try {
             setLoading(true);
-            const response = await axios.get(`${API_BASE_URL}/push-notifications`);
-            setCampsList(response.data);
+            const token = await AsyncStorage.getItem('userToken');
+            const config = token ? { headers: { Authorization: `Bearer ${token}` } } : {};
+            const response = await axios.get(`${API_BASE_URL}/push-notifications`, config);
+            setCampsList(Array.isArray(response.data) ? response.data : []);
             
             const storedData = await AsyncStorage.getItem('userData');
             const user = storedData ? JSON.parse(storedData) : null;
@@ -69,8 +71,10 @@ export default function MedicalCampNotification() {
                 if (storedData) {
                     let parsedData = JSON.parse(storedData);
                     try {
-                        const res = await axios.get(`${API_BASE_URL}/doctors`);
-                        const fullProfile = res.data.find((d: any) => d.email === parsedData.email);
+                        const token = await AsyncStorage.getItem('userToken');
+                        const config = token ? { headers: { Authorization: `Bearer ${token}` } } : {};
+                        const res = await axios.get(`${API_BASE_URL}/doctors`, config);
+                        const fullProfile = res.data.find((d: any) => d.email === parsedData.email || d._id === parsedData.id);
                         if (fullProfile) {
                             parsedData = { ...parsedData, ...fullProfile };
                         }
@@ -115,7 +119,9 @@ export default function MedicalCampNotification() {
         try {
             const result = await launchImageLibrary({
                 mediaType: 'photo',
-                quality: 0.8,
+                quality: 0.7,
+                maxWidth: 1024,
+                maxHeight: 1024,
                 includeBase64: true,
             });
 
@@ -129,7 +135,7 @@ export default function MedicalCampNotification() {
     };
 
     const handleSaveMedicalCamp = async () => {
-        if (!campTitle || !campDescription || !campFromDate || !campToDate) {
+        if (!campTitle.trim() || !campDescription.trim() || !campFromDate.trim() || !campToDate.trim()) {
             Alert.alert("Error", "Please fill all required fields.");
             return;
         }
@@ -137,22 +143,33 @@ export default function MedicalCampNotification() {
         setLoading(true);
         let base64Image = '';
         if (campImage) {
-            base64Image = campImage.base64 ? `data:${campImage.type};base64,${campImage.base64}` : campImage.uri;
+            base64Image = campImage.base64 ? `data:${campImage.type || 'image/jpeg'};base64,${campImage.base64}` : campImage.uri;
         }
 
         try {
+            const token = await AsyncStorage.getItem('userToken');
+            let currentDoctorName = userData?.doctorName;
+            if (!currentDoctorName) {
+                const storedData = await AsyncStorage.getItem('userData');
+                if (storedData) {
+                    const parsed = JSON.parse(storedData);
+                    currentDoctorName = parsed?.doctorName || parsed?.name || '';
+                }
+            }
+
             const payload = {
-                title: campTitle,
-                description: campDescription,
-                fromDate: campFromDate,
-                toDate: campToDate,
+                title: campTitle.trim(),
+                description: campDescription.trim(),
+                fromDate: campFromDate.trim(),
+                toDate: campToDate.trim(),
                 activeStatus: campActiveStatus,
                 image: base64Image,
                 role: 'doctor',
-                doctorName: userData?.doctorName || ''
+                doctorName: currentDoctorName || 'Doctor'
             };
 
-            await axios.post(`${API_BASE_URL}/push-notifications`, payload);
+            const config = token ? { headers: { Authorization: `Bearer ${token}` } } : {};
+            await axios.post(`${API_BASE_URL}/push-notifications`, payload, config);
             Alert.alert("Success", "Medical Camp notification created.");
             setCampTitle('');
             setCampDescription('');
@@ -160,9 +177,11 @@ export default function MedicalCampNotification() {
             setCampToDate('');
             setCampImage(null);
             setViewMode('list');
-        } catch (error) {
-            console.error("Error saving medical camp:", error);
-            Alert.alert("Error", "Failed to save medical camp notification.");
+            fetchCamps();
+        } catch (error: any) {
+            console.error("Error saving medical camp:", error?.response?.data || error);
+            const msg = error?.response?.data?.message || error?.message || "Failed to save medical camp notification.";
+            Alert.alert("Error", msg);
         } finally {
             setLoading(false);
         }
@@ -170,7 +189,7 @@ export default function MedicalCampNotification() {
 
     const handleEditImageUpload = async () => {
         try {
-            const result = await launchImageLibrary({ mediaType: 'photo', quality: 0.8, includeBase64: true });
+            const result = await launchImageLibrary({ mediaType: 'photo', quality: 0.7, maxWidth: 1024, maxHeight: 1024, includeBase64: true });
             if (result.assets && result.assets.length > 0) {
                 setEditImage(result.assets[0]);
             }
@@ -195,27 +214,30 @@ export default function MedicalCampNotification() {
         setLoading(true);
         let base64Image = typeof editImage?.uri === 'string' && editImage.uri.startsWith('http') ? editImage.uri : '';
         if (editImage && editImage.base64) {
-            base64Image = `data:${editImage.type};base64,${editImage.base64}`;
+            base64Image = `data:${editImage.type || 'image/jpeg'};base64,${editImage.base64}`;
         } else if (editImage && !editImage.base64) {
             base64Image = editImage.uri;
         }
 
         try {
+            const token = await AsyncStorage.getItem('userToken');
+            const config = token ? { headers: { Authorization: `Bearer ${token}` } } : {};
             const payload = {
-                title: editTitle,
-                description: editDescription,
-                fromDate: editFromDate,
-                toDate: editToDate,
+                title: editTitle.trim(),
+                description: editDescription.trim(),
+                fromDate: editFromDate.trim(),
+                toDate: editToDate.trim(),
                 activeStatus: editActiveStatus,
                 image: base64Image
             };
-            await axios.put(`${API_BASE_URL}/push-notifications/${selectedCampId}`, payload);
+            await axios.put(`${API_BASE_URL}/push-notifications/${selectedCampId}`, payload, config);
             Alert.alert("Success", "Medical Camp updated successfully.");
             setEditModalVisible(false);
             fetchCamps();
-        } catch (error) {
-            console.error("Update error:", error);
-            Alert.alert("Error", "Failed to update camp.");
+        } catch (error: any) {
+            console.error("Update error:", error?.response?.data || error);
+            const msg = error?.response?.data?.message || error?.message || "Failed to update camp.";
+            Alert.alert("Error", msg);
         } finally {
             setLoading(false);
         }
@@ -228,11 +250,14 @@ export default function MedicalCampNotification() {
                 text: "Delete", style: "destructive", onPress: async () => {
                     setLoading(true);
                     try {
-                        await axios.delete(`${API_BASE_URL}/push-notifications/${id}`);
+                        const token = await AsyncStorage.getItem('userToken');
+                        const config = token ? { headers: { Authorization: `Bearer ${token}` } } : {};
+                        await axios.delete(`${API_BASE_URL}/push-notifications/${id}`, config);
                         fetchCamps();
-                    } catch (error) {
-                        console.error("Delete error:", error);
-                        Alert.alert("Error", "Failed to delete camp.");
+                    } catch (error: any) {
+                        console.error("Delete error:", error?.response?.data || error);
+                        const msg = error?.response?.data?.message || error?.message || "Failed to delete camp.";
+                        Alert.alert("Error", msg);
                     } finally {
                         setLoading(false);
                     }
@@ -333,7 +358,13 @@ export default function MedicalCampNotification() {
                                 <Text style={{ textAlign: 'center', color: '#999', marginTop: 20 }}>No medical camps found.</Text>
                             )}
                             {campsList.map((camp: any) => {
-                                const isMyCamp = camp.role === 'doctor' && camp.doctorName === userData?.doctorName;
+                                const myDoctorName = (userData?.doctorName || userData?.name || '').trim().toLowerCase();
+                                const campDoctorName = (camp.doctorName || '').trim().toLowerCase();
+                                const isMyCamp = camp.role === 'doctor' && (
+                                    (myDoctorName && campDoctorName === myDoctorName) ||
+                                    (myDoctorName && campDoctorName.includes(myDoctorName)) ||
+                                    (campDoctorName && myDoctorName.includes(campDoctorName))
+                                );
                                 const isUnseen = !isMyCamp && !seenCamps.includes(camp._id);
                                 return (
                                     <TouchableOpacity 
@@ -361,7 +392,7 @@ export default function MedicalCampNotification() {
                                     <Text style={styles.cardCreator}>
                                         Created by: {camp.role === 'admin' ? 'Admin' : camp.doctorName || 'Doctor'}
                                     </Text>
-                                    {camp.role === 'doctor' && camp.doctorName === userData?.doctorName && (
+                                    {isMyCamp && (
                                         <View style={styles.cardActions}>
                                             <TouchableOpacity style={styles.editBtn} onPress={() => openEditModal(camp)}>
                                                 <Ionicons name="create-outline" size={16} color="#666" />

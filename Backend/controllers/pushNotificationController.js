@@ -9,47 +9,83 @@ const createPushNotification = async (req, res) => {
     try {
         const { title, description, fromDate, toDate, image, activeStatus, role, doctorName } = req.body;
 
-        const pushNotification = new PushNotification({
-            title,
-            description,
-            fromDate,
-            toDate,
-            image,
+        let effectiveDoctorName = doctorName || '';
+        let assignedAdminId = (req.user && req.user.role === 'admin' && req.user.uniqueId) ? req.user.uniqueId : undefined;
+
+        const isDoctor = role === 'doctor' || (req.user && req.user.role === 'doctor');
+
+        if (isDoctor) {
+            let docId = req.user ? req.user.id : null;
+            let docObj = null;
+            if (docId) {
+                docObj = await Doctor.findById(docId);
+            }
+            if (!docObj && req.user && req.user.email) {
+                docObj = await Doctor.findOne({ email: req.user.email });
+            }
+            if (!docObj && effectiveDoctorName) {
+                docObj = await Doctor.findOne({ doctorName: effectiveDoctorName });
+            }
+
+            if (docObj) {
+                if (docObj.adminId) {
+                    assignedAdminId = docObj.adminId;
+                }
+                if (!effectiveDoctorName) {
+                    effectiveDoctorName = docObj.doctorName || '';
+                }
+            }
+        }
+
+        const notificationData = {
+            title: title || '',
+            description: description || '',
+            fromDate: fromDate || '',
+            toDate: toDate || '',
+            image: image || '',
             activeStatus: activeStatus || false,
-            role: role || 'admin',
-            doctorName: doctorName || '',
-            adminId: (req.user && req.user.role === 'admin' && req.user.uniqueId) ? req.user.uniqueId : undefined
-        });
+            role: isDoctor ? 'doctor' : (role || 'admin'),
+            doctorName: effectiveDoctorName || ''
+        };
+
+        if (assignedAdminId) {
+            notificationData.adminId = assignedAdminId;
+        }
+
+        const pushNotification = new PushNotification(notificationData);
 
         await pushNotification.save();
 
         // If active, broadcast to all patients
         if (activeStatus) {
-            await broadcastToPatients(title, description);
+            try {
+                await broadcastToPatients(title, description);
+            } catch (broadcastErr) {
+                console.error("Error broadcasting to patients:", broadcastErr);
+            }
         }
 
         // Notify Admin if created by a Doctor
-        if (role === 'doctor') {
-            let assignedAdminId = null;
-            if (req.user && req.user.id) {
-                const docObj = await Doctor.findById(req.user.id);
-                assignedAdminId = docObj ? docObj.adminId : null;
+        if (isDoctor) {
+            try {
+                await createNotification(
+                    'admin',
+                    'admin',
+                    'New Medical Camp Created',
+                    `Dr. ${effectiveDoctorName || 'Doctor'} has created a new Medical Camp Notification: ${title}`,
+                    'medical_camp',
+                    assignedAdminId
+                );
+            } catch (adminNotifErr) {
+                console.error("Error notifying admin of medical camp:", adminNotifErr);
             }
-            await createNotification(
-                'admin',
-                'admin',
-                'New Medical Camp Created',
-                `Dr. ${doctorName || 'Doctor'} has created a new Medical Camp Notification: ${title}`,
-                'medical_camp',
-                assignedAdminId
-            );
         }
 
         // Notify all OTHER doctors
         try {
             const doctors = await Doctor.find({});
             for (const doc of doctors) {
-                if (role === 'doctor' && (doc.doctorName === doctorName || doc.email === doctorName)) continue;
+                if (isDoctor && (doc.doctorName === effectiveDoctorName || doc.email === effectiveDoctorName)) continue;
                 
                 const identifier = doc.email || doc.doctorName;
                 if (!identifier) continue;
@@ -58,7 +94,7 @@ const createPushNotification = async (req, res) => {
                     'doctor',
                     identifier,
                     'New Medical Camp',
-                    `${role === 'admin' ? 'Admin' : 'Dr. ' + doctorName} has created a new Medical Camp: ${title}`,
+                    `${isDoctor ? 'Dr. ' + (effectiveDoctorName || 'Doctor') : 'Admin'} has created a new Medical Camp: ${title}`,
                     'medical_camp'
                 );
             }

@@ -33,6 +33,13 @@ function createModel(collectionName) {
             const plainData = { ...this };
             delete plainData.id;
             delete plainData._id;
+
+            // Remove any undefined properties because Firebase RTDB rejects undefined
+            Object.keys(plainData).forEach(key => {
+                if (plainData[key] === undefined) {
+                    delete plainData[key];
+                }
+            });
             
             await docRef.set(plainData);
             return this;
@@ -94,6 +101,13 @@ function createModel(collectionName) {
                 const salt = await bcrypt.genSalt(10);
                 finalUpdate.password = await bcrypt.hash(finalUpdate.password, salt);
             }
+            delete finalUpdate.id;
+            delete finalUpdate._id;
+            Object.keys(finalUpdate).forEach(key => {
+                if (finalUpdate[key] === undefined) {
+                    delete finalUpdate[key];
+                }
+            });
             
             await ref.update(finalUpdate);
             const updatedSnapshot = await ref.once('value');
