@@ -1,25 +1,31 @@
-import { useState } from 'react';
-import { FiEye, FiEyeOff, FiAlertCircle, FiCheck } from 'react-icons/fi';
+import { useState, useEffect } from 'react';
+import { FiEye, FiEyeOff, FiAlertCircle } from 'react-icons/fi';
 import adminLogo from '../assets/Adminlogo.svg';
 import superadminImg from '../assets/superadmin.png';
 import './Login.css';
 
 const Login = ({ onLogin }) => {
-  const [username, setUsername] = useState('superadmin@drz.com');
-  const [password, setPassword] = useState('Superadmin@123');
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [rememberDevice, setRememberDevice] = useState(true);
   const [error, setError] = useState('');
-  const [infoMessage, setInfoMessage] = useState('');
+  
+  // Prevent browser autofill from popping saved credentials into inputs
+  const [canEditUser, setCanEditUser] = useState(false);
+  const [canEditPass, setCanEditPass] = useState(false);
+
+  useEffect(() => {
+    setUsername('');
+    setPassword('');
+  }, []);
 
   const handleSubmit = (e) => {
     e.preventDefault();
     setError('');
-    setInfoMessage('');
 
     const trimmedUser = username.trim().toLowerCase();
 
-    // Check credentials
+    // Verify authorized Super Admin credentials
     if (
       (trimmedUser === 'superadmin@drz.com' || trimmedUser === 'superadmin' || trimmedUser === 'admin') &&
       (password === 'Superadmin@123' || password === 'admin')
@@ -28,12 +34,6 @@ const Login = ({ onLogin }) => {
     } else {
       setError('Invalid username or password.');
     }
-  };
-
-  const handleForgotPassword = (e) => {
-    e.preventDefault();
-    setInfoMessage('Password reset link sent to admin email.');
-    setTimeout(() => setInfoMessage(''), 3500);
   };
 
   return (
@@ -59,10 +59,9 @@ const Login = ({ onLogin }) => {
 
           <div className="spike-login-header">
             <h1>Welcome to Super Admin</h1>
-            <p>Your Admin Dashboard</p>
           </div>
 
-          {/* Error / Notification Alert */}
+          {/* Error Alert */}
           {error && (
             <div className="spike-error-alert" role="alert">
               <FiAlertCircle className="spike-alert-icon" />
@@ -70,78 +69,75 @@ const Login = ({ onLogin }) => {
             </div>
           )}
 
-          {infoMessage && (
-            <div className="spike-info-alert" role="status">
-              <FiCheck className="spike-alert-icon" />
-              <span>{infoMessage}</span>
-            </div>
-          )}
+          {/* Login Form with Autofill Protection */}
+          <form onSubmit={handleSubmit} className="spike-form" autoComplete="off">
+            {/* Decoy hidden inputs to absorb browser password managers */}
+            <input 
+              type="text" 
+              name="fake_user_decoy" 
+              tabIndex={-1} 
+              autoComplete="off" 
+              style={{ position: 'absolute', opacity: 0, height: 0, width: 0, pointerEvents: 'none', zIndex: -1 }} 
+            />
+            <input 
+              type="password" 
+              name="fake_pass_decoy" 
+              tabIndex={-1} 
+              autoComplete="off" 
+              style={{ position: 'absolute', opacity: 0, height: 0, width: 0, pointerEvents: 'none', zIndex: -1 }} 
+            />
 
-          {/* Login Form */}
-          <form onSubmit={handleSubmit} className="spike-form">
             <div className="spike-form-group">
-              <label htmlFor="username">Username</label>
+              <label htmlFor="login_email">Username</label>
               <div className="spike-input-wrapper">
                 <input
-                  id="username"
-                  type="text"
+                  id="login_email"
+                  name="sa_email_addr"
+                  type="email"
                   className="spike-input"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
-                  placeholder="Enter username or email"
+                  placeholder="Enter your mail"
                   required
-                  autoComplete="username"
-                  autoFocus
+                  autoComplete="off"
+                  readOnly={!canEditUser}
+                  onFocus={() => setCanEditUser(true)}
+                  onClick={() => setCanEditUser(true)}
                 />
               </div>
             </div>
 
             <div className="spike-form-group">
-              <label htmlFor="password">Password</label>
+              <label htmlFor="login_pwd">Password</label>
               <div className="spike-input-wrapper">
                 <input
-                  id="password"
+                  id="login_pwd"
+                  name="sa_secret_token"
                   type={showPassword ? 'text' : 'password'}
                   className="spike-input"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Enter password"
+                  placeholder="Enter your password"
                   required
-                  autoComplete="current-password"
+                  autoComplete="new-password"
+                  readOnly={!canEditPass}
+                  onFocus={() => setCanEditPass(true)}
+                  onClick={() => setCanEditPass(true)}
                 />
                 <button
                   type="button"
                   className="spike-password-toggle"
                   onClick={() => setShowPassword(!showPassword)}
                   aria-label={showPassword ? 'Hide password' : 'Show password'}
+                  tabIndex={-1}
                 >
                   {showPassword ? <FiEyeOff /> : <FiEye />}
                 </button>
               </div>
             </div>
 
-            {/* Remember Me & Forgot Password Row */}
-            <div className="spike-form-options">
-              <label className="spike-checkbox-label">
-                <input
-                  type="checkbox"
-                  checked={rememberDevice}
-                  onChange={(e) => setRememberDevice(e.target.checked)}
-                />
-                <span>Remember this Device</span>
-              </label>
-
-              <button 
-                type="button" 
-                className="spike-forgot-link"
-                onClick={handleForgotPassword}
-              >
-                Forgot Password ?
-              </button>
-            </div>
-
             {/* Submit Button */}
-            <button type="submit" className="spike-submit-btn">
+            <button type="submit" className="spike-submit-btn" style={{ marginTop: '16px' }}>
               Sign In
             </button>
           </form>

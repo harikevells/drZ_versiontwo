@@ -147,7 +147,7 @@ const ManagePlans = () => {
         </button>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '30px', marginTop: '20px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '15px' , padding:'15px', paddingLeft:'2px'}}>
         {plans.length === 0 ? (
           <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '50px', color: '#6b7280', background: '#fff', borderRadius: '12px' }}>
             No subscription plans found. Click "Create Plan" to get started.
