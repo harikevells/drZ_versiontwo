@@ -1,0 +1,829 @@
+/* Super Admin Login Page - CSS Grid 1fr 1fr Layout */
+
+/* Global container constraints - strictly no scroll */
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.spike-login-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr; /* 1fr 1fr column grid layout */
+  height: 100vh;
+  height: 100dvh;
+  max-height: 100dvh;
+  width: 100vw;
+  max-width: 100vw;
+  background-color: #ffffff;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  color: #1e293b;
+  overflow: hidden; /* strictly no scroll */
+  position: relative;
+  box-sizing: border-box;
+}
+
+/* =========================================================
+   Logo placed directly above "Welcome to Super Admin" (Centered & Enlarged)
+   ========================================================= */
+.spike-login-logo {
+  display: flex;
+  align-items: center;
+  justify-content: center; /* Centered above Welcome to Super Admin */
+  margin-bottom: clamp(16px, 2.6vh, 26px);
+  width: 100%;
+}
+
+.spike-admin-logo {
+  height: clamp(82px, 6.8vh, 68px); /* Increased size */
+  width: auto;
+  max-width: 260px;
+  object-fit: contain;
+  display: block;
+  user-select: none;
+}
+
+/* =========================================================
+   Left Column: 1fr (Hero 3D Illustration)
+   ========================================================= */
+.spike-login-left {
+  grid-column: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: clamp(16px, 2.5vh, 32px) clamp(20px, 3vw, 44px);
+  background: #ffffff;
+  position: relative;
+  height: 100%;
+  width: 100%;
+  min-height: 0;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.spike-illustration-wrapper {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  align-items: end;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+}
+
+.spike-illustration-img {
+  max-width: 96%;
+  max-height: clamp(360px, 80vh, 720px);
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 20px 40px rgba(0, 0, 0, 0.07));
+  animation: floatIllustration 4.5s ease-in-out infinite alternate;
+  user-select: none;
+  pointer-events: none;
+}
+
+@keyframes floatIllustration {
+  0% { transform: translateY(0px); }
+  100% { transform: translateY(-8px); }
+}
+
+/* =========================================================
+   Right Column: 1fr (Login Form with Fixed Alignment & Size)
+   ========================================================= */
+.spike-login-right {
+  grid-column: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(20px, 3.5vh, 48px) clamp(24px, 4vw, 64px);
+  background: #ffffff;
+  height: 100%;
+  width: 100%;
+  min-height: 0;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.spike-login-box {
+  width: 100%;
+  max-width: clamp(440px, 34vw, 540px); /* Proportional width matching the left image size */
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  box-sizing: border-box;
+}
+
+/* Header Text (Increased Font Sizes) */
+.spike-login-header {
+  margin-bottom: clamp(18px, 3vh, 32px);
+  text-align: center;
+}
+
+.spike-login-header h1 {
+  font-size: clamp(26px, 2.6vw, 34px);
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0 0 8px 0;
+  letter-spacing: -0.5px;
+  line-height: 1.2;
+}
+
+.spike-login-header p {
+  font-size: clamp(14px, 1.05vw, 16px);
+  color: #8a99ad;
+  margin: 0;
+  font-weight: 400;
+}
+
+/* =========================================================
+   Alerts
+   ========================================================= */
+.spike-error-alert {
+  padding: 10px 16px;
+  background-color: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #dc2626;
+  border-radius: 8px;
+  font-size: clamp(12px, 0.95vw, 14px);
+  margin-bottom: clamp(12px, 2vh, 18px);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  animation: shakeAlert 0.3s ease-in-out;
+  flex-shrink: 0;
+}
+
+.spike-info-alert {
+  padding: 10px 16px;
+  background-color: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  color: #166534;
+  border-radius: 8px;
+  font-size: clamp(12px, 0.95vw, 14px);
+  margin-bottom: clamp(12px, 2vh, 18px);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.spike-alert-icon {
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+@keyframes shakeAlert {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-4px); }
+  75% { transform: translateX(4px); }
+}
+
+/* =========================================================
+   Form Fields (Increased Sizes & Light Blue Background)
+   ========================================================= */
+.spike-form {
+  display: flex;
+  flex-direction: column;
+}
+
+.spike-form-group {
+  margin-bottom: clamp(16px, 2.4vh, 24px);
+  display: flex;
+  flex-direction: column;
+}
+
+.spike-form-group label {
+  font-size: clamp(14px, 1.05vw, 16px);
+  font-weight: 600;
+  color: #1e293b;
+  margin-bottom: clamp(6px, 1vh, 10px);
+}
+
+.spike-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+/* Input Fields matching the Screenshot (#edf3fc background) */
+.spike-input {
+  width: 100%;
+  height: clamp(48px, 5.8vh, 56px);
+  padding: 0 18px;
+  font-size: clamp(15px, 1.1vw, 17px);
+  color: #1e293b;
+  background-color: #edf3fc; /* Light blue tint matching the screenshot */
+  border: 1px solid #e1eaf8;
+  border-radius: 10px;
+  outline: none;
+  transition: all 0.2s ease;
+  font-family: inherit;
+  box-sizing: border-box;
+}
+
+.spike-input:focus {
+  background-color: #f3f7fd;
+  border-color: #0085db;
+  box-shadow: 0 0 0 3px rgba(0, 133, 219, 0.15);
+}
+
+.spike-input::placeholder {
+  color: #94a3b8;
+  font-weight: 400;
+}
+
+.spike-password-toggle {
+  position: absolute;
+  right: 12px;
+  background: none;
+  border: none;
+  color: #8a99ad;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  padding: 6px;
+  border-radius: 6px;
+  transition: color 0.2s ease;
+}
+
+.spike-password-toggle:hover {
+  color: #1e293b;
+}
+
+/* =========================================================
+   Options Row (Remember Device & Forgot Password)
+   ========================================================= */
+.spike-form-options {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 4px;
+  margin-bottom: clamp(18px, 3vh, 30px);
+  gap: 10px;
+}
+
+.spike-checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: clamp(13px, 0.95vw, 15px);
+  color: #1e293b;
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+}
+
+.spike-checkbox-label input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: #0085db;
+  border-radius: 4px;
+  cursor: pointer;
+  margin: 0;
+}
+
+.spike-forgot-link {
+  font-size: clamp(13px, 0.95vw, 15px);
+  font-weight: 500;
+  color: #0085db;
+  text-decoration: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  white-space: nowrap;
+  transition: color 0.2s ease;
+}
+
+.spike-forgot-link:hover {
+  text-decoration: underline;
+  color: #006bb3;
+}
+
+/* =========================================================
+   Sign In Button (Increased Height & Font Size)
+   ========================================================= */
+.spike-submit-btn {
+  width: 100%;
+  height: clamp(48px, 5.8vh, 56px);
+  background-color: #0085db;
+  color: #ffffff;
+  border: none;
+  border-radius: 10px;
+  font-size: clamp(15px, 1.1vw, 17px);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 14px rgba(0, 133, 219, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  letter-spacing: 0.2px;
+  flex-shrink: 0;
+}
+
+.spike-submit-btn:hover {
+  background-color: #0074c2;
+  box-shadow: 0 6px 18px rgba(0, 133, 219, 0.4);
+  transform: translateY(-1px);
+}
+
+.spike-submit-btn:active {
+  transform: translateY(0);
+}
+
+/* =========================================================
+   Large Screens (1600px - 1919px) - Scaled Sizing & Fixed Alignment
+   ========================================================= */
+@media (min-width: 1600px) and (max-width: 1919px) {
+  .spike-login-left {
+    padding: clamp(20px, 3vh, 36px) clamp(24px, 3vw, 56px);
+    justify-content: center;
+    align-items: flex-end; /* brings illustration closer to the center */
+  }
+
+  .spike-illustration-wrapper {
+    justify-content: flex-end;
+  }
+
+  .spike-illustration-img {
+    max-height: clamp(480px, 80vh, 760px);
+    max-width: 96%;
+  }
+
+  .spike-login-right {
+    padding: clamp(20px, 3vh, 36px) clamp(24px, 3vw, 64px);
+    /* justify-content: flex-start; brings form closer to the center */
+  }
+
+  .spike-login-box {
+    max-width: 530px; /* Increased to match screen proportions */
+  }
+
+  .spike-login-header {
+    margin-bottom: 26px;
+  }
+
+  .spike-login-header h1 {
+    font-size: 34px;
+    margin-bottom: 8px;
+  }
+
+  .spike-login-header p {
+    font-size: 16px;
+  }
+
+  .spike-form-group {
+    margin-bottom: 22px;
+  }
+
+  .spike-form-group label {
+    font-size: 16px;
+    margin-bottom: 9px;
+  }
+
+  .spike-input {
+    height: 56px; /* Increased input height */
+    font-size: 17px; /* Increased font size */
+    padding: 0 20px;
+    border-radius: 12px;
+  }
+
+  .spike-password-toggle {
+    font-size: 22px;
+    right: 14px;
+  }
+
+  .spike-form-options {
+    margin-bottom: 26px;
+  }
+
+  .spike-checkbox-label {
+    font-size: 15px;
+    gap: 10px;
+  }
+
+  .spike-checkbox-label input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+  }
+
+  .spike-forgot-link {
+    font-size: 15px;
+  }
+
+  .spike-submit-btn {
+    height: 56px; /* Increased button height */
+    font-size: 17px;
+    border-radius: 12px;
+  }
+
+  .spike-admin-logo {
+    height: 100px;
+    max-width: 270px;
+  }
+}
+
+/* =========================================================
+   Ultra-Wide & 2K Screens (1920px - 2199px)
+   ========================================================= */
+@media (min-width: 1920px) and (max-width: 2199px) {
+  .spike-admin-logo {
+    height: 100px;
+    max-width: 290px;
+  }
+
+  .spike-login-left {
+    padding: 32px clamp(32px, 3.5vw, 72px);
+    justify-content: center;
+    align-items: flex-end;
+  }
+
+  .spike-illustration-wrapper {
+    justify-content: flex-end;
+  }
+
+  .spike-illustration-img {
+    max-height: clamp(540px, 82vh, 840px);
+    max-width: 95%;
+  }
+
+  .spike-login-right {
+    padding: 32px clamp(32px, 3.5vw, 72px);
+    justify-content: flex-start;
+  }
+
+  .spike-login-box {
+    max-width: 580px; /* Grand scale matching large monitor */
+  }
+
+  .spike-login-header {
+    margin-bottom: 30px;
+  }
+
+  .spike-login-header h1 {
+    font-size: 38px;
+    margin-bottom: 10px;
+  }
+
+  .spike-login-header p {
+    font-size: 17px;
+  }
+
+  .spike-form-group {
+    margin-bottom: 24px;
+  }
+
+  .spike-form-group label {
+    font-size: 17px;
+    margin-bottom: 10px;
+  }
+
+  .spike-input {
+    height: 62px; /* Grand 62px input height */
+    font-size: 18px; /* Crisp 18px font size */
+    padding: 0 22px;
+    border-radius: 12px;
+  }
+
+  .spike-password-toggle {
+    font-size: 24px;
+    right: 16px;
+  }
+
+  .spike-form-options {
+    margin-bottom: 28px;
+  }
+
+  .spike-checkbox-label {
+    font-size: 16px;
+    gap: 11px;
+  }
+
+  .spike-checkbox-label input[type="checkbox"] {
+    width: 21px;
+    height: 21px;
+  }
+
+  .spike-forgot-link {
+    font-size: 16px;
+  }
+
+  .spike-submit-btn {
+    height: 62px; /* Grand 62px button height */
+    font-size: 18px;
+    border-radius: 12px;
+  }
+}
+
+/* =========================================================
+   Ultra-Wide 2K / 4K / QHD Monitors (2200px - 2600px)
+   ========================================================= */
+@media (min-width: 2200px) {
+  .spike-admin-logo {
+    height: 100px;
+    max-width: 320px;
+  }
+
+  .spike-login-left {
+    padding: 40px clamp(40px, 4vw, 90px);
+    justify-content: center;
+    align-items: flex-end;
+  }
+
+  .spike-illustration-wrapper {
+    justify-content: flex-end;
+  }
+
+  .spike-illustration-img {
+    max-height: clamp(600px, 84vh, 920px);
+    max-width: 95%;
+  }
+
+  .spike-login-right {
+    padding: 40px clamp(40px, 4vw, 90px);
+    justify-content: flex-start;
+  }
+
+  .spike-login-box {
+    max-width: 630px; /* Extra spacious width for 2200px-2600px */
+  }
+
+  .spike-login-header {
+    margin-bottom: 36px;
+  }
+
+  .spike-login-header h1 {
+    font-size: 42px;
+    margin-bottom: 12px;
+  }
+
+  .spike-login-header p {
+    font-size: 18px;
+  }
+
+  .spike-form-group {
+    margin-bottom: 28px;
+  }
+
+  .spike-form-group label {
+    font-size: 18px;
+    margin-bottom: 12px;
+  }
+
+  .spike-input {
+    height: 66px; /* 66px large input height */
+    font-size: 19px; /* 19px large font size */
+    padding: 0 24px;
+    border-radius: 14px;
+  }
+
+  .spike-password-toggle {
+    font-size: 26px;
+    right: 18px;
+  }
+
+  .spike-form-options {
+    margin-bottom: 32px;
+  }
+
+  .spike-checkbox-label {
+    font-size: 17px;
+    gap: 12px;
+  }
+
+  .spike-checkbox-label input[type="checkbox"] {
+    width: 23px;
+    height: 23px;
+  }
+
+  .spike-forgot-link {
+    font-size: 17px;
+  }
+
+  .spike-submit-btn {
+    height: 66px; /* 66px large button height */
+    font-size: 19px;
+    border-radius: 14px;
+  }
+}
+
+/* =========================================================
+   Medium Screens (901px - 1200px)
+   ========================================================= */
+@media (max-width: 1200px) {
+  .spike-login-left {
+    padding: clamp(20px, 3vh, 36px) clamp(20px, 3vw, 40px);
+  }
+  .spike-login-right {
+    padding: clamp(20px, 3vh, 36px) clamp(20px, 3vw, 40px);
+  }
+  .spike-illustration-img {
+    max-height: clamp(320px, 64vh, 560px);
+  }
+}
+
+/* =========================================================
+   Tablets & Mobile (320px - 900px)
+   Zero Scroll layout: stacked vertically inside 100dvh
+   ========================================================= */
+@media (max-width: 900px) {
+  .spike-login-container {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    height: 100dvh;
+    max-height: 100dvh;
+    overflow: hidden;
+  }
+
+  .spike-admin-logo {
+    height: 48px;
+  }
+
+  .spike-login-left {
+    flex: 0 0 auto;
+    height: auto;
+    min-height: 0;
+    padding: 6px 20px;
+    align-items: center;
+  }
+
+  .spike-illustration-img {
+    max-height: clamp(120px, 24vh, 210px);
+    max-width: 340px;
+  }
+
+  .spike-login-right {
+    flex: 1 1 auto;
+    height: auto;
+    min-height: 0;
+    padding: 10px 20px 20px 20px;
+    align-items: center;
+  }
+
+  .spike-login-box {
+    max-width: 440px;
+  }
+
+  .spike-login-header {
+    margin-bottom: clamp(12px, 2vh, 20px);
+  }
+
+  .spike-login-header h1 {
+    font-size: clamp(22px, 5vw, 28px);
+  }
+
+  .spike-input {
+    font-size: 16px; /* prevent iOS auto-zoom */
+    height: clamp(44px, 5.4vh, 50px);
+  }
+
+  .spike-submit-btn {
+    height: clamp(44px, 5.4vh, 50px);
+  }
+}
+
+/* =========================================================
+   Small Phone Screens (320px - 480px, e.g. iPhone SE)
+   Zero Scroll layout: compact and perfectly fitted
+   ========================================================= */
+@media (max-width: 480px) {
+  .spike-admin-logo {
+    height: 40px;
+  }
+
+  .spike-login-left {
+    padding: 4px 16px;
+  }
+
+  .spike-illustration-img {
+    max-height: clamp(90px, 18vh, 150px);
+  }
+
+  .spike-login-right {
+    padding: 8px 16px 16px 16px;
+  }
+
+  .spike-login-header {
+    margin-bottom: 12px;
+  }
+
+  .spike-login-header h1 {
+    font-size: 21px;
+    margin-bottom: 4px;
+  }
+
+  .spike-login-header p {
+    font-size: 13px;
+  }
+
+  .spike-form-group {
+    margin-bottom: 12px;
+  }
+
+  .spike-form-group label {
+    font-size: 13.5px;
+    margin-bottom: 5px;
+  }
+
+  .spike-input {
+    height: 44px;
+    font-size: 16px;
+    padding: 0 14px;
+  }
+
+  .spike-form-options {
+    margin-bottom: 16px;
+    gap: 8px;
+  }
+
+  .spike-checkbox-label {
+    font-size: 12.5px;
+  }
+
+  .spike-forgot-link {
+    font-size: 12.5px;
+  }
+
+  .spike-submit-btn {
+    height: 44px;
+    font-size: 15px;
+  }
+}
+
+/* =========================================================
+   Landscape Mobile (Short viewport height <= 540px)
+   ========================================================= */
+@media (max-height: 540px) and (orientation: landscape) {
+  .spike-login-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .spike-admin-logo {
+    height: 30px;
+  }
+
+  .spike-login-left {
+    grid-column: 1;
+    padding: 12px 20px;
+    justify-content: center;
+  }
+
+  .spike-illustration-img {
+    max-height: 200px;
+  }
+
+  .spike-login-right {
+    grid-column: 2;
+    padding: 12px 28px;
+  }
+
+  .spike-login-header {
+    margin-bottom: 10px;
+  }
+
+  .spike-login-header h1 {
+    font-size: 20px;
+    margin-bottom: 2px;
+  }
+
+  .spike-login-header p {
+    font-size: 12px;
+  }
+
+  .spike-form-group {
+    margin-bottom: 10px;
+  }
+
+  .spike-form-group label {
+    font-size: 12.5px;
+    margin-bottom: 3px;
+  }
+
+  .spike-input {
+    height: 38px;
+    font-size: 14px;
+  }
+
+  .spike-form-options {
+    margin-bottom: 12px;
+  }
+
+  .spike-checkbox-label,
+  .spike-forgot-link {
+    font-size: 12px;
+  }
+
+  .spike-submit-btn {
+    height: 40px;
+    font-size: 14px;
+  }
+}

@@ -9,7 +9,7 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 5;
+  const itemsPerPage = 4;
 
   // Edit Modal State
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -198,20 +198,26 @@ const Dashboard = () => {
   );
 
   if (loading) {
-    return <div style={{ padding: '2rem' }}>Loading...</div>;
+    return (
+      <div className="dashboard-loading-state">
+        <div className="loading-spinner"></div>
+        <p>Loading hospital administrators...</p>
+      </div>
+    );
   }
 
   return (
-    <div>
+    <div className="dashboard-page-container">
+      {/* Top Stats Cards Grid */}
       <div className="stats-grid">
         <div className="stat-card">
           <div className="stat-icon blue">
             <FaUsers />
           </div>
           <div className="stat-content">
-            <span className="stat-label">Total Admins</span>
+            <span className="stat-label">Total Hospitals</span>
             <span className="stat-value">{totalAdmins}</span>
-            <span className="stat-desc">Active hospitals</span>
+            <span className="stat-desc">Registered hospital admins</span>
           </div>
         </div>
 
@@ -220,9 +226,9 @@ const Dashboard = () => {
             <FaShieldAlt />
           </div>
           <div className="stat-content">
-            <span className="stat-label">Active Admins</span>
+            <span className="stat-label">Active Access</span>
             <span className="stat-value">{activeAdmins}</span>
-            <span className="stat-desc">Currently active</span>
+            <span className="stat-desc">Currently operational</span>
           </div>
         </div>
 
@@ -233,7 +239,7 @@ const Dashboard = () => {
           <div className="stat-content">
             <span className="stat-label">Expiring Soon</span>
             <span className="stat-value">{expiringSoonCount}</span>
-            <span className="stat-desc">In next 7 days</span>
+            <span className="stat-desc">Within next 7 days</span>
           </div>
         </div>
 
@@ -244,24 +250,29 @@ const Dashboard = () => {
           <div className="stat-content">
             <span className="stat-label">Super Admins</span>
             <span className="stat-value">{superAdminsCount}</span>
-            <span className="stat-desc">System owner</span>
+            <span className="stat-desc">Master system root</span>
           </div>
         </div>
       </div>
 
+      {/* Main Table Card */}
       <div className="table-card">
         <div className="table-header">
           <div className="table-title">
-            <FaListUl color="#5F76FE" /> Admin List
+            <div className="table-title-icon">
+              <FaListUl />
+            </div>
+            <span>Hospital Administrators</span>
+            <span className="table-count-badge">{filteredAdmins.length} Total</span>
           </div>
+
           <div className="table-actions">
-            <div style={{ position: 'relative' }}>
-              <FaSearch style={{ position: 'absolute', left: '12px', top: '12px', color: '#a3aed0' }} />
+            <div className="search-input-wrapper">
+              <FaSearch className="search-icon" />
               <input
                 type="text"
                 className="search-input"
                 placeholder="Search hospital or email..."
-                style={{ paddingLeft: '35px' }}
                 value={searchTerm}
                 onChange={(e) => {
                   setSearchTerm(e.target.value);
@@ -269,108 +280,128 @@ const Dashboard = () => {
                 }}
               />
             </div>
-            <button className="btn-primary" onClick={() => navigate('/create-admin')}>
-              <FaPlus /> Add New Admin
+            <button className="btn-primary add-admin-btn" onClick={() => navigate('/create-admin')}>
+              <FaPlus /> <span>Add New Admin</span>
             </button>
           </div>
         </div>
 
         <div className="table-container">
-          <table>
+          <table className="admin-data-table">
             <thead>
               <tr>
-                <th>Hospital Name</th>
-                <th>Email Address</th>
-                <th>Access Period</th>
-                <th>Status</th>
-                <th>Actions</th>
+                <th style={{ width: '25%' }}>Hospital Name</th>
+                <th style={{ width: '22%' }}>Email Address</th>
+                <th style={{ width: '24%' }}>Access Period</th>
+                <th style={{ width: '12%', textAlign: 'center' }}>Status</th>
+                <th style={{ width: '17%', textAlign: 'right' }}>Actions</th>
               </tr>
             </thead>
             <tbody>
               {paginatedAdmins.length === 0 ? (
                 <tr>
-                  <td colSpan="5" style={{ textAlign: 'center', padding: '3rem' }}>No admins found</td>
+                  <td colSpan="5" className="table-empty-state">
+                    <FaBuilding className="empty-icon" />
+                    <h4>No hospital admins found</h4>
+                    <p>Try searching with another keyword or add a new admin.</p>
+                  </td>
                 </tr>
               ) : (
                 paginatedAdmins.map((admin, index) => {
                   const status = getAdminStatus(admin);
-                  // Generating a color based on index for the hospital icon
-                  const iconColors = ['#eff6ff', '#d1fae5', '#f3e8ff', '#fff7ed'];
-                  const textColors = ['#3b82f6', '#10b981', '#8b5cf6', '#f97316'];
+                  const iconColors = ['#eff6ff', '#ecfdf5', '#f5f3ff', '#fff7ed'];
+                  const textColors = ['#2563eb', '#059669', '#7c3aed', '#ea580c'];
                   const colorIdx = index % 4;
 
                   return (
                     <tr key={admin.id}>
+                      {/* Column 1: Hospital Name */}
                       <td>
                         <div className="hospital-cell">
                           <div className="hospital-icon" style={{ background: iconColors[colorIdx], color: textColors[colorIdx] }}>
                             <FaBuilding />
                           </div>
-                          <span className="hospital-name">{admin.name}</span>
-                        </div>
-                      </td>
-                      <td style={{ color: '#64748b' }}>{admin.email}</td>
-                      <td>
-                        <div style={{ fontSize: '13px', color: '#64748b', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                            <FaCalendarAlt color="#cbd5e1" /> {admin.accessStartDate} {admin.accessStartTime}
-                          </div>
-                          <div style={{ paddingLeft: '20px' }}>
-                            to {admin.accessEndDate} {admin.accessEndTime}
+                          <div className="hospital-info">
+                            <span className="hospital-name">{admin.name}</span>
+                            <span className="hospital-sub">ID: #{admin.id ? String(admin.id).slice(-4).toUpperCase() : 'N/A'}</span>
                           </div>
                         </div>
                       </td>
+
+                      {/* Column 2: Email */}
                       <td>
+                        <div className="email-cell">
+                          <span className="email-text">{admin.email}</span>
+                        </div>
+                      </td>
+
+                      {/* Column 3: Access Period */}
+                      <td>
+                        <div className="access-period-box">
+                          <div className="access-row">
+                            <span className="access-tag start">From</span>
+                            <span className="access-val">{admin.accessStartDate || 'N/A'} {admin.accessStartTime || ''}</span>
+                          </div>
+                          <div className="access-row">
+                            <span className="access-tag end">To</span>
+                            <span className="access-val">{admin.accessEndDate || 'N/A'} {admin.accessEndTime || ''}</span>
+                          </div>
+                        </div>
+                      </td>
+
+                      {/* Column 4: Status */}
+                      <td style={{ textAlign: 'center' }}>
                         <span className={`status-pill ${status === 'Active' ? 'status-active' : 'status-expired'}`}>
-                          <div className="status-dot"></div> {status}
+                          <span className="status-dot"></span>
+                          <span>{status}</span>
                         </span>
                       </td>
-                      <td>
-                        <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+
+                      {/* Column 5: Actions */}
+                      <td style={{ textAlign: 'right' }}>
+                        <div className="table-actions-group">
                           <button
                             className="action-btn send"
                             onClick={() => handleSendInvoice(admin.id)}
                             disabled={!admin.isActive}
-                            style={{ opacity: admin.isActive ? 1 : 0.5, cursor: admin.isActive ? 'pointer' : 'not-allowed' }}
-                            title="Send Invoice"
+                            title="Send Invoice to Admin"
                           >
-                            <FaEnvelope /> Send
+                            <FaEnvelope /> <span>Invoice</span>
                           </button>
 
                           <button
-                            className="action-btn deactivate"
+                            className={`action-btn ${admin.isActive ? 'deactivate' : 'activate'}`}
                             onClick={() => toggleAdminStatus(admin.id, admin.isActive, admin)}
-                            style={{
-                              background: admin.isActive ? '#fef2f2' : '#d1fae5',
-                              color: admin.isActive ? '#ef4444' : '#10b981',
-                            }}
+                            title={admin.isActive ? 'Click to Deactivate' : 'Click to Activate'}
                           >
-                            <FaPowerOff /> {admin.isActive ? 'Deactivate' : 'Activate'}
+                            <FaPowerOff /> <span>{admin.isActive ? 'Deactivate' : 'Activate'}</span>
                           </button>
 
-                          <button
-                            className="action-icon-btn crown"
-                            onClick={() => navigate(`/subscription/${admin.id}`)}
-                            title="Subscription Plan"
-                          >
-                            <FaCrown />
-                          </button>
+                          <div className="action-icon-group">
+                            <button
+                              className="action-icon-btn crown"
+                              onClick={() => navigate(`/subscription/${admin.id}`)}
+                              title="Subscription Plan"
+                            >
+                              <FaCrown />
+                            </button>
 
-                          <button
-                            className="action-icon-btn edit"
-                            onClick={() => openEditModal(admin)}
-                            title="Edit"
-                          >
-                            <FaEdit />
-                          </button>
+                            <button
+                              className="action-icon-btn edit"
+                              onClick={() => openEditModal(admin)}
+                              title="Edit Admin"
+                            >
+                              <FaEdit />
+                            </button>
 
-                          <button
-                            className="action-icon-btn delete"
-                            onClick={() => handleDelete(admin.id)}
-                            title="Delete"
-                          >
-                            <FaTrash />
-                          </button>
+                            <button
+                              className="action-icon-btn delete"
+                              onClick={() => handleDelete(admin.id)}
+                              title="Delete Admin"
+                            >
+                              <FaTrash />
+                            </button>
+                          </div>
                         </div>
                       </td>
                     </tr>
@@ -381,7 +412,8 @@ const Dashboard = () => {
           </table>
         </div>
 
-        {totalPages > 0 && (
+        {/* Pagination shown only when table has more than 4 items */}
+        {filteredAdmins.length > itemsPerPage && (
           <div className="pagination-footer">
             <span>Showing {(currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, filteredAdmins.length)} of {filteredAdmins.length} entries</span>
             <div className="pagination-controls">

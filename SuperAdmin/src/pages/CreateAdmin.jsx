@@ -1,6 +1,19 @@
 import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { FiUser, FiMail, FiPhone, FiMapPin, FiLock, FiEye, FiEyeOff, FiCalendar, FiClock } from 'react-icons/fi';
+import { useNavigate } from 'react-router-dom';
+import {
+  FiUser,
+  FiMail,
+  FiPhone,
+  FiMapPin,
+  FiLock,
+  FiEye,
+  FiEyeOff,
+  FiCalendar,
+  FiClock,
+  FiCheckCircle,
+  FiAlertCircle
+} from 'react-icons/fi';
+import { FaBuilding } from 'react-icons/fa';
 import config from '../config';
 import './Createadmin.css';
 
@@ -13,11 +26,11 @@ const CreateAdmin = () => {
     mobileNumber: '',
     address: '',
     accessStartDate: '',
-    accessStartTime: '',
+    accessStartTime: '09:00',
     accessEndDate: '',
-    accessEndTime: ''
+    accessEndTime: '18:00'
   });
-  
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -32,22 +45,29 @@ const CreateAdmin = () => {
   };
 
   const validateForm = () => {
-    if (!formData.name || !formData.email || !formData.password || 
-        !formData.mobileNumber || !formData.address ||
-        !formData.accessStartDate || !formData.accessStartTime || 
-        !formData.accessEndDate || !formData.accessEndTime) {
-      return "All fields are required.";
+    if (
+      !formData.name ||
+      !formData.email ||
+      !formData.password ||
+      !formData.mobileNumber ||
+      !formData.address ||
+      !formData.accessStartDate ||
+      !formData.accessStartTime ||
+      !formData.accessEndDate ||
+      !formData.accessEndTime
+    ) {
+      return 'Please fill in all required fields.';
     }
-    
+
     if (formData.password.length < 6) {
-      return "Password should be at least 6 characters.";
+      return 'Password should be at least 6 characters.';
     }
 
     const startDateTime = new Date(`${formData.accessStartDate}T${formData.accessStartTime}`);
     const endDateTime = new Date(`${formData.accessEndDate}T${formData.accessEndTime}`);
 
     if (startDateTime >= endDateTime) {
-      return "Access End Date and Time must be after Start Date and Time.";
+      return 'Access End Date & Time must be after Start Date & Time.';
     }
 
     return null;
@@ -57,7 +77,7 @@ const CreateAdmin = () => {
     e.preventDefault();
     setError('');
     setSuccess('');
-    
+
     const validationError = validateForm();
     if (validationError) {
       setError(validationError);
@@ -71,16 +91,15 @@ const CreateAdmin = () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData)
       });
-      
+
       const data = await response.json();
-      
+
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to register admin in backend');
+        throw new Error(data.error || 'Failed to register admin');
       }
 
-      setSuccess('Admin registered successfully!');
-      
-      // Reset form
+      setSuccess('Admin created successfully!');
+
       setFormData({
         name: '',
         email: '',
@@ -88,15 +107,14 @@ const CreateAdmin = () => {
         mobileNumber: '',
         address: '',
         accessStartDate: '',
-        accessStartTime: '',
+        accessStartTime: '09:00',
         accessEndDate: '',
-        accessEndTime: ''
+        accessEndTime: '18:00'
       });
-      
+
       setTimeout(() => {
         navigate('/');
-      }, 2000);
-      
+      }, 1500);
     } catch (err) {
       console.error(err);
       setError(err.message || 'Failed to create admin.');
@@ -106,211 +124,218 @@ const CreateAdmin = () => {
   };
 
   return (
-    <div>
-      <div className="page-header" style={{ marginBottom: '0' }}>
-        <h2 style={{ marginBottom: '8px' }}>Create Admin</h2>
-      </div>
-      <div className="page-breadcrumb">
-        <Link to="/">Dashboard</Link> &gt; <span>Create Admin</span>
-      </div>
+    <div className="create-form-container">
+      <div className="create-form-card">
+        {error && (
+          <div className="alert-banner error">
+            <FiAlertCircle style={{ fontSize: '18px', flexShrink: 0 }} />
+            <span>{error}</span>
+          </div>
+        )}
 
-      <div className="create-admin-card">
-        {error && <div className="error-message">{error}</div>}
-        {success && <div className="success-message">{success}</div>}
-        
+        {success && (
+          <div className="alert-banner success">
+            <FiCheckCircle style={{ fontSize: '18px', flexShrink: 0 }} />
+            <span>{success}</span>
+          </div>
+        )}
+
         <form onSubmit={handleSubmit} autoComplete="off">
           {/* Section 1: Admin Details */}
-          <div className="section-header">
-            <div className="section-icon-large">
-              <FiUser />
-            </div>
-            <div className="section-title">
-              <h3>Admin Details</h3>
-              <p>Enter the basic information of the admin.</p>
-            </div>
+          <div className="form-section-title">
+            <span className="section-title-icon"><FaBuilding /></span>
+            <span>Admin Details</span>
           </div>
 
-          <div className="form-grid">
+          <div className="form-grid-2">
             <div className="form-group">
-              <label>Admin Name</label>
-              <div className="input-wrapper">
-                <div className="input-icon-box">
-                  <FiUser />
-                </div>
-                <input 
-                  type="text" 
+              <label className="form-label">
+                Hospital / Admin Name <span className="req">*</span>
+              </label>
+              <div className="form-input-wrapper">
+                <span className="input-icon"><FaBuilding /></span>
+                <input
+                  type="text"
                   name="name"
-                  value={formData.name} 
-                  onChange={handleChange} 
-                  placeholder="Enter full name"
+                  value={formData.name}
+                  onChange={handleChange}
+                  placeholder="Enter hospital / admin name"
+                  required
                 />
               </div>
             </div>
-            
+
             <div className="form-group">
-              <label>Admin Email</label>
-              <div className="input-wrapper">
-                <div className="input-icon-box">
-                  <FiMail />
-                </div>
-                <input 
-                  type="email" 
+              <label className="form-label">
+                Email Address <span className="req">*</span>
+              </label>
+              <div className="form-input-wrapper">
+                <span className="input-icon"><FiMail /></span>
+                <input
+                  type="email"
                   name="email"
-                  value={formData.email} 
-                  onChange={handleChange} 
+                  value={formData.email}
+                  onChange={handleChange}
                   placeholder="Enter email address"
                   autoComplete="new-email"
+                  required
                 />
               </div>
             </div>
           </div>
-          
+
           <div className="form-grid-3">
             <div className="form-group">
-              <label>Mobile Number</label>
-              <div className="input-wrapper">
-                <div className="input-icon-box">
-                  <FiPhone />
-                </div>
-                <input 
-                  type="text" 
+              <label className="form-label">
+                Mobile Number <span className="req">*</span>
+              </label>
+              <div className="form-input-wrapper">
+                <span className="input-icon"><FiPhone /></span>
+                <input
+                  type="text"
                   name="mobileNumber"
-                  value={formData.mobileNumber} 
-                  onChange={handleChange} 
+                  value={formData.mobileNumber}
+                  onChange={handleChange}
                   placeholder="Enter mobile number"
-                />
-              </div>
-            </div>
-            
-            <div className="form-group">
-              <label>Address</label>
-              <div className="input-wrapper">
-                <div className="input-icon-box">
-                  <FiMapPin />
-                </div>
-                <input 
-                  type="text" 
-                  name="address"
-                  value={formData.address} 
-                  onChange={handleChange} 
-                  placeholder="Enter complete address"
+                  required
                 />
               </div>
             </div>
 
             <div className="form-group">
-              <label>Admin Password</label>
-              <div className="input-wrapper">
-                <div className="input-icon-box">
-                  <FiLock />
-                </div>
-                <input 
+              <label className="form-label">
+                Address <span className="req">*</span>
+              </label>
+              <div className="form-input-wrapper">
+                <span className="input-icon"><FiMapPin /></span>
+                <input
+                  type="text"
+                  name="address"
+                  value={formData.address}
+                  onChange={handleChange}
+                  placeholder="Enter address"
+                  required
+                />
+              </div>
+            </div>
+
+            <div className="form-group">
+              <label className="form-label">
+                Password <span className="req">*</span>
+              </label>
+              <div className="form-input-wrapper">
+                <span className="input-icon"><FiLock /></span>
+                <input
                   type={showPassword ? 'text' : 'password'}
                   name="password"
-                  value={formData.password} 
-                  onChange={handleChange} 
-                  placeholder="Create a password"
+                  value={formData.password}
+                  onChange={handleChange}
+                  placeholder="Create password"
                   autoComplete="new-password"
+                  required
                 />
-                <div 
-                  className="toggle-password" 
+                <button
+                  type="button"
+                  className="password-toggle-btn"
                   onClick={() => setShowPassword(!showPassword)}
+                  title={showPassword ? 'Hide password' : 'Show password'}
                 >
-                  {showPassword ? <FiEye /> : <FiEyeOff />}
-                </div>
+                  {showPassword ? <FiEyeOff /> : <FiEye />}
+                </button>
               </div>
             </div>
           </div>
 
-          <div className="divider-dashed"></div>
+          <div className="form-divider"></div>
 
           {/* Section 2: Access Duration */}
-          <div className="section-header">
-            <div className="section-icon-large">
-              <FiCalendar />
-            </div>
-            <div className="section-title">
-              <h3>Access Duration</h3>
-              <p>Set the access start and end date & time.</p>
-            </div>
+          <div className="form-section-title">
+            <span className="section-title-icon"><FiCalendar /></span>
+            <span>Access Duration</span>
           </div>
-          
-          <div className="form-grid">
+
+          <div className="form-grid-2">
             <div className="form-group">
-              <label>Access Start Date</label>
-              <div className="input-wrapper">
-                <div className="input-icon-box">
-                  <FiCalendar />
-                </div>
-                <input 
-                  type="date" 
+              <label className="form-label">
+                Access Start Date <span className="req">*</span>
+              </label>
+              <div className="form-input-wrapper">
+                <span className="input-icon"><FiCalendar /></span>
+                <input
+                  type="date"
                   name="accessStartDate"
-                  value={formData.accessStartDate} 
-                  onChange={handleChange} 
+                  value={formData.accessStartDate}
+                  onChange={handleChange}
+                  required
                 />
               </div>
             </div>
-            
+
             <div className="form-group">
-              <label>Access Start Time</label>
-              <div className="input-wrapper">
-                <div className="input-icon-box">
-                  <FiClock />
-                </div>
-                <input 
-                  type="time" 
+              <label className="form-label">
+                Access Start Time <span className="req">*</span>
+              </label>
+              <div className="form-input-wrapper">
+                <span className="input-icon"><FiClock /></span>
+                <input
+                  type="time"
                   name="accessStartTime"
-                  value={formData.accessStartTime} 
-                  onChange={handleChange} 
-                />
-              </div>
-            </div>
-            
-            <div className="form-group">
-              <label>Access End Date</label>
-              <div className="input-wrapper">
-                <div className="input-icon-box">
-                  <FiCalendar />
-                </div>
-                <input 
-                  type="date" 
-                  name="accessEndDate"
-                  value={formData.accessEndDate} 
-                  onChange={handleChange} 
-                />
-              </div>
-            </div>
-            
-            <div className="form-group">
-              <label>Access End Time</label>
-              <div className="input-wrapper">
-                <div className="input-icon-box">
-                  <FiClock />
-                </div>
-                <input 
-                  type="time" 
-                  name="accessEndTime"
-                  value={formData.accessEndTime} 
-                  onChange={handleChange} 
+                  value={formData.accessStartTime}
+                  onChange={handleChange}
+                  required
                 />
               </div>
             </div>
           </div>
 
-          <div className="form-actions">
-            <button 
-              type="button" 
+          <div className="form-grid-2">
+            <div className="form-group">
+              <label className="form-label">
+                Access End Date <span className="req">*</span>
+              </label>
+              <div className="form-input-wrapper">
+                <span className="input-icon"><FiCalendar /></span>
+                <input
+                  type="date"
+                  name="accessEndDate"
+                  value={formData.accessEndDate}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
+            </div>
+
+            <div className="form-group">
+              <label className="form-label">
+                Access End Time <span className="req">*</span>
+              </label>
+              <div className="form-input-wrapper">
+                <span className="input-icon"><FiClock /></span>
+                <input
+                  type="time"
+                  name="accessEndTime"
+                  value={formData.accessEndTime}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="form-actions-footer">
+            <button
+              type="button"
               className="btn-cancel"
               onClick={() => navigate('/')}
             >
               Cancel
             </button>
-            <button 
-              type="submit" 
+            <button
+              type="submit"
               className="btn-submit"
               disabled={loading}
             >
-              {loading ? 'Creating...' : 'Register Admin'}
+              {loading ? 'Creating...' : 'Create Admin'}
             </button>
           </div>
         </form>
